@@ -22,7 +22,7 @@ from .teams import SortDirection, SortField, TeamsClient, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 
-__version__ = "1.0.7"
+__version__ = "1.0.6"
 __all__ = [
     "RezenClient",
     "TransactionBuilderClient",
