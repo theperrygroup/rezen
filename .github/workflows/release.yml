@@ -152,7 +152,7 @@ jobs:
         echo "- **Documentation**: [GitHub Docs](https://github.com/theperrygroup/rezen/blob/main/docs/README.md)" >> CHANGELOG.md
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: ReZEN ${{ steps.changelog.outputs.VERSION }}
         body_path: CHANGELOG.md
