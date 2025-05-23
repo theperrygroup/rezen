@@ -5,6 +5,7 @@ from typing import Optional
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .teams import TeamsClient
+from .agents import AgentsClient
 
 
 class RezenClient:
@@ -34,6 +35,9 @@ class RezenClient:
         
         # Use teams endpoints
         teams = client.teams.search_teams(status="ACTIVE")
+        
+        # Use agents endpoints
+        agents = client.agents.search_active_agents(name="John")
         ```
     """
 
@@ -49,6 +53,7 @@ class RezenClient:
         self._transaction_builder: Optional[TransactionBuilderClient] = None
         self._transactions: Optional[TransactionsClient] = None
         self._teams: Optional[TeamsClient] = None
+        self._agents: Optional[AgentsClient] = None
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:
@@ -90,4 +95,18 @@ class RezenClient:
                 api_key=self._api_key
                 # Note: teams uses a different base URL, handled in TeamsClient
             )
-        return self._teams 
+        return self._teams
+
+    @property
+    def agents(self) -> AgentsClient:
+        """Access to agents endpoints.
+        
+        Returns:
+            AgentsClient instance
+        """
+        if self._agents is None:
+            self._agents = AgentsClient(
+                api_key=self._api_key
+                # Note: agents uses a different base URL, handled in AgentsClient
+            )
+        return self._agents 
