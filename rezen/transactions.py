@@ -1,6 +1,7 @@
 """Transactions client for ReZEN API."""
 
-from typing import Dict, Any, Optional, List, Union, BinaryIO
+from typing import Any, BinaryIO, Dict, List, Optional, Union
+
 from .base_client import BaseClient
 
 
@@ -11,10 +12,10 @@ class TransactionsClient(BaseClient):
 
     def get_transaction(self, transaction_id: str) -> Dict[str, Any]:
         """Get a specific transaction by ID.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Transaction data
         """
@@ -23,10 +24,10 @@ class TransactionsClient(BaseClient):
 
     def get_transaction_explanation(self, transaction_id: str) -> Dict[str, Any]:
         """Get verbose explanation of transaction without participant payout explanations.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Transaction explanation data
         """
@@ -35,36 +36,40 @@ class TransactionsClient(BaseClient):
 
     def get_payout_explanation(self, transaction_id: str) -> Dict[str, Any]:
         """Get payout explanation for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Payout explanation data
         """
         endpoint = f"transactions/{transaction_id}/payout-explanation"
         return self.get(endpoint)
 
-    def get_participant_payout_explanation(self, transaction_id: str, participant_id: str) -> Dict[str, Any]:
+    def get_participant_payout_explanation(
+        self, transaction_id: str, participant_id: str
+    ) -> Dict[str, Any]:
         """Get payout explanation for specific participant.
-        
+
         Args:
             transaction_id: Transaction ID
             participant_id: Participant ID
-            
+
         Returns:
             Participant payout explanation data
         """
         endpoint = f"transactions/{transaction_id}/payout-explanation/{participant_id}"
         return self.get(endpoint)
 
-    def get_metadata_for_participant_creation(self, transaction_id: str, participant_role: str) -> Dict[str, Any]:
+    def get_metadata_for_participant_creation(
+        self, transaction_id: str, participant_role: str
+    ) -> Dict[str, Any]:
         """Get metadata required to create a participant.
-        
+
         Args:
             transaction_id: Transaction ID
             participant_role: Role of the participant to be created
-            
+
         Returns:
             Metadata for participant creation
         """
@@ -73,10 +78,10 @@ class TransactionsClient(BaseClient):
 
     def get_transaction_features(self, transaction_id: str) -> Dict[str, Any]:
         """Get optional features available for the transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Available features data
         """
@@ -85,10 +90,10 @@ class TransactionsClient(BaseClient):
 
     def get_transaction_permissions(self, transaction_id: str) -> Dict[str, Any]:
         """Get transaction permissions.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Transaction permissions data
         """
@@ -97,10 +102,10 @@ class TransactionsClient(BaseClient):
 
     def check_transaction_permissions(self, transaction_id: str) -> Dict[str, Any]:
         """Check transaction permissions.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Permission check results
         """
@@ -109,10 +114,10 @@ class TransactionsClient(BaseClient):
 
     def get_transaction_process(self, transaction_id: str) -> Dict[str, Any]:
         """Get transaction process information.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Transaction process data
         """
@@ -121,22 +126,24 @@ class TransactionsClient(BaseClient):
 
     def get_transaction_summary_pdf(self, transaction_id: str) -> Dict[str, Any]:
         """Get transaction summary PDF.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             PDF download information
         """
         endpoint = f"transactions/{transaction_id}/summary-pdf"
         return self.get(endpoint)
 
-    def is_display_agent_reported_transaction_closed_dialog(self, transaction_id: str) -> Dict[str, Any]:
+    def is_display_agent_reported_transaction_closed_dialog(
+        self, transaction_id: str
+    ) -> Dict[str, Any]:
         """Check if agent reported transaction closed dialog should be displayed.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Dialog display status
         """
@@ -145,10 +152,10 @@ class TransactionsClient(BaseClient):
 
     def get_transaction_by_code(self, transaction_code: str) -> Dict[str, Any]:
         """Get transaction by transaction code.
-        
+
         Args:
             transaction_code: Transaction code
-            
+
         Returns:
             Transaction data
         """
@@ -157,51 +164,59 @@ class TransactionsClient(BaseClient):
 
     # ===== TITLE MANAGEMENT =====
 
-    def update_transaction_title(self, transaction_id: str, title_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_transaction_title(
+        self, transaction_id: str, title_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update title information for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
             title_info: Title information data
-            
+
         Returns:
             Updated transaction data
         """
         endpoint = f"transactions/{transaction_id}/title"
         return self.put(endpoint, json_data=title_info)
 
-    def update_title_system_user(self, transaction_id: str, system_user_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_title_system_user(
+        self, transaction_id: str, system_user_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update title system user information.
-        
+
         Args:
             transaction_id: Transaction ID
             system_user_info: System user information data
-            
+
         Returns:
             Updated transaction data
         """
         endpoint = f"transactions/{transaction_id}/title/system-user"
         return self.put(endpoint, json_data=system_user_info)
 
-    def update_title_order(self, transaction_id: str, title_order_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_title_order(
+        self, transaction_id: str, title_order_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update title order information.
-        
+
         Args:
             transaction_id: Transaction ID
             title_order_info: Title order information data
-            
+
         Returns:
             Updated transaction data
         """
         endpoint = f"transactions/{transaction_id}/title-order"
         return self.put(endpoint, json_data=title_order_info)
 
-    def get_title_order_placement_eligibility(self, transaction_id: str) -> Dict[str, Any]:
+    def get_title_order_placement_eligibility(
+        self, transaction_id: str
+    ) -> Dict[str, Any]:
         """Get title order placement eligibility.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Placement eligibility data
         """
@@ -210,65 +225,75 @@ class TransactionsClient(BaseClient):
 
     # ===== PARTICIPANT MANAGEMENT =====
 
-    def update_participant(self, transaction_id: str, participant_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_participant(
+        self, transaction_id: str, participant_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update participant information.
-        
+
         Args:
             transaction_id: Transaction ID
             participant_info: Participant information data
-            
+
         Returns:
             Updated transaction data
         """
         endpoint = f"transactions/{transaction_id}/participant"
         return self.put(endpoint, json_data=participant_info)
 
-    def update_participant_opcity(self, transaction_id: str, opcity_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_participant_opcity(
+        self, transaction_id: str, opcity_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update participant opcity information.
-        
+
         Args:
             transaction_id: Transaction ID
             opcity_info: Opcity information data
-            
+
         Returns:
             Updated transaction data
         """
         endpoint = f"transactions/{transaction_id}/participant/opcity"
         return self.put(endpoint, json_data=opcity_info)
 
-    def create_participant(self, transaction_id: str, participant_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_participant(
+        self, transaction_id: str, participant_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create transaction participant.
-        
+
         Args:
             transaction_id: Transaction ID
             participant_data: Participant creation data
-            
+
         Returns:
             Created participant data
         """
         endpoint = f"transactions/{transaction_id}/create-participant"
         return self.post(endpoint, json_data=participant_data)
 
-    def get_participant_lite(self, transaction_id: str, participant_id: str) -> Dict[str, Any]:
+    def get_participant_lite(
+        self, transaction_id: str, participant_id: str
+    ) -> Dict[str, Any]:
         """Get lite participant information.
-        
+
         Args:
             transaction_id: Transaction ID
             participant_id: Participant ID
-            
+
         Returns:
             Lite participant data
         """
         endpoint = f"transactions/{transaction_id}/participant/{participant_id}/lite"
         return self.get(endpoint)
 
-    def get_participant_payment(self, transaction_id: str, participant_id: str) -> Dict[str, Any]:
+    def get_participant_payment(
+        self, transaction_id: str, participant_id: str
+    ) -> Dict[str, Any]:
         """Get participant payment information.
-        
+
         Args:
             transaction_id: Transaction ID
             participant_id: Participant ID
-            
+
         Returns:
             Participant payment data
         """
@@ -277,23 +302,25 @@ class TransactionsClient(BaseClient):
 
     def get_agent_participants(self, transaction_id: str) -> Dict[str, Any]:
         """Get agent participants for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Agent participants data
         """
         endpoint = f"transactions/{transaction_id}/agent-participants"
         return self.get(endpoint)
 
-    def get_comment_participants(self, transaction_id: str, agent_id: str) -> Dict[str, Any]:
+    def get_comment_participants(
+        self, transaction_id: str, agent_id: str
+    ) -> Dict[str, Any]:
         """Get comment participants for agent.
-        
+
         Args:
             transaction_id: Transaction ID
             agent_id: Agent ID
-            
+
         Returns:
             Comment participants data
         """
@@ -302,10 +329,10 @@ class TransactionsClient(BaseClient):
 
     def get_checklist_assignees(self, transaction_id: str) -> Dict[str, Any]:
         """Get checklist assignees for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Checklist assignees data
         """
@@ -316,11 +343,11 @@ class TransactionsClient(BaseClient):
 
     def get_payment_info(self, transaction_id: str, agent_id: str) -> Dict[str, Any]:
         """Get payment information for agent.
-        
+
         Args:
             transaction_id: Transaction ID
             agent_id: Agent ID
-            
+
         Returns:
             Payment information data
         """
@@ -329,10 +356,10 @@ class TransactionsClient(BaseClient):
 
     def get_paid_at_closing(self, transaction_id: str) -> Dict[str, Any]:
         """Get paid at closing information.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Paid at closing data
         """
@@ -341,23 +368,25 @@ class TransactionsClient(BaseClient):
 
     def get_money_transfers(self, transaction_id: str) -> Dict[str, Any]:
         """Get money transfers for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Money transfers data
         """
         endpoint = f"transactions/{transaction_id}/money-transfers"
         return self.get(endpoint)
 
-    def update_attached_fee(self, transaction_id: str, fee_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_attached_fee(
+        self, transaction_id: str, fee_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update attached fee information.
-        
+
         Args:
             transaction_id: Transaction ID
             fee_info: Fee information data
-            
+
         Returns:
             Updated transaction data
         """
@@ -366,53 +395,63 @@ class TransactionsClient(BaseClient):
 
     # ===== ESCROW MANAGEMENT =====
 
-    def create_escrow(self, transaction_id: str, escrow_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_escrow(
+        self, transaction_id: str, escrow_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create escrow for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
             escrow_data: Escrow creation data
-            
+
         Returns:
             Created escrow data
         """
         endpoint = f"transactions/{transaction_id}/escrow"
         return self.post(endpoint, json_data=escrow_data)
 
-    def create_escrow_deposit(self, escrow_id: str, deposit_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_escrow_deposit(
+        self, escrow_id: str, deposit_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Deposit a payment for an escrow (trust deposit).
-        
+
         Args:
             escrow_id: Escrow ID
             deposit_data: Deposit data
-            
+
         Returns:
             Escrow response data
         """
         endpoint = f"transactions/escrows/{escrow_id}/escrow-deposit"
         return self.post(endpoint, json_data=deposit_data)
 
-    def get_escrow_deposit(self, escrow_id: str, escrow_deposit_id: str) -> Dict[str, Any]:
+    def get_escrow_deposit(
+        self, escrow_id: str, escrow_deposit_id: str
+    ) -> Dict[str, Any]:
         """Get specific escrow deposit.
-        
+
         Args:
             escrow_id: Escrow ID
             escrow_deposit_id: Escrow deposit ID
-            
+
         Returns:
             Escrow deposit data
         """
-        endpoint = f"transactions/escrows/{escrow_id}/escrow-deposit/{escrow_deposit_id}"
+        endpoint = (
+            f"transactions/escrows/{escrow_id}/escrow-deposit/{escrow_deposit_id}"
+        )
         return self.get(endpoint)
 
-    def update_escrow_check_deposit(self, escrow_id: str, check_deposit_id: str, deposit_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_escrow_check_deposit(
+        self, escrow_id: str, check_deposit_id: str, deposit_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update escrow check deposit.
-        
+
         Args:
             escrow_id: Escrow ID
             check_deposit_id: Check deposit ID
             deposit_data: Updated deposit data
-            
+
         Returns:
             Updated escrow data
         """
@@ -421,14 +460,16 @@ class TransactionsClient(BaseClient):
 
     # ===== CHECK DEPOSITS =====
 
-    def update_check_deposit(self, transaction_id: str, check_deposit_id: str, deposit_data: Dict[str, Any]) -> Dict[str, Any]:
+    def update_check_deposit(
+        self, transaction_id: str, check_deposit_id: str, deposit_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update check deposit.
-        
+
         Args:
             transaction_id: Transaction ID
             check_deposit_id: Check deposit ID
             deposit_data: Updated deposit data
-            
+
         Returns:
             Updated transaction data
         """
@@ -437,49 +478,57 @@ class TransactionsClient(BaseClient):
 
     def get_check_deposits(self, transaction_id: str) -> Dict[str, Any]:
         """Get check deposits for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Check deposits data
         """
         endpoint = f"transactions/{transaction_id}/check-deposits"
         return self.get(endpoint)
 
-    def get_check_deposit_upload_link(self, transaction_id: str, deposit_type: str) -> Dict[str, Any]:
+    def get_check_deposit_upload_link(
+        self, transaction_id: str, deposit_type: str
+    ) -> Dict[str, Any]:
         """Get upload link for check deposit.
-        
+
         Args:
             transaction_id: Transaction ID
             deposit_type: Type of deposit
-            
+
         Returns:
             Upload link data
         """
-        endpoint = f"transactions/{transaction_id}/check-deposits/{deposit_type}/upload-link"
+        endpoint = (
+            f"transactions/{transaction_id}/check-deposits/{deposit_type}/upload-link"
+        )
         return self.get(endpoint)
 
-    def get_check_deposit_front_image_download_url(self, transaction_id: str, check_deposit_id: str) -> Dict[str, Any]:
+    def get_check_deposit_front_image_download_url(
+        self, transaction_id: str, check_deposit_id: str
+    ) -> Dict[str, Any]:
         """Get front image download URL for check deposit.
-        
+
         Args:
             transaction_id: Transaction ID
             check_deposit_id: Check deposit ID
-            
+
         Returns:
             Front image download URL
         """
         endpoint = f"transactions/{transaction_id}/check-deposits/{check_deposit_id}/front-image/download-url"
         return self.get(endpoint)
 
-    def get_check_deposit_back_image_download_url(self, transaction_id: str, check_deposit_id: str) -> Dict[str, Any]:
+    def get_check_deposit_back_image_download_url(
+        self, transaction_id: str, check_deposit_id: str
+    ) -> Dict[str, Any]:
         """Get back image download URL for check deposit.
-        
+
         Args:
             transaction_id: Transaction ID
             check_deposit_id: Check deposit ID
-            
+
         Returns:
             Back image download URL
         """
@@ -490,10 +539,10 @@ class TransactionsClient(BaseClient):
 
     def get_canada_bank_accounts(self, transaction_id: str) -> Dict[str, Any]:
         """Get Canada bank accounts for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Canada bank accounts data
         """
@@ -502,10 +551,10 @@ class TransactionsClient(BaseClient):
 
     def get_bank_accounts(self, transaction_id: str) -> Dict[str, Any]:
         """Get bank accounts for transaction.
-        
+
         Args:
             transaction_id: Transaction ID
-            
+
         Returns:
             Bank accounts data
         """
@@ -514,40 +563,46 @@ class TransactionsClient(BaseClient):
 
     # ===== DOUBLE ENDER =====
 
-    def update_double_ender(self, transaction_id: str, double_ender_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_double_ender(
+        self, transaction_id: str, double_ender_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update double ender information.
-        
+
         Args:
             transaction_id: Transaction ID
             double_ender_info: Double ender information data
-            
+
         Returns:
             Updated transaction data
         """
         endpoint = f"transactions/{transaction_id}/double-ender"
         return self.put(endpoint, json_data=double_ender_info)
 
-    def update_agent_reported_transaction_closed_dialog(self, transaction_id: str, dialog_info: Dict[str, Any]) -> Dict[str, Any]:
+    def update_agent_reported_transaction_closed_dialog(
+        self, transaction_id: str, dialog_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update agent reported transaction closed dialog.
-        
+
         Args:
             transaction_id: Transaction ID
             dialog_info: Dialog information data
-            
+
         Returns:
             Updated transaction data
         """
-        endpoint = f"transactions/{transaction_id}/agent-reported-transaction-closed-dialog"
+        endpoint = (
+            f"transactions/{transaction_id}/agent-reported-transaction-closed-dialog"
+        )
         return self.put(endpoint, json_data=dialog_info)
 
     # ===== BATCH AND LIST OPERATIONS =====
 
     def get_transactions_lite_batch(self, transaction_ids: List[str]) -> Dict[str, Any]:
         """Get multiple transactions in lite format.
-        
+
         Args:
             transaction_ids: List of transaction IDs
-            
+
         Returns:
             Batch transaction data
         """
@@ -561,17 +616,17 @@ class TransactionsClient(BaseClient):
         page_size: int = 20,
         sort_by: Optional[str] = None,
         sort_direction: str = "ASC",
-        **filters
+        **filters,
     ) -> Dict[str, Any]:
         """Get rolling transactions with pagination and filtering.
-        
+
         Args:
             page_number: Page number (default 0)
             page_size: Page size (default 20)
             sort_by: Sort field
             sort_direction: Sort direction ('ASC' or 'DESC')
             **filters: Additional filter parameters
-            
+
         Returns:
             Paginated rolling transactions data
         """
@@ -580,7 +635,7 @@ class TransactionsClient(BaseClient):
             "pageNumber": page_number,
             "pageSize": page_size,
             "sortDirection": sort_direction,
-            **filters
+            **filters,
         }
         if sort_by:
             params["sortBy"] = sort_by
@@ -590,10 +645,10 @@ class TransactionsClient(BaseClient):
 
     def get_participant_transactions(self, yenta_id: str) -> Dict[str, Any]:
         """Get transactions for participant.
-        
+
         Args:
             yenta_id: Participant (user) ID
-            
+
         Returns:
             Participant transactions data
         """
@@ -609,10 +664,10 @@ class TransactionsClient(BaseClient):
         search_text: Optional[str] = None,
         sort_by: Optional[str] = None,
         sort_direction: Optional[str] = None,
-        transaction_type: Optional[List[str]] = None
+        transaction_type: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Get transactions for participant by lifecycle group with pagination.
-        
+
         Args:
             yenta_id: Participant (user) ID
             lifecycle_group: Lifecycle group ('OPEN', 'LISTING_ACTIVE', 'CLOSED', 'TERMINATED', 'LISTING_NONTERMINATED')
@@ -622,16 +677,13 @@ class TransactionsClient(BaseClient):
             sort_by: Sort field (optional)
             sort_direction: Sort direction (optional)
             transaction_type: List of transaction types to filter by (optional)
-            
+
         Returns:
             Paginated participant transactions data
         """
         endpoint = f"transactions/participant/{yenta_id}/transactions/{lifecycle_group}"
-        params: Dict[str, Any] = {
-            "pageNumber": page_number,
-            "pageSize": page_size
-        }
-        
+        params: Dict[str, Any] = {"pageNumber": page_number, "pageSize": page_size}
+
         if search_text:
             params["searchText"] = search_text
         if sort_by:
@@ -640,19 +692,23 @@ class TransactionsClient(BaseClient):
             params["sortDirection"] = sort_direction
         if transaction_type:
             params["transactionType"] = transaction_type
-            
+
         return self.get(endpoint, params=params)
 
-    def get_participant_transaction_lifecycle_group_counts(self, yenta_id: str) -> Dict[str, Any]:
+    def get_participant_transaction_lifecycle_group_counts(
+        self, yenta_id: str
+    ) -> Dict[str, Any]:
         """Get transaction lifecycle group counts for participant.
-        
+
         Args:
             yenta_id: Participant (user) ID
-            
+
         Returns:
             Lifecycle group counts data
         """
-        endpoint = f"transactions/participant/{yenta_id}/transactions/lifecycle-group-counts"
+        endpoint = (
+            f"transactions/participant/{yenta_id}/transactions/lifecycle-group-counts"
+        )
         return self.get(endpoint)
 
     def get_participant_listing_transactions(
@@ -663,10 +719,10 @@ class TransactionsClient(BaseClient):
         page_size: int,
         search_text: Optional[str] = None,
         sort_by: Optional[str] = None,
-        sort_direction: Optional[str] = None
+        sort_direction: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Get listing transactions for participant by lifecycle group.
-        
+
         Args:
             yenta_id: Participant (user) ID
             lifecycle_group: Lifecycle group
@@ -675,31 +731,30 @@ class TransactionsClient(BaseClient):
             search_text: Search text (optional)
             sort_by: Sort field (optional)
             sort_direction: Sort direction (optional)
-            
+
         Returns:
             Paginated participant listing transactions data
         """
         endpoint = f"transactions/participant/{yenta_id}/listing-transactions/{lifecycle_group}"
-        params: Dict[str, Any] = {
-            "pageNumber": page_number,
-            "pageSize": page_size
-        }
-        
+        params: Dict[str, Any] = {"pageNumber": page_number, "pageSize": page_size}
+
         if search_text:
             params["searchText"] = search_text
         if sort_by:
             params["sortBy"] = sort_by
         if sort_direction:
             params["sortDirection"] = sort_direction
-            
+
         return self.get(endpoint, params=params)
 
-    def get_participant_listing_transaction_lifecycle_group_counts(self, yenta_id: str) -> Dict[str, Any]:
+    def get_participant_listing_transaction_lifecycle_group_counts(
+        self, yenta_id: str
+    ) -> Dict[str, Any]:
         """Get listing transaction lifecycle group counts for participant.
-        
+
         Args:
             yenta_id: Participant (user) ID
-            
+
         Returns:
             Listing transaction lifecycle group counts data
         """
@@ -708,12 +763,12 @@ class TransactionsClient(BaseClient):
 
     def get_participant_current_transactions(self, yenta_id: str) -> Dict[str, Any]:
         """Get current transactions for participant.
-        
+
         Args:
             yenta_id: Participant (user) ID
-            
+
         Returns:
             Current transactions data
         """
         endpoint = f"transactions/participant/{yenta_id}/current"
-        return self.get(endpoint) 
+        return self.get(endpoint)

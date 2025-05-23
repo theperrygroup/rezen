@@ -1,19 +1,21 @@
 """Tests for the base client."""
 
 import os
-import pytest
-import responses
-import requests
 from unittest.mock import patch
+
+import pytest
+import requests
+import responses
+
 from rezen.base_client import BaseClient
 from rezen.exceptions import (
     AuthenticationError,
-    ValidationError,
+    NetworkError,
     NotFoundError,
     RateLimitError,
-    ServerError,
-    NetworkError,
     RezenError,
+    ServerError,
+    ValidationError,
 )
 
 
@@ -30,7 +32,9 @@ class TestBaseClientInit:
 
     def test_init_with_custom_base_url(self) -> None:
         """Test initialization with custom base URL."""
-        client = BaseClient(api_key="test_key", base_url="https://test.example.com/api/v1")
+        client = BaseClient(
+            api_key="test_key", base_url="https://test.example.com/api/v1"
+        )
         assert client.api_key == "test_key"
         assert client.base_url == "https://test.example.com/api/v1"
 
@@ -69,9 +73,9 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"success": True},
-            status=200
+            status=200,
         )
-        
+
         result = self.client.get("test")
         assert result == {"success": True}
 
@@ -82,21 +86,17 @@ class TestBaseClientResponseHandling:
             responses.POST,
             f"{self.client.base_url}/test",
             json={"created": True},
-            status=201
+            status=201,
         )
-        
+
         result = self.client.post("test", json_data={"data": "test"})
         assert result == {"created": True}
 
     @responses.activate
     def test_handle_response_204(self) -> None:
         """Test 204 No Content response handling."""
-        responses.add(
-            responses.DELETE,
-            f"{self.client.base_url}/test",
-            status=204
-        )
-        
+        responses.add(responses.DELETE, f"{self.client.base_url}/test", status=204)
+
         result = self.client.delete("test")
         assert result == {}
 
@@ -107,9 +107,9 @@ class TestBaseClientResponseHandling:
             responses.POST,
             f"{self.client.base_url}/test",
             json={"message": "Invalid data"},
-            status=400
+            status=400,
         )
-        
+
         with pytest.raises(ValidationError, match="Bad request: Invalid data"):
             self.client.post("test", json_data={"invalid": "data"})
 
@@ -120,10 +120,12 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"message": "Invalid credentials"},
-            status=401
+            status=401,
         )
-        
-        with pytest.raises(AuthenticationError, match="Authentication failed: Invalid credentials"):
+
+        with pytest.raises(
+            AuthenticationError, match="Authentication failed: Invalid credentials"
+        ):
             self.client.get("test")
 
     @responses.activate
@@ -133,9 +135,9 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"message": "Not found"},
-            status=404
+            status=404,
         )
-        
+
         with pytest.raises(NotFoundError, match="Resource not found: Not found"):
             self.client.get("test")
 
@@ -146,10 +148,12 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"message": "Too many requests"},
-            status=429
+            status=429,
         )
-        
-        with pytest.raises(RateLimitError, match="Rate limit exceeded: Too many requests"):
+
+        with pytest.raises(
+            RateLimitError, match="Rate limit exceeded: Too many requests"
+        ):
             self.client.get("test")
 
     @responses.activate
@@ -159,9 +163,9 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"message": "Internal server error"},
-            status=500
+            status=500,
         )
-        
+
         with pytest.raises(ServerError, match="Server error: Internal server error"):
             self.client.get("test")
 
@@ -172,9 +176,9 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"message": "Service unavailable"},
-            status=503
+            status=503,
         )
-        
+
         with pytest.raises(ServerError, match="Server error: Service unavailable"):
             self.client.get("test")
 
@@ -185,9 +189,9 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"message": "Unexpected error"},
-            status=418  # I'm a teapot
+            status=418,  # I'm a teapot
         )
-        
+
         with pytest.raises(RezenError, match="Unexpected error: Unexpected error"):
             self.client.get("test")
 
@@ -195,12 +199,9 @@ class TestBaseClientResponseHandling:
     def test_handle_response_empty_content(self) -> None:
         """Test response with empty content."""
         responses.add(
-            responses.GET,
-            f"{self.client.base_url}/test",
-            body="",
-            status=200
+            responses.GET, f"{self.client.base_url}/test", body="", status=200
         )
-        
+
         result = self.client.get("test")
         assert result == {}
 
@@ -211,9 +212,9 @@ class TestBaseClientResponseHandling:
             responses.GET,
             f"{self.client.base_url}/test",
             body="invalid json",
-            status=400
+            status=400,
         )
-        
+
         with pytest.raises(ValidationError):
             self.client.get("test")
 
@@ -232,9 +233,9 @@ class TestBaseClientHttpMethods:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"method": "GET"},
-            status=200
+            status=200,
         )
-        
+
         result = self.client.get("test")
         assert result == {"method": "GET"}
 
@@ -245,9 +246,9 @@ class TestBaseClientHttpMethods:
             responses.GET,
             f"{self.client.base_url}/test?param1=value1&param2=value2",
             json={"method": "GET"},
-            status=200
+            status=200,
         )
-        
+
         params = {"param1": "value1", "param2": "value2"}
         result = self.client.get("test", params=params)
         assert result == {"method": "GET"}
@@ -259,9 +260,9 @@ class TestBaseClientHttpMethods:
             responses.POST,
             f"{self.client.base_url}/test",
             json={"method": "POST"},
-            status=201
+            status=201,
         )
-        
+
         result = self.client.post("test", json_data={"key": "value"})
         assert result == {"method": "POST"}
 
@@ -272,9 +273,9 @@ class TestBaseClientHttpMethods:
             responses.POST,
             f"{self.client.base_url}/test",
             json={"method": "POST"},
-            status=201
+            status=201,
         )
-        
+
         result = self.client.post("test", data={"key": "value"})
         assert result == {"method": "POST"}
 
@@ -285,9 +286,9 @@ class TestBaseClientHttpMethods:
             responses.PUT,
             f"{self.client.base_url}/test",
             json={"method": "PUT"},
-            status=200
+            status=200,
         )
-        
+
         result = self.client.put("test", json_data={"key": "value"})
         assert result == {"method": "PUT"}
 
@@ -298,9 +299,9 @@ class TestBaseClientHttpMethods:
             responses.DELETE,
             f"{self.client.base_url}/test",
             json={"method": "DELETE"},
-            status=200
+            status=200,
         )
-        
+
         result = self.client.delete("test")
         assert result == {"method": "DELETE"}
 
@@ -311,15 +312,19 @@ class TestBaseClientHttpMethods:
             responses.PATCH,
             f"{self.client.base_url}/test",
             json={"method": "PATCH"},
-            status=200
+            status=200,
         )
-        
+
         result = self.client.patch("test", json_data={"key": "value"})
         assert result == {"method": "PATCH"}
 
     def test_network_error(self) -> None:
         """Test network error handling."""
-        with patch.object(self.client.session, 'request', side_effect=requests.exceptions.ConnectionError("Connection failed")):
+        with patch.object(
+            self.client.session,
+            "request",
+            side_effect=requests.exceptions.ConnectionError("Connection failed"),
+        ):
             with pytest.raises(NetworkError, match="Network error"):
                 self.client.get("test")
 
@@ -330,12 +335,12 @@ class TestBaseClientHttpMethods:
             responses.GET,
             f"{self.client.base_url}/test",
             json={"success": True},
-            status=200
+            status=200,
         )
-        
+
         # Test with and without leading slash
         result1 = self.client.get("test")
         result2 = self.client.get("/test")
-        
+
         assert result1 == {"success": True}
-        assert result2 == {"success": True} 
+        assert result2 == {"success": True}
