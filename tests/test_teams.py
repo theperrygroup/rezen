@@ -2,19 +2,20 @@
 
 import json
 from datetime import date
-from typing import Dict, Any
+from typing import Any, Dict
 from unittest.mock import patch
-import responses
-import pytest
 
+import pytest
+import responses
+
+from rezen.exceptions import AuthenticationError, NotFoundError, ValidationError
 from rezen.teams import (
-    TeamsClient,
     SortDirection,
     SortField,
+    TeamsClient,
     TeamStatus,
     TeamType,
 )
-from rezen.exceptions import AuthenticationError, ValidationError, NotFoundError
 
 
 class TestTeamsClient:
@@ -32,7 +33,9 @@ class TestTeamsClient:
 
     def test_init_with_custom_base_url(self) -> None:
         """Test client initialization with custom base URL."""
-        client = TeamsClient(api_key="test_key", base_url="https://custom.example.com/api/v1")
+        client = TeamsClient(
+            api_key="test_key", base_url="https://custom.example.com/api/v1"
+        )
         assert client.base_url == "https://custom.example.com/api/v1"
 
     @patch.dict("os.environ", {"REZEN_API_KEY": "env_api_key"})
@@ -56,21 +59,18 @@ class TestTeamsClient:
                     "id": "550e8400-e29b-41d4-a716-446655440000",
                     "name": "Test Team",
                     "status": "ACTIVE",
-                    "teamType": "NORMAL"
+                    "teamType": "NORMAL",
                 }
             ],
-            "pageable": {
-                "pageNumber": 0,
-                "pageSize": 20
-            },
-            "totalElements": 1
+            "pageable": {"pageNumber": 0, "pageSize": 20},
+            "totalElements": 1,
         }
 
         responses.add(
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         result = self.client.search_teams()
@@ -86,21 +86,18 @@ class TestTeamsClient:
                     "id": "550e8400-e29b-41d4-a716-446655440000",
                     "name": "Platinum Team",
                     "status": "ACTIVE",
-                    "teamType": "PLATINUM"
+                    "teamType": "PLATINUM",
                 }
             ],
-            "pageable": {
-                "pageNumber": 1,
-                "pageSize": 50
-            },
-            "totalElements": 1
+            "pageable": {"pageNumber": 1, "pageSize": 50},
+            "totalElements": 1,
         }
 
         responses.add(
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         result = self.client.search_teams(
@@ -144,7 +141,7 @@ class TestTeamsClient:
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         result = self.client.search_teams(
@@ -155,7 +152,7 @@ class TestTeamsClient:
         )
 
         assert result == mock_response
-        
+
         # Verify query parameters
         request = responses.calls[0].request
         assert "sortDirection=ASC" in request.url
@@ -172,13 +169,13 @@ class TestTeamsClient:
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         result = self.client.search_teams(sort_by=SortField.STATUS)
 
         assert result == mock_response
-        
+
         # Verify query parameters
         request = responses.calls[0].request
         assert "sortBy=STATUS" in request.url
@@ -192,14 +189,14 @@ class TestTeamsClient:
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         # This should hit the missing line (single string sort field)
         result = self.client.search_teams(sort_by="LEADER_NAME")
 
         assert result == mock_response
-        
+
         # Verify query parameters
         request = responses.calls[0].request
         assert "sortBy=LEADER_NAME" in request.url
@@ -213,14 +210,14 @@ class TestTeamsClient:
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         # Only pass sort_by as string, nothing else, to ensure we hit the else branch
         result = self.client.search_teams(sort_by="ID")
 
         assert result == mock_response
-        
+
         # Verify query parameters
         request = responses.calls[0].request
         assert "sortBy=ID" in request.url
@@ -234,7 +231,7 @@ class TestTeamsClient:
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         result = self.client.search_teams(
@@ -243,7 +240,7 @@ class TestTeamsClient:
         )
 
         assert result == mock_response
-        
+
         # Verify query parameters
         request = responses.calls[0].request
         assert "createdAtStart=2023-01-01" in request.url
@@ -254,27 +251,21 @@ class TestTeamsClient:
         """Test search teams with only pagination parameters."""
         mock_response: Dict[str, Any] = {
             "content": [],
-            "pageable": {
-                "pageNumber": 2,
-                "pageSize": 10
-            },
-            "totalElements": 0
+            "pageable": {"pageNumber": 2, "pageSize": 10},
+            "totalElements": 0,
         }
 
         responses.add(
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=mock_response,
-            status=200
+            status=200,
         )
 
-        result = self.client.search_teams(
-            page_number=2,
-            page_size=10
-        )
+        result = self.client.search_teams(page_number=2, page_size=10)
 
         assert result == mock_response
-        
+
         # Verify query parameters
         request = responses.calls[0].request
         assert "pageNumber=2" in request.url
@@ -285,14 +276,14 @@ class TestTeamsClient:
         """Test search teams with validation error response."""
         error_response: Dict[str, Any] = {
             "message": "Invalid page size",
-            "details": "Page size must be between 1 and 100"
+            "details": "Page size must be between 1 and 100",
         }
 
         responses.add(
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=error_response,
-            status=400
+            status=400,
         )
 
         with pytest.raises(ValidationError, match="Bad request: Invalid page size"):
@@ -301,18 +292,18 @@ class TestTeamsClient:
     @responses.activate
     def test_search_teams_authentication_error(self) -> None:
         """Test search teams with authentication error."""
-        error_response: Dict[str, Any] = {
-            "message": "Invalid API key"
-        }
+        error_response: Dict[str, Any] = {"message": "Invalid API key"}
 
         responses.add(
             responses.GET,
             "https://yenta.therealbrokerage.com/api/v1/teams",
             json=error_response,
-            status=401
+            status=401,
         )
 
-        with pytest.raises(AuthenticationError, match="Authentication failed: Invalid API key"):
+        with pytest.raises(
+            AuthenticationError, match="Authentication failed: Invalid API key"
+        ):
             self.client.search_teams()
 
     @responses.activate
@@ -325,14 +316,14 @@ class TestTeamsClient:
             "status": "ACTIVE",
             "teamType": "NORMAL",
             "description": "A test team",
-            "createdAt": "2023-01-01T00:00:00Z"
+            "createdAt": "2023-01-01T00:00:00Z",
         }
 
         responses.add(
             responses.GET,
             f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/without-agents",
             json=mock_response,
-            status=200
+            status=200,
         )
 
         result = self.client.get_team_without_agents(team_id)
@@ -343,15 +334,13 @@ class TestTeamsClient:
     def test_get_team_without_agents_not_found(self) -> None:
         """Test get team without agents not found."""
         team_id = "nonexistent-team-id"
-        error_response: Dict[str, Any] = {
-            "message": "Team not found"
-        }
+        error_response: Dict[str, Any] = {"message": "Team not found"}
 
         responses.add(
             responses.GET,
             f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/without-agents",
             json=error_response,
-            status=404
+            status=404,
         )
 
         with pytest.raises(NotFoundError, match="Resource not found: Team not found"):
@@ -380,4 +369,4 @@ class TestTeamsClient:
         assert TeamType.PLATINUM.value == "PLATINUM"
         assert TeamType.GROUP.value == "GROUP"
         assert TeamType.DOMESTIC.value == "DOMESTIC"
-        assert TeamType.PRO.value == "PRO" 
+        assert TeamType.PRO.value == "PRO"

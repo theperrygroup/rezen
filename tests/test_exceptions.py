@@ -1,14 +1,15 @@
 """Tests for ReZEN API exceptions."""
 
 import pytest
+
 from rezen.exceptions import (
-    RezenError,
     AuthenticationError,
-    ValidationError,
+    NetworkError,
     NotFoundError,
     RateLimitError,
+    RezenError,
     ServerError,
-    NetworkError,
+    ValidationError,
 )
 
 
@@ -27,7 +28,7 @@ class TestRezenError:
         """Test RezenError initialization with all parameters."""
         response_data = {"error": "Test error", "code": 400}
         error = RezenError("Test error", status_code=400, response_data=response_data)
-        
+
         assert str(error) == "Test error"
         assert error.message == "Test error"
         assert error.status_code == 400
@@ -132,4 +133,4 @@ class TestNetworkError:
         """Test NetworkError initialization."""
         error = NetworkError("Connection failed")
         assert str(error) == "Connection failed"
-        assert error.status_code is None 
+        assert error.status_code is None
