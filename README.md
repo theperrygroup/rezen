@@ -34,7 +34,7 @@ transaction = client.transactions.get_transaction("transaction-id")
 ## 📦 Installation
 
 ```bash
-pip install rezen-api
+pip install rezen
 
 # Or for development:
 git clone <repository-url>
