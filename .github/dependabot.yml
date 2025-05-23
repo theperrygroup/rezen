@@ -1,0 +1,51 @@
+version: 2
+updates:
+  # Enable version updates for Python pip
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "theperrygroup"
+    assignees:
+      - "theperrygroup"
+    commit-message:
+      prefix: "deps:"
+      prefix-development: "deps-dev:"
+    # Group updates by type
+    groups:
+      testing:
+        patterns:
+          - "pytest*"
+          - "responses"
+          - "pytest-*"
+      linting:
+        patterns:
+          - "black"
+          - "flake8"
+          - "mypy"
+          - "isort"
+          - "pylint"
+      core:
+        patterns:
+          - "requests"
+          - "pydantic"
+          - "python-dotenv"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "theperrygroup"
+    assignees:
+      - "theperrygroup"
+    commit-message:
+      prefix: "ci:" 
