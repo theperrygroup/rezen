@@ -616,7 +616,7 @@ class TransactionsClient(BaseClient):
         page_size: int = 20,
         sort_by: Optional[str] = None,
         sort_direction: str = "ASC",
-        **filters,
+        **filters: Any,
     ) -> Dict[str, Any]:
         """Get rolling transactions with pagination and filtering.
 

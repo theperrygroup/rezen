@@ -513,7 +513,7 @@ class TransactionBuilderClient(BaseClient):
         endpoint = "transaction-builder"
         params = {"type": builder_type}
         response = self._request("POST", endpoint, params=params)
-        return response.get("id", "")
+        return str(response.get("id", ""))
 
     def create_builder_from_transaction(self, transaction_id: str) -> Dict[str, Any]:
         """Create transaction builder from given transaction.
