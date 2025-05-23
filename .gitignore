@@ -238,7 +238,7 @@ $RECYCLE.BIN/
 *.log
 
 # Temporary test files
-test_*.py
+# test_*.py
 *_test.py
 temp_*.py
 scratch_*.py
