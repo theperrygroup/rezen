@@ -231,6 +231,16 @@ python scripts/bump_version.py patch --push
 2. Verify repository permissions
 3. Review workflow logs
 
+### License Deprecation Warning
+
+**Warning:** `project.license` as a TOML table is deprecated
+
+**Cause:** Newer setuptools versions prefer SPDX license expressions over table format
+
+**Solution:** This is just a warning and won't affect builds. The workflow completes successfully.
+
+**Future fix:** After 2026, update to: `license = "MIT"` once setuptools>=77.0.0 is standard
+
 ### Tests Failing During Release
 
 **Cause:** Tests must pass before publishing
