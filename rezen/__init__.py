@@ -4,6 +4,14 @@ from .client import RezenClient
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .teams import TeamsClient, SortDirection, SortField, TeamStatus, TeamType
+from .agents import (
+    AgentsClient, 
+    AgentStatus, 
+    AgentSortDirection, 
+    AgentSortField, 
+    Country, 
+    StateOrProvince
+)
 from .exceptions import (
     RezenError,
     AuthenticationError,
@@ -24,6 +32,12 @@ __all__ = [
     "SortField", 
     "TeamStatus",
     "TeamType",
+    "AgentsClient",
+    "AgentStatus",
+    "AgentSortDirection",
+    "AgentSortField",
+    "Country",
+    "StateOrProvince",
     "RezenError",
     "AuthenticationError",
     "ValidationError",
