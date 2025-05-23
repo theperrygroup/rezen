@@ -9,13 +9,7 @@ import pytest
 import responses
 
 from rezen.exceptions import AuthenticationError, NotFoundError, ValidationError
-from rezen.teams import (
-    SortDirection,
-    SortField,
-    TeamsClient,
-    TeamStatus,
-    TeamType,
-)
+from rezen.teams import SortDirection, SortField, TeamsClient, TeamStatus, TeamType
 
 
 class TestTeamsClient:
