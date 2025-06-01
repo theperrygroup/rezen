@@ -17,14 +17,18 @@ Common issues, solutions, and debugging techniques for the ReZEN Python API clie
 
 ## Authentication Issues
 
-### Invalid API Key
+### ERR_AUTH_001: Invalid API Key
+
+**Message**: `AuthenticationError: Invalid API key`
 
 **Symptoms:**
-- `AuthenticationError: Invalid API key`
 - 401 Unauthorized responses
 - "Authentication failed" messages
+- API key validation failures
 
-**Solutions:**
+**Cause**: The provided API key is either malformed, expired, or invalid.
+
+**Resolution:**
 
 ```python
 import os
@@ -50,11 +54,15 @@ except AuthenticationError as e:
 - API key revoked or expired
 - Using staging key with production API or vice versa
 
-### Environment Variable Not Found
+**See Also**: [Authentication Setup Guide](../getting-started/authentication.md)
 
-**Error:** `REZEN_API_KEY environment variable not set`
+### ERR_AUTH_002: Environment Variable Not Found
 
-**Solutions:**
+**Message**: `REZEN_API_KEY environment variable not set`
+
+**Cause**: The required environment variable for API authentication is not configured.
+
+**Resolution:**
 
 ```bash
 # Check if environment variable is set
@@ -180,11 +188,13 @@ client.teams._base_client = ProxyBaseClient()
 
 ## API Errors
 
-### Rate Limiting
+### ERR_API_001: Rate Limit Exceeded
 
-**Error:** `RateLimitError: Rate limit exceeded`
+**Message**: `RateLimitError: Rate limit exceeded`
 
-**Solutions:**
+**Cause**: API requests are being made too frequently, exceeding the allowed rate limit.
+
+**Resolution:**
 
 ```python
 from rezen.exceptions import RateLimitError
