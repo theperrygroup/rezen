@@ -387,7 +387,7 @@ The following sections provide auto-generated documentation from the source code
 
     Understand error handling and exception types
 
--   [:material-file-document: **Examples**](../examples.md)
+-   [:material-file-document: **Examples**](../guides/examples.md)
 
     See practical usage examples
 

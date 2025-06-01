@@ -708,13 +708,13 @@ We use [Semantic Versioning](https://semver.org/):
 
 - **GitHub Discussions**: For general questions about contributing
 - **Discord/Slack**: For real-time development chat (if available)
-- **Email**: dev-support@rezen.com for private questions
+- **Email**: support@rezen.com for private questions
 
 ### Resources
 
 - **Style Guide**: Follow PEP 8 and project conventions above
-- **API Documentation**: [docs/api-reference.md](api-reference.md)
-- **Examples**: [docs/examples.md](examples.md)
+- **API Documentation**: [docs/api/index.md](../api/index.md)
+- **Examples**: [docs/guides/examples.md](../guides/examples.md)
 - **Python Docs**: [docs.python.org](https://docs.python.org/)
 
 ---

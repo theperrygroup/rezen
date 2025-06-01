@@ -814,7 +814,7 @@ collect_debug_info()
 
 ### Support Channels
 
-- **Documentation**: [API Reference](api-reference.md)
+- **Documentation**: [API Reference](../api/index.md)
 - **Examples**: [Usage Examples](examples.md)
 - **GitHub Issues**: Create an issue with debug information
 - **Email Support**: support@rezen.com

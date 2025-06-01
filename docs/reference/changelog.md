@@ -40,7 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 - **DOCKER_README.md**: Comprehensive Docker setup and usage guide
-- **CURSOR_DOCKER_GUIDE.md**: Quick start guide specifically for Cursor IDE users
 - **Agent Development Guide**: Instructions for creating custom background agents
 - **Deployment Examples**: Production deployment patterns and best practices
 
@@ -305,5 +304,5 @@ Found a bug or want to contribute? See our [Contributing Guide](contributing.md)
 ## Support
 
 - **Documentation**: [Full Documentation](index.md)
-- **GitHub Issues**: [Report Issues](https://github.com/your-org/rezen-python-client/issues)
+- **GitHub Issues**: [Report Issues](https://github.com/theperrygroup/rezen/issues)
 - **Email**: [support@rezen.com](mailto:support@rezen.com)
