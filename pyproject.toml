@@ -7,7 +7,7 @@ name = "rezen"
 version = "1.1.5"
 description = "Python wrapper for The Real Brokerage ReZEN API - Transaction Builder, Transactions, Teams, Agents, and Directory management"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "The Perry Group", email = "dev@theperrygroup.com"}
 ]
