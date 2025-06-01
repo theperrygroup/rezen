@@ -1,0 +1,54 @@
+services:
+  rezen-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rezen-background-agent
+    restart: unless-stopped
+    environment:
+      # ReZEN API configuration
+      - REZEN_API_KEY=${REZEN_API_KEY:-your_api_key_here }
+      # Python configuration
+      - PYTHONPATH=/app
+      - TZ=UTC
+    volumes:
+      # Mount agent scripts directory
+      - ./agents:/app/agents
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Optional: mount a custom .env file
+      - ./.env:/app/.env:ro
+    working_dir: /app
+    # Keep container running for background agents
+    command: tail -f /dev/null
+
+    # Uncomment below to run a specific agent script on startup
+    # command: python agents/my_agent.py
+
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Optional: Add a development service for testing
+  rezen-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rezen-dev
+    environment:
+      - REZEN_API_KEY=${REZEN_API_KEY:-your_api_key_here }
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
