@@ -5,13 +5,47 @@
 [![License](https://img.shields.io/github/license/theperrygroup/rezen.svg)](https://github.com/theperrygroup/rezen/blob/main/LICENSE)
 [![Coverage](https://img.shields.io/codecov/c/github/theperrygroup/rezen.svg)](https://codecov.io/gh/theperrygroup/rezen)
 
-{!_includes/description.md!}
+The **official Python client** for the ReZEN Real Estate API. Build powerful real estate applications with comprehensive transaction management, agent networking, and team operations.
 
 ## 🚀 Quick Start
 
 Get up and running in 60 seconds:
 
-{!_includes/quick-start.md!}
+```bash
+pip install rezen
+```
+
+```python
+from rezen import RezenClient
+
+# Initialize main client
+client = RezenClient()
+
+# Search for active teams
+teams = client.teams.search_teams(status="ACTIVE")
+
+# Search for agents in California
+agents = client.agents.search_active_agents(state_or_province=["CALIFORNIA"])
+
+# Create a transaction
+response = client.transaction_builder.create_transaction_builder()
+transaction_id = response['id']
+
+# Add property details
+client.transaction_builder.update_location_info(transaction_id, {
+    "address": "123 Main Street",
+    "city": "Anytown",
+    "state": "CA",
+    "zipCode": "90210"
+})
+
+# Use Directory API for vendor management through main client
+vendors = client.directory.search_vendors(
+    page_number=0,
+    page_size=20,
+    roles=["TITLE_ESCROW", "LENDER"]
+)
+```
 
 **[→ Get Started](quickstart.md)**{ .md-button .md-button--primary }
 **[→ API Reference](api-reference.md)**{ .md-button }
@@ -91,7 +125,14 @@ Integrate ReZEN with your existing systems:
 
 ## 📊 API Coverage
 
-{!_includes/api-coverage.md!}
+| **API Section** | **Endpoints** | **Status** |
+|-----------------|---------------|------------|
+| Transaction Builder | 52 endpoints | ✅ Complete |
+| Transactions | 49 endpoints | ✅ Complete |
+| Agents | 36 endpoints | ✅ Complete |
+| Teams | 2 endpoints | ✅ Complete |
+| Directory | 16 endpoints | ✅ Complete |
+| **Total** | **155 endpoints** | **✅ Complete** |
 
 ---
 
