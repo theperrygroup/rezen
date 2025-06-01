@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from .base_client import BaseClient
-from .enums import Country, StateOrProvince
+from .enums import Country, SortDirection, StateOrProvince
 
 
 class AgentStatus(Enum):
@@ -16,13 +16,6 @@ class AgentStatus(Enum):
     INACTIVE = "INACTIVE"
     REJECTED = "REJECTED"
     RESURRECTING = "RESURRECTING"
-
-
-class AgentSortDirection(Enum):
-    """Sort direction for agent queries."""
-
-    ASC = "ASC"
-    DESC = "DESC"
 
 
 class AgentSortField(Enum):
@@ -248,7 +241,7 @@ class AgentsClient(BaseClient):
         agent_id: str,
         page_number: Optional[int] = None,
         page_size: Optional[int] = None,
-        sort_direction: Optional[Union[AgentSortDirection, str]] = None,
+        sort_direction: Optional[Union[SortDirection, str]] = None,
     ) -> Dict[str, Any]:
         """
         Search payment settings history with the given criteria.
@@ -273,7 +266,7 @@ class AgentsClient(BaseClient):
         if sort_direction:
             params["sortDirection"] = (
                 sort_direction.value
-                if isinstance(sort_direction, AgentSortDirection)
+                if isinstance(sort_direction, SortDirection)
                 else sort_direction
             )
 
@@ -385,7 +378,7 @@ class AgentsClient(BaseClient):
         self,
         page_number: Optional[int] = None,
         page_size: Optional[int] = None,
-        sort_direction: Optional[Union[AgentSortDirection, str]] = None,
+        sort_direction: Optional[Union[SortDirection, str]] = None,
         sort_by: Optional[List[Union[AgentSortField, str]]] = None,
         name: Optional[str] = None,
         non_reportable: Optional[List[bool]] = None,
@@ -419,7 +412,7 @@ class AgentsClient(BaseClient):
         if sort_direction:
             params["sortDirection"] = (
                 sort_direction.value
-                if isinstance(sort_direction, AgentSortDirection)
+                if isinstance(sort_direction, SortDirection)
                 else sort_direction
             )
         if sort_by:

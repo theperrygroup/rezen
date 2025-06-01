@@ -5,16 +5,10 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from .base_client import BaseClient
+from .enums import SortDirection
 
 
-class SortDirection(Enum):
-    """Sort direction options."""
-
-    ASC = "ASC"
-    DESC = "DESC"
-
-
-class SortField(Enum):
+class TeamSortField(Enum):
     """Sort field options for teams."""
 
     ID = "ID"
@@ -68,7 +62,7 @@ class TeamsClient(BaseClient):
         page_size: Optional[int] = None,
         sort_direction: Optional[Union[SortDirection, str]] = None,
         sort_by: Optional[
-            Union[List[Union[SortField, str]], Union[SortField, str]]
+            Union[List[Union[TeamSortField, str]], Union[TeamSortField, str]]
         ] = None,
         team_id: Optional[str] = None,
         name: Optional[str] = None,
@@ -139,14 +133,14 @@ class TeamsClient(BaseClient):
                 # Handle list of sort fields
                 sort_values = []
                 for field in sort_by:
-                    if isinstance(field, SortField):
+                    if isinstance(field, TeamSortField):
                         sort_values.append(field.value)
                     else:
                         sort_values.append(field)
                 params["sortBy"] = sort_values
             else:
                 # Handle single sort field
-                if isinstance(sort_by, SortField):
+                if isinstance(sort_by, TeamSortField):
                     params["sortBy"] = [sort_by.value]
                 else:
                     params["sortBy"] = [sort_by]

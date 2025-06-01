@@ -98,10 +98,8 @@ class RezenClient:
             TeamsClient instance
         """
         if self._teams is None:
-            self._teams = TeamsClient(
-                api_key=self._api_key
-                # Note: teams uses a different base URL, handled in TeamsClient
-            )
+            # Teams uses yenta API, so don't pass custom base_url
+            self._teams = TeamsClient(api_key=self._api_key)
         return self._teams
 
     @property
@@ -112,10 +110,8 @@ class RezenClient:
             AgentsClient instance
         """
         if self._agents is None:
-            self._agents = AgentsClient(
-                api_key=self._api_key
-                # Note: agents uses a different base URL, handled in AgentsClient
-            )
+            # Agents uses yenta API, so don't pass custom base_url
+            self._agents = AgentsClient(api_key=self._api_key)
         return self._agents
 
     @property
@@ -126,8 +122,6 @@ class RezenClient:
             DirectoryClient instance
         """
         if self._directory is None:
-            self._directory = DirectoryClient(
-                api_key=self._api_key
-                # Note: directory uses a different base URL, handled in DirectoryClient
-            )
+            # Directory uses yenta API, so don't pass custom base_url
+            self._directory = DirectoryClient(api_key=self._api_key)
         return self._directory

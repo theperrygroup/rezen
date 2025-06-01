@@ -9,12 +9,10 @@ import responses
 
 from rezen.agents import (
     AgentsClient,
-    AgentSortDirection,
     AgentSortField,
     AgentStatus,
-    Country,
-    StateOrProvince,
 )
+from rezen.enums import Country, SortDirection, StateOrProvince
 from rezen.exceptions import AuthenticationError, NetworkError, ValidationError
 
 
@@ -238,7 +236,7 @@ class TestAgentsClient:
             agent_id=agent_id,
             page_number=0,
             page_size=10,
-            sort_direction=AgentSortDirection.DESC,
+            sort_direction=SortDirection.DESC,
         )
 
         request_url = responses.calls[0].request.url
@@ -370,7 +368,7 @@ class TestAgentsClient:
         result = client.search_active_agents(
             page_number=0,
             page_size=50,
-            sort_direction=AgentSortDirection.ASC,
+            sort_direction=SortDirection.ASC,
             sort_by=[AgentSortField.FIRST_NAME, AgentSortField.LAST_NAME],
             name="John",
             non_reportable=[False],
@@ -692,7 +690,7 @@ class TestAgentsClient:
         """Test agent enums have correct values."""
         assert AgentStatus.ACTIVE.value == "ACTIVE"
         assert AgentStatus.INACTIVE.value == "INACTIVE"
-        assert AgentSortDirection.ASC.value == "ASC"
+        assert SortDirection.ASC.value == "ASC"
         assert AgentSortField.FIRST_NAME.value == "FIRST_NAME"
         assert Country.UNITED_STATES.value == "UNITED_STATES"
         assert StateOrProvince.CALIFORNIA.value == "CALIFORNIA"

@@ -8,8 +8,9 @@ from unittest.mock import patch
 import pytest
 import responses
 
+from rezen.enums import SortDirection
 from rezen.exceptions import AuthenticationError, NotFoundError, ValidationError
-from rezen.teams import SortDirection, SortField, TeamsClient, TeamStatus, TeamType
+from rezen.teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 
 
 class TestTeamsClient:
@@ -98,7 +99,7 @@ class TestTeamsClient:
             page_number=1,
             page_size=50,
             sort_direction=SortDirection.DESC,
-            sort_by=[SortField.NAME, SortField.CREATED_AT],
+            sort_by=[TeamSortField.NAME, TeamSortField.CREATED_AT],
             team_id="550e8400-e29b-41d4-a716-446655440000",
             name="Platinum Team",
             search_text="platinum",
@@ -166,7 +167,7 @@ class TestTeamsClient:
             status=200,
         )
 
-        result = self.client.search_teams(sort_by=SortField.STATUS)
+        result = self.client.search_teams(sort_by=TeamSortField.STATUS)
 
         assert result == mock_response
 
@@ -369,13 +370,13 @@ class TestTeamsClient:
         assert SortDirection.ASC.value == "ASC"
         assert SortDirection.DESC.value == "DESC"
 
-        # Test SortField
-        assert SortField.ID.value == "ID"
-        assert SortField.NAME.value == "NAME"
-        assert SortField.STATUS.value == "STATUS"
-        assert SortField.TEAM_TYPE.value == "TEAM_TYPE"
-        assert SortField.LEADER_NAME.value == "LEADER_NAME"
-        assert SortField.CREATED_AT.value == "CREATED_AT"
+        # Test TeamSortField
+        assert TeamSortField.ID.value == "ID"
+        assert TeamSortField.NAME.value == "NAME"
+        assert TeamSortField.STATUS.value == "STATUS"
+        assert TeamSortField.TEAM_TYPE.value == "TEAM_TYPE"
+        assert TeamSortField.LEADER_NAME.value == "LEADER_NAME"
+        assert TeamSortField.CREATED_AT.value == "CREATED_AT"
 
         # Test TeamStatus
         assert TeamStatus.ACTIVE.value == "ACTIVE"

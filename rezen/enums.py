@@ -3,6 +3,13 @@
 from enum import Enum
 
 
+class SortDirection(Enum):
+    """Sort direction enumeration used across multiple API endpoints."""
+
+    ASC = "ASC"
+    DESC = "DESC"
+
+
 class Country(Enum):
     """Country enumeration."""
 

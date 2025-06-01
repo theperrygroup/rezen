@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Future fixes
 
+## [1.1.4] - 2025-01-06
+
+### Fixed
+- **Client Base URL Handling**: Fixed RezenClient to properly handle custom base URLs for different API services. Teams, Agents, and Directory clients now correctly use their default yenta base URL instead of inheriting custom base URLs from the main client
+- **Code Style**: Resolved all Black formatting inconsistencies and import sorting issues
+- **Unused Imports**: Removed unused imports from transaction_builder.py and transactions.py modules
+- **Line Length**: Fixed long lines in base_client.py for better code readability
+
+### Technical Improvements
+- All 266 tests passing with 100% code coverage maintained
+- Improved code formatting consistency across the entire codebase
+- Enhanced type safety with proper import organization
+
 ## [1.1.1] - 2024-01-21
 
 ### Fixed
