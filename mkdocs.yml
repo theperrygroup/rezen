@@ -1,10 +1,10 @@
 site_name: ReZEN Python API Client
 site_description: Modern Python client for the ReZEN real estate transaction API
-site_url: https://your-username.github.io/rezen
+site_url: https://theperrygroup.github.io/rezen
 
 # Repository
-repo_name: your-username/rezen
-repo_url: https://github.com/your-username/rezen
+repo_name: theperrygroup/rezen
+repo_url: https://github.com/theperrygroup/rezen
 edit_uri: edit/main/docs/
 
 # Copyright
@@ -110,7 +110,7 @@ markdown_extensions:
   - pymdownx.magiclink:
       normalize_issue_symbols: true
       repo_url_shorthand: true
-      user: your-username
+      user: theperrygroup
       repo: rezen
   - pymdownx.mark
   - pymdownx.smartsymbols
@@ -192,6 +192,6 @@ extra:
   generator: false
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/rezen
+      link: https://github.com/theperrygroup/rezen
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/rezen/
