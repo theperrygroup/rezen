@@ -362,7 +362,7 @@ Test your client setup with a simple API call:
 
     Access comprehensive agent search and management
 
--   [:material-file-document: **Examples**](../examples.md)
+-   [:material-file-document: **Examples**](../guides/examples.md)
 
     See practical examples and use cases
 

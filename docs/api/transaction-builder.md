@@ -812,7 +812,7 @@ Create and manage transaction builders with full participant and property manage
 
     Find and manage agent information
 
--   [:material-file-document: **Examples**](../examples.md)
+-   [:material-file-document: **Examples**](../guides/examples.md)
 
     See more practical usage examples
 
