@@ -303,6 +303,6 @@ Found a bug or want to contribute? See our [Contributing Guide](contributing.md)
 
 ## Support
 
-- **Documentation**: [Full Documentation](index.md)
+- **Documentation**: [Full Documentation](../index.md)
 - **GitHub Issues**: [Report Issues](https://github.com/theperrygroup/rezen/issues)
 - **Email**: [support@rezen.com](mailto:support@rezen.com)

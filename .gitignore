@@ -288,7 +288,7 @@ pid.txt
 .env.production
 
 # Cursor IDE
-.cursor/
+.cursor/rules/
 
 # Task tracking and development artifacts
 tasks/

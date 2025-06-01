@@ -350,15 +350,15 @@ Test your client setup with a simple API call:
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [:material-hammer-wrench: **Transaction Builder**](../api/transaction-builder.md)
 
     Start creating transactions with the Transaction Builder API
 
--   [:material-account-group: **Teams API**](teams.md)
+-   [:material-account-group: **Teams API**](../api/teams.md)
 
     Search and manage team information
 
--   [:material-account-tie: **Agents API**](agents.md)
+-   [:material-account-tie: **Agents API**](../api/agents.md)
 
     Access comprehensive agent search and management
 
