@@ -16,20 +16,22 @@ pip install rezen
 ```
 
 ```python
+from typing import Dict, List, Any
+
 from rezen import RezenClient
 
 # Initialize main client
-client = RezenClient()
+client: RezenClient = RezenClient()
 
 # Search for active teams
-teams = client.teams.search_teams(status="ACTIVE")
+teams: List[Dict[str, Any]] = client.teams.search_teams(status="ACTIVE")
 
 # Search for agents in California
-agents = client.agents.search_active_agents(state_or_province=["CALIFORNIA"])
+agents: List[Dict[str, Any]] = client.agents.search_active_agents(state_or_province=["CALIFORNIA"])
 
 # Create a transaction
-response = client.transaction_builder.create_transaction_builder()
-transaction_id = response['id']
+response: Dict[str, Any] = client.transaction_builder.create_transaction_builder()
+transaction_id: str = response['id']
 
 # Add property details
 client.transaction_builder.update_location_info(transaction_id, {
@@ -40,15 +42,15 @@ client.transaction_builder.update_location_info(transaction_id, {
 })
 
 # Use Directory API for vendor management through main client
-vendors = client.directory.search_vendors(
+vendors: List[Dict[str, Any]] = client.directory.search_vendors(
     page_number=0,
     page_size=20,
     roles=["TITLE_ESCROW", "LENDER"]
 )
 ```
 
-**[→ Get Started](quickstart.md)**{ .md-button .md-button--primary }
-**[→ API Reference](api-reference.md)**{ .md-button }
+**[→ Get Started](getting-started/quickstart.md)**{ .md-button .md-button--primary }
+**[→ API Reference](api/index.md)**{ .md-button }
 
 ---
 
@@ -62,7 +64,7 @@ vendors = client.directory.search_vendors(
 
     Complete transaction lifecycle management from creation to closing, with support for all participant types and financial operations.
 
-    [:octicons-arrow-right-24: Learn more](api-reference.md#transaction-builder-api)
+    [:octicons-arrow-right-24: Learn more](api/transaction-builder.md)
 
 -   :material-account-group: **Agent & Team Operations**
 
@@ -70,7 +72,7 @@ vendors = client.directory.search_vendors(
 
     Comprehensive agent search, network hierarchy management, and team operations with advanced filtering capabilities.
 
-    [:octicons-arrow-right-24: Learn more](api-reference.md#agents-api)
+    [:octicons-arrow-right-24: Learn more](api/agents.md)
 
 -   :material-cog: **Type-Safe & Robust**
 
@@ -78,7 +80,7 @@ vendors = client.directory.search_vendors(
 
     Complete type hints, comprehensive error handling, and 100% test coverage for production-ready applications.
 
-    [:octicons-arrow-right-24: Learn more](contributing.md#testing-guidelines)
+    [:octicons-arrow-right-24: Learn more](development/contributing.md)
 
 -   :material-book-open: **Well Documented**
 
@@ -86,7 +88,7 @@ vendors = client.directory.search_vendors(
 
     Extensive documentation with real-world examples, troubleshooting guides, and comprehensive API reference.
 
-    [:octicons-arrow-right-24: Learn more](examples.md)
+    [:octicons-arrow-right-24: Learn more](guides/examples.md)
 
 </div>
 
@@ -180,14 +182,16 @@ graph TB
 ### Create a Complete Transaction
 
 ```python
-from rezen import RezenClient
 from datetime import datetime, timedelta
+from typing import Dict, Any
 
-client = RezenClient()
+from rezen import RezenClient
+
+client: RezenClient = RezenClient()
 
 # Create transaction builder
-response = client.transaction_builder.create_transaction_builder()
-transaction_id = response['id']
+response: Dict[str, Any] = client.transaction_builder.create_transaction_builder()
+transaction_id: str = response['id']
 
 # Add property details
 client.transaction_builder.update_location_info(transaction_id, {
@@ -198,7 +202,7 @@ client.transaction_builder.update_location_info(transaction_id, {
 })
 
 # Set pricing and timeline
-closing_date = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
+closing_date: str = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
 client.transaction_builder.update_price_and_date_info(transaction_id, {
     "purchase_price": 850000,
     "closing_date": closing_date
@@ -218,19 +222,25 @@ client.transaction_builder.submit_transaction(transaction_id)
 ### Agent Network Analysis
 
 ```python
+from typing import Dict, List, Any
+
+from rezen import RezenClient
+
+client: RezenClient = RezenClient()
+
 # Find agents in California
-agents = client.agents.search_active_agents(
+agents: List[Dict[str, Any]] = client.agents.search_active_agents(
     state_or_province=["CALIFORNIA"],
     page_size=50
 )
 
 # Analyze agent's network
 for agent in agents[:5]:
-    agent_id = agent['id']
+    agent_id: str = agent['id']
 
     # Get network statistics
-    network_stats = client.agents.get_network_size_by_tier(agent_id)
-    front_line = client.agents.get_front_line_agents_info(agent_id)
+    network_stats: List[Dict[str, Any]] = client.agents.get_network_size_by_tier(agent_id)
+    front_line: List[Dict[str, Any]] = client.agents.get_front_line_agents_info(agent_id)
 
     print(f"Agent {agent['first_name']} {agent['last_name']}:")
     print(f"  Network tiers: {len(network_stats)}")
@@ -240,8 +250,14 @@ for agent in agents[:5]:
 ### Directory Management
 
 ```python
+from typing import Dict, List, Any
+
+from rezen import RezenClient
+
+client: RezenClient = RezenClient()
+
 # Search for vendors
-vendors = client.directory.search_vendors(
+vendors: List[Dict[str, Any]] = client.directory.search_vendors(
     page_number=0,
     page_size=20,
     is_archived=False,
@@ -249,13 +265,13 @@ vendors = client.directory.search_vendors(
 )
 
 # Create a new person
-person_data = {
+person_data: Dict[str, Any] = {
     "firstName": "Jane",
     "lastName": "Smith",
     "emailAddress": "jane@example.com",
     "phoneNumber": "555-0123"
 }
-person = client.directory.create_person(person_data)
+person: Dict[str, Any] = client.directory.create_person(person_data)
 
 # Link person to vendor
 client.directory.link_person(person['id'], {
@@ -263,7 +279,7 @@ client.directory.link_person(person['id'], {
 })
 ```
 
-**[→ More Examples](examples.md)**
+**[→ More Examples](guides/examples.md)**
 
 ---
 
@@ -317,14 +333,16 @@ Set up your API credentials:
 ### 3. First API Call
 
 ```python
+from typing import List, Dict, Any
+
 from rezen import RezenClient
 
-client = RezenClient()
-teams = client.teams.search_teams(status="ACTIVE", page_size=10)
+client: RezenClient = RezenClient()
+teams: List[Dict[str, Any]] = client.teams.search_teams(status="ACTIVE", page_size=10)
 print(f"Found {len(teams)} active teams")
 ```
 
-**[→ Complete Installation Guide](installation.md)**
+**[→ Complete Installation Guide](getting-started/installation.md)**
 
 ---
 
@@ -332,27 +350,27 @@ print(f"Found {len(teams)} active teams")
 
 <div class="grid cards" markdown>
 
--   **[🚀 Quick Start](quickstart.md)**
+-   **[🚀 Quick Start](getting-started/quickstart.md)**
 
     5-minute guide to get up and running
 
--   **[📚 API Reference](api-reference.md)**
+-   **[📚 API Reference](api/index.md)**
 
     Complete API documentation with examples
 
--   **[💡 Examples](examples.md)**
+-   **[💡 Examples](guides/examples.md)**
 
     Real-world usage patterns and best practices
 
--   **[🔧 Troubleshooting](troubleshooting.md)**
+-   **[🔧 Troubleshooting](guides/troubleshooting.md)**
 
     Common issues and debugging techniques
 
--   **[🤝 Contributing](contributing.md)**
+-   **[🤝 Contributing](development/contributing.md)**
 
     Help improve the ReZEN Python client
 
--   **[📋 Changelog](changelog.md)**
+-   **[📋 Changelog](reference/changelog.md)**
 
     Version history and release notes
 
@@ -383,4 +401,4 @@ The ReZEN Python client is released under the [MIT License](https://github.com/t
 
 ---
 
-**Ready to build powerful real estate applications?** **[Get Started →](quickstart.md)**
+**Ready to build powerful real estate applications?** **[Get Started →](getting-started/quickstart.md)**
