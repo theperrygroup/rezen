@@ -158,8 +158,8 @@ directory = DirectoryClient(
 
     Add directory contacts to transactions
 
--   [:material-rocket-launch: **Client Setup**](client-setup.md)
+-   [:material-rocket-launch: **Getting Started**](../getting-started/quickstart.md)
 
-    Configure both clients for your application
+    Complete setup guide for ReZEN clients
 
 </div>

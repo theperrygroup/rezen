@@ -950,4 +950,4 @@ if __name__ == '__main__':
 
 These examples demonstrate real-world usage patterns and best practices for the ReZEN API client. Each pattern can be adapted and combined based on your specific integration needs.
 
-For more specific use cases or custom patterns, refer to the [API Reference](api-reference.md) for detailed method documentation.
+For more specific use cases or custom patterns, refer to the [API Reference](../api/index.md) for detailed method documentation.

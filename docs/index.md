@@ -391,7 +391,7 @@ print(f"Found {len(teams)} active teams")
 
 - **🔍 API Status**: [status.rezen.com](https://status.rezen.com)
 - **📊 PyPI Package**: [pypi.org/project/rezen](https://pypi.org/project/rezen/)
-- **🐙 GitHub Repo**: [github.com/your-org/rezen-python-client](https://github.com/your-org/rezen-python-client)
+- **🐙 GitHub Repo**: [github.com/theperrygroup/rezen](https://github.com/theperrygroup/rezen)
 
 ---
 

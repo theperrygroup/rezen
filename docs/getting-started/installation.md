@@ -19,16 +19,16 @@ pip install rezen
 ### From Source
 
 ```bash
-git clone https://github.com/your-org/rezen-python-client.git
-cd rezen-python-client
+git clone https://github.com/theperrygroup/rezen.git
+cd rezen
 pip install .
 ```
 
 ### Development Installation
 
 ```bash
-git clone https://github.com/your-org/rezen-python-client.git
-cd rezen-python-client
+git clone https://github.com/theperrygroup/rezen.git
+cd rezen
 pip install -e .
 ```
 
