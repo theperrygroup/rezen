@@ -17,21 +17,52 @@ Comprehensive agent search, network management, and detailed information retriev
 
 ## Quick Start
 
-```python
-from rezen import RezenClient
-from rezen.enums import Country, StateOrProvince, AgentSortField
+=== ":material-rocket-launch: Basic Usage"
 
-client = RezenClient()
+    ```python
+    from rezen import RezenClient
 
-# Basic agent search
-agents = client.agents.search_active_agents(name="John", limit=10)
+    client = RezenClient()
 
-# Geographic search
-agents = client.agents.search_active_agents(
-    country=[Country.UNITED_STATES],
-    state_or_province=[StateOrProvince.CALIFORNIA]
-)
-```
+    # Simple agent search by name
+    agents = client.agents.search_active_agents(name="John", limit=10)
+    print(f"Found {len(agents)} agents named John")
+    ```
+
+=== ":material-cog: Advanced Filtering"
+
+    ```python
+    from rezen import RezenClient
+    from rezen.enums import Country, StateOrProvince, AgentSortField
+
+    client = RezenClient()
+
+    # Geographic search with sorting
+    agents = client.agents.search_active_agents(
+        country=[Country.UNITED_STATES],
+        state_or_province=[StateOrProvince.CALIFORNIA],
+        sort_by=[AgentSortField.LAST_NAME],
+        page_size=50
+    )
+    ```
+
+=== ":material-shield-check: Error Handling"
+
+    ```python
+    from rezen import RezenClient
+    from rezen.exceptions import RezenError, NotFoundError
+
+    client = RezenClient()
+
+    try:
+        agents = client.agents.search_active_agents(name="John")
+        if not agents:
+            print("No agents found with that name")
+        else:
+            print(f"Successfully found {len(agents)} agents")
+    except RezenError as e:
+        print(f"API error occurred: {e}")
+    ```
 
 ---
 

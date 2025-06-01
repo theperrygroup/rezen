@@ -6,6 +6,9 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
 ## 🚀 API Overview
 
+!!! success "✅ All APIs Operational"
+    All ReZEN API endpoints are fully operational with real-time data access.
+
 <div class="grid cards" markdown>
 
 -   :material-hammer-wrench:{ .lg .middle } **Transaction Builder**
@@ -49,6 +52,18 @@ Complete method reference for the ReZEN Python API client. This section covers a
     [:octicons-arrow-right-24: Directory API](directory.md)
 
 </div>
+
+---
+
+## 📊 API Status Overview
+
+| **API Section** | **Status** | **Endpoints** | **Coverage** |
+|-----------------|------------|---------------|--------------|
+| Transaction Builder | ✅ **Available** | 52 endpoints | Complete |
+| Transactions | ✅ **Available** | 49 endpoints | Complete |
+| Agents | ✅ **Available** | 36 endpoints | Complete |
+| Teams | ✅ **Available** | 2 endpoints | Complete |
+| Directory | ✅ **Available** | 16 endpoints | Complete |
 
 ---
 
