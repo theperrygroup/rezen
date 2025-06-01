@@ -5,8 +5,6 @@ from .agents import (
     AgentSortDirection,
     AgentSortField,
     AgentStatus,
-    Country,
-    StateOrProvince,
 )
 from .client import RezenClient
 from .directory import (
@@ -17,6 +15,7 @@ from .directory import (
     PersonSortField,
     VendorSortField,
 )
+from .enums import Country, StateOrProvince
 from .exceptions import (
     AuthenticationError,
     NetworkError,

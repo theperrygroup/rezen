@@ -5,27 +5,27 @@
 [![License](https://img.shields.io/github/license/theperrygroup/rezen.svg)](https://github.com/theperrygroup/rezen/blob/main/LICENSE)
 [![Coverage](https://img.shields.io/codecov/c/github/theperrygroup/rezen.svg)](https://codecov.io/gh/theperrygroup/rezen)
 
-{!docs/_includes/description.md!}
+{!_includes/description.md!}
 
 ## 🚀 Quick Start
 
-{!docs/_includes/installation.md!}
+{!_includes/installation.md!}
 
-{!docs/_includes/quick-start.md!}
+{!_includes/quick-start.md!}
 
 ## ✨ Key Features
 
-{!docs/_includes/features.md!}
+{!_includes/features.md!}
 
 ## 📊 API Coverage
 
-{!docs/_includes/api-coverage.md!}
+{!_includes/api-coverage.md!}
 
 ## 📖 Documentation
 
 For comprehensive documentation, examples, and API reference:
 
-**[📚 Full Documentation →](https://rezen-python-client.readthedocs.io/)**
+**[📚 Full Documentation →](https://theperrygroup.github.io/rezen/)**
 
 ### Quick Links
 
@@ -61,7 +61,7 @@ mkdocs serve
 
 ## 🆘 Support
 
-- **📖 Documentation**: [Full Documentation](https://rezen-python-client.readthedocs.io/)
+- **📖 Documentation**: [Full Documentation](https://theperrygroup.github.io/rezen/)
 - **💬 Issues**: [GitHub Issues](../../issues)
 - **📧 Email**: [support@rezen.com](mailto:support@rezen.com)
 
