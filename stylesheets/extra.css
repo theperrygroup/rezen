@@ -1,0 +1,78 @@
+/* Extra CSS for ReZEN Documentation */
+
+/* Custom styles for better readability */
+.md-content__button {
+  color: var(--md-primary-fg-color);
+}
+
+/* Code block improvements */
+.highlight pre {
+  border-radius: 6px;
+}
+
+/* Grid cards spacing */
+.grid.cards {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Improve table styling */
+.md-typeset table:not([class]) {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Button styling */
+.md-button {
+  border-radius: 6px;
+}
+
+/* Navigation improvements */
+.md-nav__item .md-nav__link--active {
+  font-weight: 600;
+}
+
+/* Admonition improvements */
+.md-typeset .admonition {
+  border-radius: 6px;
+}
+
+/* Material Design Icons Support */
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* FontAwesome icons fallback */
+.fa, .fab, .fas, .far {
+  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands";
+}
+
+/* Ensure icon rendering in navigation and content */
+.md-nav__icon,
+.md-header__button .md-icon,
+.md-search__icon,
+.md-clipboard .md-icon {
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+/* Fix for Material Design icon rendering issues */
+[data-md-component="icon"] {
+  display: inline-block;
+  vertical-align: middle;
+}
