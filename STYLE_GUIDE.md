@@ -1,6 +1,6 @@
 # The Perry Group Python Style Guide
 
-This document outlines the coding standards and practices for the Perry Group Django projects. Following these guidelines ensures consistent, maintainable, and high-quality code.
+This document outlines the coding standards and practices for the Perry Group Python API wrapper projects. Following these guidelines ensures consistent, maintainable, and high-quality code.
 
 ## General Principles
 
@@ -14,15 +14,15 @@ This document outlines the coding standards and practices for the Perry Group Dj
 
 ### File Structure
 
-- One class per file when possible (with exceptions for closely related small classes)
-- Group related functionality in modules
-- Follow Django's app-based organization
+- One client class per file when possible (with exceptions for closely related utility classes)
+- Group related API endpoints in modules (e.g., `agents.py`, `transactions.py`, `teams.py`)
+- Follow logical API grouping and service boundaries
 
 ### Import Order
 
 1. Python standard library imports
-2. Django and third-party imports
-3. Local application imports
+2. Third-party library imports (requests, pydantic, etc.)
+3. Local package imports
 4. Import specific classes/functions rather than modules where practical
 
 Example:
@@ -30,14 +30,14 @@ Example:
 import re
 import logging
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
-from django.db import models
-from django.conf import settings
-from bs4 import BeautifulSoup
+import requests
+from pydantic import BaseModel
+from requests.adapters import HTTPAdapter
 
-from apps.core.helpers import clean_phone, clean_email
-from apps.opendoor_leads.models import OpendoorLead
+from .base_client import BaseClient
+from .exceptions import RezenError, ValidationError
 ```
 
 ## Code Style
@@ -45,16 +45,19 @@ from apps.opendoor_leads.models import OpendoorLead
 ### Class Structure
 
 - Use object-oriented design principles
-- Break large classes into smaller, focused ones
-- Follow single responsibility principle
+- Break large client classes into focused endpoint groups
+- Follow single responsibility principle for each client class
 
 ```python
-class LeadExtractor:
-    """Extract lead data from external sources."""
+class AgentsClient:
+    """Client for agent-related API endpoints."""
     
-    @staticmethod
-    def extract_data(source_data: Dict) -> Dict:
-        """Extract normalized lead data from source."""
+    def __init__(self, base_client: BaseClient) -> None:
+        """Initialize the agents client."""
+        self._client = base_client
+    
+    def get_agent(self, agent_id: str) -> Dict[str, Any]:
+        """Get agent by ID."""
         # Implementation
 ```
 
@@ -108,19 +111,24 @@ def clean_phone(phone: str) -> str:
 
 ## Error Handling
 
-- Use specific exception types
-- Always log exceptions with context
-- Handle errors at appropriate levels
+- Use specific exception types for different API error conditions
+- Always log API errors with context including request details
+- Handle errors at appropriate levels (network, authentication, validation)
 
 ```python
 try:
-    result = process_data(data)
-except ValueError as e:
-    logger.error(f"Invalid data format: {e}")
-    return None
-except ConnectionError as e:
-    logger.error(f"Failed to connect: {e}")
-    raise ServiceUnavailableError(f"Service unavailable: {e}")
+    response = self._client.make_request("GET", f"/agents/{agent_id}")
+    return response.json()
+except requests.ConnectionError as e:
+    logger.error(f"Network error fetching agent {agent_id}: {e}")
+    raise NetworkError(f"Failed to connect to ReZEN API: {e}")
+except requests.HTTPError as e:
+    if e.response.status_code == 404:
+        raise NotFoundError(f"Agent {agent_id} not found")
+    elif e.response.status_code == 401:
+        raise AuthenticationError("Invalid API credentials")
+    else:
+        raise RezenError(f"API error: {e}")
 ```
 
 ## Testing
@@ -141,12 +149,33 @@ This project uses the following tools to enforce style:
 
 Configuration files for these tools are in the project root.
 
-## Models and Database
+## Data Models and Validation
 
-- Always define `__str__` method for models
+- Use Pydantic models for request/response validation when appropriate
 - Include docstrings for model classes and complex fields
-- Use appropriate field types and validators
-- Add Meta classes with proper ordering and constraints
+- Use appropriate type hints and validators
+- Define clear data transformation methods for API responses
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+
+class Agent(BaseModel):
+    """Agent data model."""
+    
+    id: str = Field(..., description="Unique agent identifier")
+    email: str = Field(..., description="Agent email address")
+    first_name: str = Field(..., description="Agent first name")
+    last_name: str = Field(..., description="Agent last name")
+    status: str = Field(..., description="Agent status")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    
+    class Config:
+        """Pydantic model configuration."""
+        allow_population_by_field_name = True
+        validate_assignment = True
+```
 
 ## Git Commits
 
