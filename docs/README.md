@@ -1,181 +1,252 @@
-# ReZEN API Documentation
+# ReZEN Python Client Documentation
 
-Welcome to the comprehensive documentation for the ReZEN Python API client.
+This directory contains the complete documentation for the ReZEN Python API client, built with [MkDocs](https://mkdocs.org) and the [Material theme](https://squidfunk.github.io/mkdocs-material/).
 
-## 📖 Documentation Structure
+## 📁 Structure
 
-### 🔄 Workflow Documentation
+```
+docs/
+├── README.md                 # This file
+├── index.md                  # Home page
+├── installation.md           # Installation guide
+├── quickstart.md            # Quick start guide
+├── examples.md              # Usage examples and patterns
+├── api-reference.md         # Complete API reference
+├── troubleshooting.md       # Troubleshooting guide
+├── contributing.md          # Contributing guidelines
+├── changelog.md             # Version history
+├── deployment.md            # Deployment guide
+└── requirements.txt         # Documentation dependencies
+```
 
-Complete guides for common patterns and use cases:
+## 🚀 Quick Start
 
-- **[🏗️ Transaction Builder Workflows](workflows/transaction-builder.md)**  
-  Create and manage transaction builders from scratch, add participants, and submit transactions
+### Local Development
 
-- **[📋 Transaction Management Workflows](workflows/transactions.md)**  
-  Work with live transactions, manage participants, handle finances, and generate reports
+```bash
+# Install dependencies
+pip install -r docs/requirements.txt
 
-- **[🤝 Agent Management Workflows](workflows/agents.md)**  
-  Find agents, access network hierarchies, manage financial information, and integrate with transactions
+# Serve documentation locally
+mkdocs serve
 
-- **[👥 Team Management Workflows](workflows/teams.md)**  
-  Search for teams, get team details, and integrate teams with transaction workflows
+# Open http://127.0.0.1:8000 in your browser
+```
 
-- **[🔑 Authentication & Setup](workflows/authentication.md)**  
-  Configure API keys, set up environments, and validate authentication
+### Using the Deployment Script
 
-- **[🚨 Error Handling Workflows](workflows/error-handling.md)**  
-  Handle errors gracefully, implement retry logic, and troubleshoot common issues
+```bash
+# Make script executable
+chmod +x scripts/deploy_docs.sh
 
-- **[🧪 Testing Workflows](workflows/testing.md)**  
-  Test your integration with unit tests, mocked responses, and live API testing
+# Check if ready for deployment
+./scripts/deploy_docs.sh check
 
-### 📚 API Reference
+# Test build
+./scripts/deploy_docs.sh test
 
-Detailed technical reference (future expansion):
+# Serve locally
+./scripts/deploy_docs.sh serve
 
-- **[Transaction Builder API](api-reference/)** - Endpoint specifications and examples
-- **[Transactions API](api-reference/)** - Complete API reference  
-- **[Agents API](api-reference/)** - Agent endpoints documentation
-- **[Teams API](api-reference/)** - Team endpoints documentation
+# Deploy to GitHub Pages (if configured)
+./scripts/deploy_docs.sh deploy
+```
 
-## 🚀 Quick Start Paths
+## 🛠️ Configuration
 
-### New to ReZEN API?
-1. Start with **[Authentication & Setup](workflows/authentication.md)** to configure your environment
-2. Try **[Teams](workflows/teams.md)** to find your team ID
-3. Use **[Agents](workflows/agents.md)** to search for agent information
-4. Follow **[Transaction Builder](workflows/transaction-builder.md)** to create your first transaction
+### MkDocs Configuration
 
-### Building Production Applications?
-1. Review **[Error Handling](workflows/error-handling.md)** for robust applications
-2. Implement **[Testing](workflows/testing.md)** for reliable code
-3. Use **[Transaction Management](workflows/transactions.md)** for live transaction operations
+The documentation is configured via [`mkdocs.yml`](../mkdocs.yml) in the project root:
 
-### Integration Developer?
-1. **[Transaction Builder](workflows/transaction-builder.md)** - Core transaction creation
-2. **[Agents](workflows/agents.md)** - Agent discovery and network management
-3. **[Teams](workflows/teams.md)** - Team assignment for agents
-4. **[Error Handling](workflows/error-handling.md)** - Production-ready error handling
+- **Theme**: Material Design with dark/light mode
+- **Features**: Navigation tabs, search, code copying
+- **Extensions**: Code highlighting, diagrams, admonitions
+- **Navigation**: Organized into logical sections
 
-## 🎯 Common Use Cases
+### Dependencies
 
-### 🏠 Real Estate Transaction Processing
-- Create purchase/sale transactions
-- Assign agents to teams
-- Add buyers, sellers, and service providers
-- Handle escrow and financial operations
+Documentation dependencies are defined in [`requirements.txt`](requirements.txt):
 
-### 🤝 Agent Management
-- Find agents by name, email, or location
-- Access agent network hierarchies and downlines
-- Manage agent financial information and commission plans
-- Integrate agents with transaction workflows
+- `mkdocs` - Static site generator
+- `mkdocs-material` - Material Design theme
+- `mkdocs-minify-plugin` - HTML/CSS/JS minification
+- `pymdown-extensions` - Enhanced Markdown features
 
-### 👥 Team & Network Operations
-- Find agent teams for commission tracking
-- Manage agent participants in transactions
-- Track agent performance across transactions
-- Analyze network hierarchies and sponsor trees
+## 🚀 Deployment Options
 
-### 💰 Financial Operations
-- Process commission payments
-- Handle escrow deposits and withdrawals
-- Manage banking information
-- Generate financial reports
+### 1. GitHub Pages (Recommended)
 
-### 📄 Documentation & Reporting
-- Generate transaction summaries
-- Export transaction data
-- Create compliance reports
+Automatic deployment via GitHub Actions:
 
-## 🔧 Development Resources
+- **Workflow**: [`.github/workflows/docs.yml`](../.github/workflows/docs.yml)
+- **Triggers**: Push to main, docs changes, manual
+- **Features**: Build caching, PR previews, strict validation
+
+**Setup**:
+1. Go to repository **Settings** → **Pages**
+2. Set **Source** to "GitHub Actions"
+3. Push to main branch to trigger deployment
+
+### 2. Netlify
+
+Alternative deployment with enhanced features:
+
+- **Workflow**: [`.github/workflows/deploy-netlify.yml`](../.github/workflows/deploy-netlify.yml)
+- **Features**: Branch previews, form handling, edge functions
+
+**Setup**:
+1. Set `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` secrets
+2. Enable the workflow
+3. Push to main branch
+
+### 3. Vercel
+
+High-performance deployment with global CDN:
+
+- **Config**: [`vercel.json`](../vercel.json)
+- **Features**: Zero-config, preview URLs, analytics
+
+**Setup**:
+1. Connect repository in Vercel dashboard
+2. Automatic deployment on push
+
+### 4. Read the Docs
+
+Documentation-focused hosting with multiple formats:
+
+- **Config**: [`.readthedocs.yml`](../.readthedocs.yml)
+- **Features**: PDF/ePub, versioning, search
+
+**Setup**:
+1. Import project on readthedocs.org
+2. Automatic builds on push
+
+## 📝 Writing Documentation
+
+### Markdown Guidelines
+
+- Use clear, concise language
+- Include working code examples
+- Add type hints and docstrings
+- Use admonitions for important notes
 
 ### Code Examples
-Each workflow guide includes complete, runnable examples that you can copy and adapt for your use case.
 
-### Error Handling
-Comprehensive error handling patterns with specific solutions for common issues.
+```python
+# ✅ Good: Complete, runnable example
+from rezen import RezenClient
 
-### Testing Support
-Full test suites and mocking strategies for reliable development.
-
-### Best Practices
-Industry-standard patterns for real estate API integration.
-
-## 📋 API Coverage
-
-| API Section | Endpoints | Documentation Status |
-|-------------|-----------|---------------------|
-| Transaction Builder | 60 endpoints | ✅ Complete workflows |
-| Transactions | 57 endpoints | ✅ Complete workflows |
-| Agents | 35 endpoints | ✅ Complete workflows |
-| Teams | 10 endpoints | ✅ Complete workflows |
-| **Total** | **162 endpoints** | **✅ Complete** |
-
-## 🆘 Getting Help
-
-### Workflow Issues
-- Check the specific workflow guide for your use case
-- Review the **[Error Handling](workflows/error-handling.md)** guide
-- Look at **[Common Issues](workflows/error-handling.md#-common-issues)** sections
-
-### API Questions
-- Consult the workflow documentation for your endpoint
-- Review code examples in the relevant workflow guide
-- Check error handling patterns for API-specific issues
-
-### Setup Problems
-- Start with **[Authentication & Setup](workflows/authentication.md)**
-- Review **[Testing](workflows/testing.md)** for validation approaches
-- Check environment configuration examples
-
-## 🔄 Workflow Connections
-
-The workflow guides are interconnected:
-
-```
-Authentication & Setup
-    ↓
-Teams (find team IDs) + Agents (find agent info)
-    ↓
-Transaction Builder (create transactions)
-    ↓
-Transaction Management (work with live transactions)
-    ↓
-Error Handling + Testing (production ready)
+client = RezenClient()
+teams = client.teams.search_teams(status="ACTIVE")
+print(f"Found {len(teams)} teams")
 ```
 
-## 🚧 Future Documentation
+### Admonitions
 
-Coming soon:
-- **API Reference** - Detailed endpoint specifications
-- **Webhook Integration** - Real-time transaction updates
-- **Advanced Patterns** - Complex integration scenarios
-- **Performance Optimization** - Scaling best practices
+```markdown
+!!! tip "Pro Tip"
+    Use environment variables for API keys
 
-## 🏗️ Contributing to Documentation
+!!! warning "Important"
+    Always validate input data before API calls
 
-Found an issue or want to improve the documentation?
+!!! note "Note"
+    This feature requires Python 3.7+
+```
 
-1. **Workflow Improvements** - Suggest better patterns or examples
-2. **Error Solutions** - Share solutions to new error scenarios  
-3. **Use Case Examples** - Contribute real-world integration examples
-4. **Code Samples** - Submit working code examples
+### Cross-References
+
+```markdown
+# Internal links
+[API Reference](api-reference.md)
+[Installation Guide](installation.md#setup)
+
+# External links
+[MkDocs Documentation](https://mkdocs.org)
+```
+
+## 🔧 Maintenance
+
+### Adding New Pages
+
+1. Create the Markdown file in `docs/`
+2. Add to navigation in `mkdocs.yml`
+3. Test locally with `mkdocs serve`
+4. Update cross-references as needed
+
+### Updating Navigation
+
+Edit the `nav` section in [`mkdocs.yml`](../mkdocs.yml):
+
+```yaml
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: installation.md
+    - Quick Start: quickstart.md
+  - Your New Section:
+    - New Page: new-page.md
+```
+
+### Troubleshooting
+
+Common issues and solutions:
+
+```bash
+# Build errors
+mkdocs build --strict  # Shows all warnings/errors
+
+# Missing dependencies
+pip install -r docs/requirements.txt
+
+# Navigation issues
+# Ensure all nav files exist in docs/
+
+# Broken links
+# Check relative paths and file names
+```
+
+## 📊 Analytics
+
+### Google Analytics
+
+Add your GA4 tracking ID to `mkdocs.yml`:
+
+```yaml
+extra:
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+```
+
+### Custom Analytics
+
+Add custom tracking code to `docs/javascripts/extra.js`.
+
+## 🤝 Contributing
+
+### Documentation Changes
+
+1. Edit Markdown files in `docs/`
+2. Test locally: `mkdocs serve`
+3. Create pull request
+4. CI will test the build automatically
+
+### Style Guide
+
+- Follow the [Contributing Guide](contributing.md)
+- Use consistent formatting
+- Include examples for code changes
+- Update relevant documentation
 
 ---
 
-## 📚 Quick Reference
+## 📞 Support
 
-| Task | Workflow Guide |
-|------|----------------|
-| Set up API access | [Authentication](workflows/authentication.md) |
-| Find agents | [Agents](workflows/agents.md) |
-| Find your team | [Teams](workflows/teams.md) |
-| Create a transaction | [Transaction Builder](workflows/transaction-builder.md) |
-| Work with live transactions | [Transactions](workflows/transactions.md) |
-| Handle errors | [Error Handling](workflows/error-handling.md) |
-| Test your code | [Testing](workflows/testing.md) |
+- **Documentation Issues**: [GitHub Issues](https://github.com/your-org/rezen-python-client/issues)
+- **MkDocs Help**: [MkDocs Documentation](https://mkdocs.org)
+- **Material Theme**: [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
 
 ---
 
-**🎉 Happy coding with the ReZEN API!** 
+**Happy documenting!** 📚 
