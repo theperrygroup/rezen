@@ -2,8 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/rezen.svg)](https://badge.fury.io/py/rezen)
 [![Python support](https://img.shields.io/pypi/pyversions/rezen.svg)](https://pypi.org/project/rezen/)
-[![License](https://img.shields.io/github/license/your-org/rezen-python-client.svg)](https://github.com/your-org/rezen-python-client/blob/main/LICENSE)
-[![Coverage](https://img.shields.io/codecov/c/github/your-org/rezen-python-client.svg)](https://codecov.io/gh/your-org/rezen-python-client)
+[![License](https://img.shields.io/github/license/theperrygroup/rezen.svg)](https://github.com/theperrygroup/rezen/blob/main/LICENSE)
+[![Coverage](https://img.shields.io/codecov/c/github/theperrygroup/rezen.svg)](https://codecov.io/gh/theperrygroup/rezen)
 
 The **official Python client** for the ReZEN Real Estate API. Build powerful real estate applications with comprehensive transaction management, agent networking, and team operations.
 
@@ -340,7 +340,7 @@ print(f"Found {len(teams)} active teams")
 
 ## 📄 License
 
-The ReZEN Python client is released under the [MIT License](https://github.com/your-org/rezen-python-client/blob/main/LICENSE).
+The ReZEN Python client is released under the [MIT License](https://github.com/theperrygroup/rezen/blob/main/LICENSE).
 
 ---
 

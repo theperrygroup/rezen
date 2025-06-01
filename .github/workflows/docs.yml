@@ -58,11 +58,26 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r docs/requirements.txt
+          pip install -r requirements-dev.txt
 
       - name: Configure Git for MkDocs
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install package for testing
+        run: |
+          pip install -e .
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=rezen --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
 
       - name: Build documentation
         run: |
