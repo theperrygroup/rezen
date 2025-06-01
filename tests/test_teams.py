@@ -113,6 +113,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "pageNumber=1" in request.url
         assert "pageSize=50" in request.url
         assert "sortDirection=DESC" in request.url
@@ -149,6 +150,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "sortDirection=ASC" in request.url
         assert "sortBy=NAME" in request.url
         assert "status=INACTIVE" in request.url
@@ -172,6 +174,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "sortBy=STATUS" in request.url
 
     @responses.activate
@@ -193,6 +196,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "sortBy=LEADER_NAME" in request.url
 
     @responses.activate
@@ -214,6 +218,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "sortBy=ID" in request.url
 
     @responses.activate
@@ -237,6 +242,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "createdAtStart=2023-01-01" in request.url
         assert "createdAtEnd=2023-12-31" in request.url
 
@@ -285,6 +291,7 @@ class TestTeamsClient:
 
         # Verify query parameters
         request = responses.calls[0].request
+        assert request.url is not None
         assert "pageNumber=2" in request.url
         assert "pageSize=10" in request.url
 

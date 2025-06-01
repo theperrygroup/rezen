@@ -749,6 +749,7 @@ class TestTransactionsClient:
 
         assert result == expected_response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "transactionIds=tx-1%2Ctx-2" in request.url  # URL-encoded comma
 
     @responses.activate
@@ -772,6 +773,7 @@ class TestTransactionsClient:
 
         assert result == expected_response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "pageNumber=1" in request.url
         assert "pageSize=25" in request.url
         assert "sortBy=CREATED_AT" in request.url
@@ -819,6 +821,7 @@ class TestTransactionsClient:
 
         assert result == expected_response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "pageNumber=0" in request.url
         assert "pageSize=20" in request.url
         assert "searchText=search+term" in request.url
@@ -865,6 +868,7 @@ class TestTransactionsClient:
 
         assert result == expected_response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "pageNumber=0" in request.url
         assert "pageSize=10" in request.url
         assert "searchText=listing+search" in request.url

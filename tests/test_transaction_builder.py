@@ -33,7 +33,9 @@ class TestTransactionBuilderClient:
 
         assert result == expected_response
         assert len(responses.calls) == 1
-        assert responses.calls[0].request.url.endswith(
+        request_url = responses.calls[0].request.url
+        assert request_url is not None
+        assert request_url.endswith(
             f"/transaction-builder/{self.transaction_id}/title"
         )
 
@@ -84,6 +86,7 @@ class TestTransactionBuilderClient:
 
         # Check that query parameters were included
         request = responses.calls[0].request
+        assert request.url is not None
         assert "role=BUYERS_AGENT" in request.url
         assert "receivesInvoice=True" in request.url
         assert "type=AGENT" in request.url
@@ -213,7 +216,9 @@ class TestTransactionBuilderClient:
 
         assert result == expected_response
         # Check query parameter
-        assert "opcity=True" in responses.calls[0].request.url
+        request_url = responses.calls[0].request.url
+        assert request_url is not None
+        assert "opcity=True" in request_url
 
     @responses.activate
     def test_update_mortgage_info(self) -> None:
@@ -421,6 +426,7 @@ class TestTransactionBuilderClient:
 
         assert result == expected_response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "limit=10" in request.url
         assert "from=0" in request.url
         assert "yentaId=user-123" in request.url
@@ -443,6 +449,7 @@ class TestTransactionBuilderClient:
 
         assert result == expected_response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "limit=20" in request.url
         assert "from=10" in request.url
         assert "type=LISTING" in request.url
@@ -572,6 +579,7 @@ class TestTransactionBuilderClient:
 
         assert result == "new-builder-123"  # Method extracts ID from response
         request = responses.calls[0].request
+        assert request.url is not None
         assert "type=LISTING" in request.url
 
     @responses.activate

@@ -1,6 +1,7 @@
 """Tests for AgentsClient."""
 
 from datetime import date
+from typing import cast, List, Dict, Any
 
 import pytest
 import responses
@@ -43,9 +44,11 @@ class TestAgentsClient:
         result = client.get_agents_by_email("test@example.com")
 
         assert len(responses.calls) == 1
-        assert "emailAddress=test%40example.com" in responses.calls[0].request.url
+        request_url = responses.calls[0].request.url
+        assert request_url is not None
+        assert "emailAddress=test%40example.com" in request_url
         # Cast result to list for test - the mocked API returns a list directly
-        agents_list = result  # type: ignore[assignment]
+        agents_list = cast(List[Dict[str, Any]], result)
         assert agents_list[0]["id"] == "agent-123"
         assert agents_list[0]["email"] == "test@example.com"
 
@@ -127,6 +130,7 @@ class TestAgentsClient:
 
         # Verify parameters were included in request
         request_url = responses.calls[-1].request.url
+        assert request_url is not None
         assert "updatedAtFrom=2025-01-01" in request_url
         assert "updatedAtTo=2025-01-31" in request_url
         assert "statusIn=ACTIVE" in request_url
@@ -234,6 +238,7 @@ class TestAgentsClient:
         )
 
         request_url = responses.calls[0].request.url
+        assert request_url is not None
         assert "pageNumber=0" in request_url
         assert "pageSize=10" in request_url
         assert "sortDirection=DESC" in request_url
@@ -372,6 +377,7 @@ class TestAgentsClient:
         )
 
         request_url = responses.calls[0].request.url
+        assert request_url is not None
         assert "pageNumber=0" in request_url
         assert "pageSize=50" in request_url
         assert "sortDirection=ASC" in request_url
@@ -398,6 +404,7 @@ class TestAgentsClient:
         )
 
         request_url = responses.calls[0].request.url
+        assert request_url is not None
         assert "agentIds=agent-123" in request_url
         assert "agentIds=agent-456" in request_url
         assert "pageNumber=0" in request_url
@@ -588,6 +595,7 @@ class TestAgentsClient:
         result = client.get_agents_by_ids(agent_ids)
 
         request_url = responses.calls[0].request.url
+        assert request_url is not None
         assert "agentIds=agent-123" in request_url
         assert "agentIds=agent-456" in request_url
 
@@ -632,6 +640,7 @@ class TestAgentsClient:
         result = client.get_agents_by_anniversary(page_number=0, page_size=10)
 
         request_url = responses.calls[0].request.url
+        assert request_url is not None
         assert "pageNumber=0" in request_url
         assert "pageSize=10" in request_url
 
@@ -648,6 +657,7 @@ class TestAgentsClient:
         result = client.get_active_agents(page_number=1, page_size=25)
 
         request_url = responses.calls[0].request.url
+        assert request_url is not None
         assert "pageNumber=1" in request_url
         assert "pageSize=25" in request_url
 
