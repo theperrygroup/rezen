@@ -7,11 +7,7 @@ from unittest.mock import Mock
 import pytest
 import responses
 
-from rezen.agents import (
-    AgentsClient,
-    AgentSortField,
-    AgentStatus,
-)
+from rezen.agents import AgentsClient, AgentSortField, AgentStatus
 from rezen.enums import Country, SortDirection, StateOrProvince
 from rezen.exceptions import AuthenticationError, NetworkError, ValidationError
 
