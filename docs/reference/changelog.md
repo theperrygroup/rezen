@@ -16,6 +16,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Future fixes
 
+## [1.5.0] - 2025-06-01
+
+### Added
+- **Docker Support**: Complete containerization for background agents and automated workflows
+- **Background Agent Framework**: Template classes for creating continuous monitoring agents
+- **Sample Agent**: Ready-to-use background agent template with logging and graceful shutdown
+- **Transaction Monitor**: Advanced agent for monitoring transaction status changes with state persistence
+- **Docker Compose Configuration**: Easy container orchestration with environment variable support
+- **Cursor IDE Integration**: Configured environment.json for seamless Docker development in Cursor
+- **Agent Templates**: Extensible base classes for custom background service development
+- **Volume Mounting**: Live-update support for agent scripts and log file access
+- **Security Features**: Non-root user containers with proper permission management
+- **Comprehensive Documentation**: Docker setup guides for both general use and Cursor-specific workflows
+
+### Infrastructure
+- **Dockerfile**: Optimized Python 3.11 container with ReZEN client pre-installed
+- **docker-compose.yml**: Production-ready orchestration with resource limits and health checks
+- **.dockerignore**: Optimized build context for faster container builds
+- **Environment Configuration**: Support for API keys, logging levels, and execution intervals
+- **Log Management**: Persistent logging with host-accessible log files
+- **Development Mode**: Separate dev container for testing and debugging
+
+### Documentation
+- **DOCKER_README.md**: Comprehensive Docker setup and usage guide
+- **CURSOR_DOCKER_GUIDE.md**: Quick start guide specifically for Cursor IDE users
+- **Agent Development Guide**: Instructions for creating custom background agents
+- **Deployment Examples**: Production deployment patterns and best practices
+
 ## [1.1.4] - 2025-01-06
 
 ### Fixed
