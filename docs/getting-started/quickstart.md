@@ -422,7 +422,7 @@ except Exception as e:
 Now that you've completed the quick start:
 
 ### 📚 Learn More
-- **[API Reference](api-reference.md)** - Complete endpoint documentation
+- **[API Reference](../api/index.md)** - Complete endpoint documentation
 - **[Examples](examples.md)** - Real-world usage patterns
 - **[Error Handling](troubleshooting.md)** - Robust error handling
 
@@ -475,7 +475,7 @@ teams: List[Dict[str, Any]] = client.teams.search_teams()
 
 ## 🆘 Need Help?
 
-- **📖 Documentation**: [Full API Reference](api-reference.md)
+- **📖 Documentation**: [Full API Reference](../api/index.md)
 - **💡 Examples**: [Common Patterns](examples.md)
 - **🐛 Issues**: [Troubleshooting Guide](troubleshooting.md)
 - **💬 Support**: [Contact Support](mailto:support@rezen.com)
@@ -489,4 +489,4 @@ teams: List[Dict[str, Any]] = client.teams.search_teams()
 - ✅ Added participants
 - ✅ Retrieved transaction status
 
-**Ready for more?** Continue to the [API Reference](api-reference.md) for complete documentation.
+**Ready for more?** Continue to the [API Reference](../api/index.md) for complete documentation.

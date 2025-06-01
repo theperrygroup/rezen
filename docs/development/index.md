@@ -132,7 +132,7 @@ def search_active_agents(
 When making code changes, always update:
 
 1. **Function docstrings** - Keep examples current
-2. **API reference** - Update `docs/api-reference.md`
+2. **API reference** - Update `docs/api/index.md`
 3. **Examples** - Update `docs/examples.md`
 4. **Changelog** - Add entry to `docs/changelog.md`
 
