@@ -12,9 +12,9 @@ import responses
 from rezen.directory import (
     Country,
     DirectoryClient,
+    DirectoryEntrySortField,
     DirectoryEntryType,
     DirectoryRole,
-    DirectoryEntrySortField,
     PersonSortField,
     StateOrProvince,
     VendorSortField,
