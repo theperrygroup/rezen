@@ -1,0 +1,44 @@
+{
+  "name": "rezen-python-client-docs",
+  "version": 2,
+  "builds": [
+    {
+      "src": "mkdocs.yml",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "site"
+      }
+    }
+  ],
+  "buildCommand": "pip install -r docs/requirements.txt && mkdocs build",
+  "devCommand": "mkdocs serve",
+  "installCommand": "pip install -r docs/requirements.txt",
+  "framework": null,
+  "public": false,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+} 
