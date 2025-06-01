@@ -86,6 +86,104 @@ This comprehensive style guide establishes standards for creating consistent, hi
 - If it covers more than one primary task
 - If it contains more than 10 main sections
 
+**❌ Don't: Poor Content Organization**
+```markdown
+# Everything About Our API
+
+This page covers installation, authentication, making API calls, error handling,
+rate limits, webhooks, data types, examples, troubleshooting, and more!
+
+First let's talk about installing...
+Then we need to authenticate...
+Now let's make some calls...
+Oh wait, here's how to handle errors...
+Did we mention rate limits?
+...continues for 5,000+ words without clear structure...
+```
+
+**✅ Do: Well-Structured Content**
+```markdown
+# Getting Started Guide
+
+Learn how to install and authenticate with the API in under 10 minutes.
+
+## Prerequisites
+- Python 3.8 or higher
+- Valid API key
+
+## Installation
+[Clear installation steps]
+
+## Authentication
+[Clear authentication steps]
+
+## Your First API Call
+[Simple example]
+
+## Next Steps
+- [Advanced Usage Guide](advanced.md)
+- [API Reference](api/index.md)
+- [Error Handling](errors.md)
+```
+
+**❌ Don't: Poor Writing Style**
+```markdown
+# API Stuff
+
+Obviously you'll want to install this thing first. It's really easy, just run the command.
+
+The API is pretty cool and does lots of things. You can get data and stuff.
+
+Simply authenticate by doing the authentication thing. Easy!
+
+Here's some code:
+```python
+x = client.get()
+```
+
+That's it! Super simple right?
+```
+
+**✅ Do: Professional Writing Style**
+```markdown
+# API Quick Start
+
+Install and configure the API client to start making requests.
+
+## Installation
+
+Install the client using pip:
+
+```bash
+pip install api-client
+```
+
+## Authentication
+
+Configure your API key in the environment:
+
+```bash
+export API_KEY="your_key_here"
+```
+
+## First Request
+
+Make your first API call:
+
+```python
+from api_client import Client
+
+client = Client()
+data = client.get_resources()
+print(f"Retrieved {len(data)} resources")
+```
+
+## Next Steps
+
+- [Authentication Guide](auth.md) - Detailed authentication setup
+- [API Reference](api/index.md) - Complete method documentation
+```
+
 ## 🎨 Modern Visual Layout and Styling
 
 ### Material Design Grid Cards
@@ -122,6 +220,48 @@ This comprehensive style guide establishes standards for creating consistent, hi
 - Group 2-6 cards per grid for optimal visual balance
 - Always include the `{ .lg .middle }` classes for proper icon sizing
 
+**❌ Don't: Poor Card Implementation**
+```markdown
+<div class="grid cards" markdown>
+
+-   **Stuff**
+
+    Some things you can do
+
+    [Click here](page.md)
+
+-   **More Stuff**
+
+    Other things
+
+    [Link](another-page.md)
+
+</div>
+```
+
+**✅ Do: Professional Card Implementation**
+```markdown
+<div class="grid cards" markdown>
+
+-   :material-api:{ .lg .middle } **API Reference**
+
+    ---
+
+    Complete method documentation with examples and parameters
+
+    [:octicons-arrow-right-24: View API Docs](api/index.md)
+
+-   :material-rocket-launch:{ .lg .middle } **Quick Start**
+
+    ---
+
+    Get up and running in under 5 minutes
+
+    [:octicons-arrow-right-24: Start Tutorial](getting-started/quickstart.md)
+
+</div>
+```
+
 ### Tabbed Content Organization
 
 **Use Case**: Organize related information that users might want to compare or choose between.
@@ -144,6 +284,44 @@ This comprehensive style guide establishes standards for creating consistent, hi
 - Present different operating system instructions
 - Show before/after examples
 - Maximum 5 tabs per section for usability
+
+**❌ Don't: Confusing Tab Organization**
+```markdown
+=== "Example"
+    Some code here without context or explanation.
+
+=== "Another Thing"
+    Different topic entirely that doesn't relate to the first tab.
+
+=== "Tab 3"
+    Vague title with unclear content organization.
+```
+
+**✅ Do: Clear Tab Organization**
+```markdown
+=== ":material-rocket-launch: Basic Operation"
+
+    ```python
+    # Simple resource creation
+    client = APIClient()
+    resource = client.create_resource(
+        name="example",
+        type="standard"
+    )
+    ```
+
+=== ":material-cog: Advanced Configuration"
+
+    ```python
+    # Advanced setup with configuration
+    client = APIClient()
+    resource = client.create_resource(
+        name="example",
+        configuration=config_data,
+        options=advanced_options
+    )
+    ```
+```
 
 ### Visual Admonitions with Emojis
 
@@ -178,23 +356,40 @@ This comprehensive style guide establishes standards for creating consistent, hi
 - Use sparingly (maximum 3 per page)
 - Choose colors that support the message intent
 
-**Advanced Admonition Examples**:
-
+**❌ Don't: Admonition Overuse and Misuse**
 ```markdown
-!!! example "Live Example"
-    Working code example with explanation of each step.
+!!! warning "Warning"
+    This is important.
 
-!!! success "Service Status: Available ✅"
-    Current status and availability information.
+!!! warning "Another Warning"
+    This is also important.
 
-!!! warning "Temporary Limitation ⚠️"
-    Known issues or temporary restrictions.
+!!! info "Note"
+    Just some regular information that could be normal text.
 
-!!! info "Developer Note 📝"
-    Technical insights and implementation details.
+!!! tip "Tip"
+    Something obvious that everyone already knows.
 
-!!! tip "Pro Tip 💡"
-    Expert advice and optimization suggestions.
+!!! example "Example"
+    # Bad code example without explanation
+    x = 1
+```
+
+**✅ Do: Strategic Admonition Usage**
+```markdown
+!!! warning "Security Considerations ⚠️"
+    Never log sensitive credentials in error messages. Always sanitize authentication errors before logging.
+
+!!! example "Complete Usage Example"
+    ```python
+    # Initialize client with proper error handling
+    try:
+        client = APIClient()
+        data = client.fetch_items(status="active")
+        print(f"Found {len(data)} active items")
+    except AuthenticationError:
+        print("Please check your API key configuration")
+    ```
 ```
 
 ### Visual Status System
@@ -396,21 +591,21 @@ Conclusion, next steps, or additional resources.
 ```markdown
 <div class="grid cards" markdown>
 
--   :material-hammer-wrench:{ .lg .middle } **Transaction Builder**
+-   :material-api:{ .lg .middle } **Core API**
 
     ---
 
-    Create and manage transaction builders with participants and properties
+    Create and manage primary resources with full CRUD operations
 
-    [:octicons-arrow-right-24: Transaction Builder API](transaction-builder.md)
+    [:octicons-arrow-right-24: Core API Reference](core-api.md)
 
--   :material-handshake:{ .lg .middle } **Transactions**
+-   :material-database:{ .lg .middle } **Data Management**
 
     ---
 
-    Work with live transactions, manage participants, and handle payments
+    Work with live data, manage relationships, and handle processing
 
-    [:octicons-arrow-right-24: Transactions API](transactions.md)
+    [:octicons-arrow-right-24: Data API](data-api.md)
 
 </div>
 ```
@@ -419,17 +614,17 @@ Conclusion, next steps, or additional resources.
 ```markdown
 <div class="grid cards" markdown>
 
--   :material-home: **Transaction Management**
+-   :material-home: **Resource Management**
 
     ---
 
-    Complete transaction lifecycle from creation to closing with automated workflows
+    Complete resource lifecycle from creation to completion with automated workflows
 
--   :material-account-group: **Agent & Team Operations**
+-   :material-account-group: **User & Team Operations**
 
     ---
 
-    Comprehensive agent search, team management, and network relationship tools
+    Comprehensive user search, team management, and relationship tools
 
 </div>
 ```
@@ -442,7 +637,7 @@ Conclusion, next steps, or additional resources.
 
     ---
 
-    Install the ReZEN Python client and set up your development environment
+    Install the Python client and set up your development environment
 
     [:octicons-arrow-right-24: Install Now](installation.md)
 
@@ -455,23 +650,26 @@ Conclusion, next steps, or additional resources.
 
 **Code Example Tabs** (Different approaches):
 ```markdown
-=== ":material-rocket-launch: Basic Transaction"
+=== ":material-rocket-launch: Basic Operation"
 
     ```python
-    # Simple transaction creation
-    builder = client.transaction_builder.create_builder(
-        listing_id="listing123",
-        transaction_type="Purchase"
+    # Simple resource creation
+    client = APIClient()
+    resource = client.create_resource(
+        name="example",
+        type="standard"
     )
     ```
 
-=== ":material-home: Listing Builder"
+=== ":material-cog: Advanced Configuration"
 
     ```python
-    # Advanced listing setup
-    builder = client.transaction_builder.create_listing_builder(
-        property_details=property_data,
-        commission_structure=commission_data
+    # Advanced setup with configuration
+    client = APIClient()
+    resource = client.create_resource(
+        name="example",
+        configuration=config_data,
+        options=advanced_options
     )
     ```
 ```
@@ -512,7 +710,7 @@ Conclusion, next steps, or additional resources.
     Fully operational with real-time data access.
 
 !!! abstract "Main Client"
-    The **`RezenClient`** serves as the main entry point.
+    The **`APIClient`** serves as the main entry point, providing access to all API modules through a unified interface.
 ```
 
 **Information/Tips (Blue)**:
@@ -587,7 +785,7 @@ Conclusion, next steps, or additional resources.
 
 ## 🚀 Quick Start
 
-New to the ReZEN API? Start here:
+New to the API? Start here:
 
 1. **[Install the client](../getting-started/installation.md)** - Get up and running
 2. **[Configure authentication](../getting-started/authentication.md)** - Set up your API key
@@ -597,17 +795,17 @@ New to the ReZEN API? Start here:
 
 **In-Content Cross-References**:
 ```markdown
-### **🏗️ Transaction Management**
-Build and manage real estate transactions:
+### **🏗️ Core Features**
+Build and manage primary application resources:
 
-- **[Transaction Builder](transaction-builder.md)** - Create new transactions with participants
-- **[Transactions](transactions.md)** - Manage live transactions and processing
+- **[Core API](core-api.md)** - Create new resources with full configuration
+- **[Data Management](data-management.md)** - Manage live data and processing
 
-### **👥 People & Organizations**
-Work with agents, teams, and contacts:
+### **👥 Users & Organizations**
+Work with users, teams, and contacts:
 
-- **[Teams](teams.md)** - Search and manage team information
-- **[Agents](agents.md)** - Agent search and network management
+- **[User Management](users.md)** - Search and manage user information
+- **[Team Operations](teams.md)** - User search and team management
 ```
 
 ### Advanced Page Structure Templates
@@ -848,6 +1046,46 @@ print(response)  # Expected output
 - Show expected output or results
 - Follow the project's code style conventions
 
+**❌ Don't: Poor Code Examples**
+```python
+# Bad example - unclear, untested, no context
+def func(x):
+    y = api.call(x)
+    return y
+
+# Usage
+result = func("stuff")
+```
+
+**✅ Do: Quality Code Examples**
+```python
+# Clear, descriptive example with context
+def fetch_user_data(user_id: str) -> Dict[str, Any]:
+    """
+    Retrieve user information by ID.
+
+    Args:
+        user_id: Unique identifier for the user
+
+    Returns:
+        Dictionary containing user profile data
+
+    Raises:
+        UserNotFoundError: If user doesn't exist
+    """
+    try:
+        response = api_client.get_user(user_id)
+        return response.data
+    except APIError as e:
+        logger.error(f"Failed to fetch user {user_id}: {e}")
+        raise
+
+# Usage example
+user_data = fetch_user_data("user123")
+print(f"Retrieved data for {user_data['name']}")
+# Expected output: Retrieved data for John Doe
+```
+
 #### Command Line Examples
 
 **Format**:
@@ -881,6 +1119,29 @@ Output text here
 - ❌ "Click here for more information"
 - ❌ "Read more"
 
+**❌ Don't: Poor Link Patterns**
+```markdown
+For more information, [click here](link.md).
+
+You can [read more](link.md) about this topic.
+
+Check out [this](link1.md) and [this](link2.md) and [this](link3.md).
+
+See the documentation [here](link.md) for details.
+```
+
+**✅ Do: Descriptive Link Patterns**
+```markdown
+Learn more in the [Authentication Setup Guide](auth.md).
+
+Download the [latest Python client](downloads.md).
+
+Explore [API examples](examples.md), [error handling patterns](errors.md),
+and [best practices guide](best-practices.md).
+
+Review the [complete API reference](api/index.md) for detailed method documentation.
+```
+
 **Link Types**:
 - **Internal links**: Use relative paths (`../guides/setup.md`)
 - **External links**: Always open in same tab unless specifically noted
@@ -899,14 +1160,14 @@ Output text here
 **API Documentation Tables**:
 
 For method parameters (matches mkdocstrings output):
-| Name | Type | Description | Default |
-|------|------|-------------|---------|
+| Name | Type | Required | Description | Default |
+|------|------|----------|-------------|---------|
 | **kwargs | Any | Additional OData parameters (top, select, orderby, etc.) | {} |
 
 For method returns:
 | Type | Description |
 |------|-------------|
-| Dict[str, Any] | Dictionary containing active property listings |
+| Dict[str, Any] | Dictionary containing active resource data |
 
 **Table Formatting Guidelines**:
 - Use consistent column widths for readability
@@ -922,6 +1183,20 @@ For method returns:
 | name | string | Yes | User's full name |
 | email | string | Yes | Valid email address |
 | age | integer | No | User's age in years |
+
+**❌ Don't: Poor Table Structure**
+| Param | Desc |
+|-------|------|
+| stuff | does things |
+| other | also does things that are really long and wordy and hard to read in a table cell |
+| ??? | unclear purpose |
+
+**✅ Do: Clear Table Structure**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| user_id | string | Yes | Unique user identifier |
+| include_metadata | boolean | No | Include additional user metadata |
+| format | string | No | Response format (json, xml) |
 
 ---
 
@@ -960,33 +1235,33 @@ For method returns:
 For Python method documentation that auto-generates with mkdocstrings, ensure your docstrings follow this pattern:
 
 ```python
-def get_active_properties(self, **kwargs) -> Dict[str, Any]:
+def get_active_resources(self, **kwargs) -> Dict[str, Any]:
     """
-    Get properties with Active status.
+    Get resources with Active status.
 
-    Convenience method to retrieve only active property listings. This is one of the most common
-    queries for real estate applications.
+    Convenience method to retrieve only active resource entries. This is one of the most common
+    queries for data-driven applications.
 
     Args:
-        **kwargs: Additional OData parameters (top, select, orderby, etc.)
+        **kwargs: Additional query parameters (limit, fields, sort, etc.)
 
     Returns:
-        Dictionary containing active property listings
+        Dictionary containing active resource data
 
     Example:
         ```python
-        # Get all active properties
-        active_properties = client.property.get_active_properties(top=100)
+        # Get all active resources
+        active_resources = client.resources.get_active_resources(limit=100)
 
-        # Get active properties with specific fields
-        active_properties = client.property.get_active_properties(
-            select=["ListingId", "ListPrice", "UnparsedAddress"],
-            orderby="ListPrice"
+        # Get active resources with specific fields
+        active_resources = client.resources.get_active_resources(
+            fields=["id", "name", "status"],
+            sort="name"
         )
         ```
 
     Raises:
-        WFRMLSError: If the request fails
+        APIError: If the request fails
         ValidationError: If parameters are invalid
     """
 ```
