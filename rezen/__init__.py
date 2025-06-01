@@ -1,6 +1,8 @@
 """ReZEN API Python Client."""
 
 from .agents import AgentsClient, AgentSortField, AgentStatus
+from .api_keys import ApiKeysClient
+from .auth import AuthClient
 from .client import RezenClient
 from .directory import (
     DirectoryClient,
@@ -20,6 +22,7 @@ from .exceptions import (
     ServerError,
     ValidationError,
 )
+from .mfa import MfaClient
 from .teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
@@ -27,6 +30,9 @@ from .transactions import TransactionsClient
 __version__ = "1.5.3"
 __all__ = [
     "RezenClient",
+    "AuthClient",
+    "MfaClient",
+    "ApiKeysClient",
     "TransactionBuilderClient",
     "TransactionsClient",
     "TeamsClient",
