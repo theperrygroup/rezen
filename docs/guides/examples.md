@@ -19,18 +19,21 @@ Real-world usage examples for the ReZEN Python API client. These examples demons
 ### Simple Client Setup
 
 ```python
-from rezen import RezenClient
 import os
+from typing import Optional
+
+from rezen import RezenClient
 
 # Environment variable setup
-client = RezenClient()
+client: RezenClient = RezenClient()
 
 # Direct API key
-client = RezenClient(api_key="your_api_key")
+client: RezenClient = RezenClient(api_key="your_api_key")
 
 # Custom environment
-client = RezenClient(
-    api_key=os.getenv('REZEN_API_KEY'),
+api_key: Optional[str] = os.getenv('REZEN_API_KEY')
+client: RezenClient = RezenClient(
+    api_key=api_key,
     base_url="https://staging-api.rezen.com"
 )
 ```
@@ -38,16 +41,18 @@ client = RezenClient(
 ### Basic Search Operations
 
 ```python
+from typing import List, Dict, Any
+
 from rezen import RezenClient, TeamStatus, AgentStatus
 
-client = RezenClient()
+client: RezenClient = RezenClient()
 
 # Quick team search
-teams = client.teams.search_teams(status=TeamStatus.ACTIVE, page_size=10)
+teams: List[Dict[str, Any]] = client.teams.search_teams(status=TeamStatus.ACTIVE, page_size=10)
 print(f"Found {len(teams)} active teams")
 
 # Quick agent search
-agents = client.agents.search_active_agents(name="John", page_size=5)
+agents: List[Dict[str, Any]] = client.agents.search_active_agents(name="John", page_size=5)
 print(f"Found {len(agents)} agents named John")
 ```
 
@@ -58,19 +63,30 @@ print(f"Found {len(agents)} agents named John")
 ### Complete Purchase Transaction
 
 ```python
-from rezen import RezenClient
 from datetime import datetime, timedelta
+from typing import Dict, Any
 
-def create_purchase_transaction():
-    client = RezenClient()
+from rezen import RezenClient
+
+def create_purchase_transaction() -> str:
+    """Create a complete purchase transaction with all participants.
+
+    Returns:
+        Transaction ID of the created transaction
+
+    Raises:
+        RezenError: If API requests fail
+        ValidationError: If transaction data is invalid
+    """
+    client: RezenClient = RezenClient()
 
     # 1. Create transaction builder
-    response = client.transaction_builder.create_transaction_builder("TRANSACTION")
-    transaction_id = response['id']
+    response: Dict[str, Any] = client.transaction_builder.create_transaction_builder("TRANSACTION")
+    transaction_id: str = response['id']
     print(f"Created transaction: {transaction_id}")
 
     # 2. Set property details
-    location_data = {
+    location_data: Dict[str, Any] = {
         "address": "1234 Elm Street",
         "city": "San Francisco",
         "state": "CA",
@@ -80,8 +96,8 @@ def create_purchase_transaction():
     client.transaction_builder.update_location_info(transaction_id, location_data)
 
     # 3. Set pricing and dates
-    closing_date = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
-    price_data = {
+    closing_date: str = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
+    price_data: Dict[str, Any] = {
         "purchase_price": 850000,
         "closing_date": closing_date,
         "contract_date": datetime.now().strftime("%Y-%m-%d")
@@ -89,7 +105,7 @@ def create_purchase_transaction():
     client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
 
     # 4. Add buyer
-    buyer_data = {
+    buyer_data: Dict[str, Any] = {
         "first_name": "Alice",
         "last_name": "Johnson",
         "email": "alice.johnson@email.com",
@@ -98,7 +114,7 @@ def create_purchase_transaction():
     client.transaction_builder.add_buyer(transaction_id, buyer_data)
 
     # 5. Add seller
-    seller_data = {
+    seller_data: Dict[str, Any] = {
         "first_name": "Bob",
         "last_name": "Smith",
         "email": "bob.smith@email.com",
@@ -107,7 +123,7 @@ def create_purchase_transaction():
     client.transaction_builder.add_seller(transaction_id, seller_data)
 
     # 6. Add title company
-    title_data = {
+    title_data: Dict[str, Any] = {
         "title_company": "Bay Area Title Company",
         "title_contact": "Sarah Wilson",
         "title_phone": "+1-415-555-0789",
@@ -116,23 +132,36 @@ def create_purchase_transaction():
     client.transaction_builder.update_title_info(transaction_id, title_data)
 
     # 7. Submit transaction
-    result = client.transaction_builder.submit_transaction(transaction_id)
+    result: Dict[str, Any] = client.transaction_builder.submit_transaction(transaction_id)
     print(f"Transaction submitted: {result}")
 
     return transaction_id
 
 # Run example
-transaction_id = create_purchase_transaction()
+transaction_id: str = create_purchase_transaction()
 ```
 
 ### Adding Multiple Participants
 
 ```python
-def add_transaction_participants(transaction_id):
-    client = RezenClient()
+from typing import List, Dict, Any
+
+from rezen import RezenClient
+from rezen.exceptions import RezenError
+
+def add_transaction_participants(transaction_id: str) -> None:
+    """Add multiple participants to a transaction.
+
+    Args:
+        transaction_id: ID of the transaction to add participants to
+
+    Raises:
+        RezenError: If API requests fail
+    """
+    client: RezenClient = RezenClient()
 
     # Add various participants
-    participants = [
+    participants: List[Dict[str, Any]] = [
         {
             "type": "INSPECTOR",
             "first_name": "Mike",
@@ -158,11 +187,11 @@ def add_transaction_participants(transaction_id):
 
     for participant in participants:
         try:
-            response = client.transaction_builder.add_participant(
+            response: Dict[str, Any] = client.transaction_builder.add_participant(
                 transaction_id, participant
             )
             print(f"Added {participant['type']}: {participant['first_name']} {participant['last_name']}")
-        except Exception as e:
+        except RezenError as e:
             print(f"Failed to add {participant['type']}: {e}")
 
 # Usage
@@ -172,11 +201,28 @@ add_transaction_participants("your-transaction-id")
 ### Commission Setup
 
 ```python
-def setup_commission_splits(transaction_id, agent_info):
-    client = RezenClient()
+from typing import Dict, Any, Optional
+
+from rezen import RezenClient
+from rezen.exceptions import RezenError
+
+def setup_commission_splits(transaction_id: str, agent_info: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    """Setup commission splits for a transaction.
+
+    Args:
+        transaction_id: ID of the transaction
+        agent_info: Dictionary containing agent IDs
+
+    Returns:
+        Response from API if successful, None if failed
+
+    Raises:
+        RezenError: If API request fails
+    """
+    client: RezenClient = RezenClient()
 
     # Set commission splits
-    commission_splits = [
+    commission_splits: List[Dict[str, Any]] = [
         {
             "agent_id": agent_info["listing_agent_id"],
             "role": "LISTING_AGENT",
@@ -192,17 +238,17 @@ def setup_commission_splits(transaction_id, agent_info):
     ]
 
     try:
-        response = client.transaction_builder.update_commission_splits(
+        response: Dict[str, Any] = client.transaction_builder.update_commission_splits(
             transaction_id, commission_splits
         )
         print("Commission splits updated successfully")
         return response
-    except Exception as e:
+    except RezenError as e:
         print(f"Failed to update commission splits: {e}")
         return None
 
 # Usage
-agent_data = {
+agent_data: Dict[str, str] = {
     "listing_agent_id": "agent-uuid-1",
     "buyers_agent_id": "agent-uuid-2"
 }
@@ -216,13 +262,21 @@ setup_commission_splits("transaction-id", agent_data)
 ### Agent Search and Analysis
 
 ```python
-from rezen import AgentSortField, AgentSortDirection, StateOrProvince
+from typing import List, Dict, Any
 
-def find_and_analyze_agents():
-    client = RezenClient()
+from rezen import RezenClient, AgentSortField, AgentSortDirection, StateOrProvince
+from rezen.exceptions import RezenError
+
+def find_and_analyze_agents() -> None:
+    """Find and analyze agents in California.
+
+    Raises:
+        RezenError: If API requests fail
+    """
+    client: RezenClient = RezenClient()
 
     # Search for agents in California
-    california_agents = client.agents.search_active_agents(
+    california_agents: List[Dict[str, Any]] = client.agents.search_active_agents(
         state_or_province=[StateOrProvince.CALIFORNIA],
         sort_by=[AgentSortField.LAST_NAME, AgentSortField.FIRST_NAME],
         sort_direction=AgentSortDirection.ASC,
@@ -233,21 +287,21 @@ def find_and_analyze_agents():
 
     # Analyze each agent's network
     for agent in california_agents[:5]:  # Analyze first 5
-        agent_id = agent['id']
-        agent_name = f"{agent.get('first_name', '')} {agent.get('last_name', '')}"
+        agent_id: str = agent['id']
+        agent_name: str = f"{agent.get('first_name', '')} {agent.get('last_name', '')}"
 
         try:
             # Get network size
-            network_stats = client.agents.get_network_size_by_tier(agent_id)
+            network_stats: List[Dict[str, Any]] = client.agents.get_network_size_by_tier(agent_id)
 
             # Get front line agents
-            front_line = client.agents.get_front_line_agents_info(agent_id)
+            front_line: List[Dict[str, Any]] = client.agents.get_front_line_agents_info(agent_id)
 
             print(f"\n{agent_name}:")
             print(f"  Network tiers: {len(network_stats)}")
             print(f"  Front line agents: {len(front_line)}")
 
-        except Exception as e:
+        except RezenError as e:
             print(f"  Could not analyze {agent_name}: {e}")
 
 find_and_analyze_agents()
@@ -256,14 +310,31 @@ find_and_analyze_agents()
 ### Agent Network Mapping
 
 ```python
-def map_agent_downline(agent_id, max_tier=3):
-    client = RezenClient()
+from typing import Dict, List, Any
 
-    network_map = {}
+from rezen import RezenClient
+from rezen.exceptions import RezenError
+
+def map_agent_downline(agent_id: str, max_tier: int = 3) -> Dict[str, Any]:
+    """Map an agent's downline network by tier.
+
+    Args:
+        agent_id: ID of the agent to map
+        max_tier: Maximum tier depth to map
+
+    Returns:
+        Dictionary containing network mapping by tier
+
+    Raises:
+        RezenError: If API requests fail
+    """
+    client: RezenClient = RezenClient()
+
+    network_map: Dict[str, Any] = {}
 
     for tier in range(1, max_tier + 1):
         try:
-            downline = client.agents.get_down_line_agents(
+            downline: List[Dict[str, Any]] = client.agents.get_down_line_agents(
                 agent_id=agent_id,
                 tier=tier,
                 status_in=["ACTIVE"],
@@ -284,14 +355,14 @@ def map_agent_downline(agent_id, max_tier=3):
 
             print(f"Tier {tier}: {len(downline)} agents")
 
-        except Exception as e:
+        except RezenError as e:
             print(f"Error getting tier {tier}: {e}")
             break
 
     return network_map
 
 # Usage
-agent_network = map_agent_downline("agent-uuid-here", max_tier=2)
+agent_network: Dict[str, Any] = map_agent_downline("agent-uuid-here", max_tier=2)
 ```
 
 ---
@@ -301,19 +372,30 @@ agent_network = map_agent_downline("agent-uuid-here", max_tier=2)
 ### Team Discovery and Management
 
 ```python
-from rezen import TeamType, SortField, SortDirection
+from typing import Dict, List, Any
 
-def discover_teams():
-    client = RezenClient()
+from rezen import RezenClient, TeamType, SortField, SortDirection
+from rezen.exceptions import RezenError
+
+def discover_teams() -> Dict[str, List[Dict[str, Any]]]:
+    """Discover teams by type and analyze them.
+
+    Returns:
+        Dictionary of teams organized by type
+
+    Raises:
+        RezenError: If API requests fail
+    """
+    client: RezenClient = RezenClient()
 
     # Find all team types
-    team_types = [TeamType.NORMAL, TeamType.PLATINUM, TeamType.GROUP]
+    team_types: List[TeamType] = [TeamType.NORMAL, TeamType.PLATINUM, TeamType.GROUP]
 
-    all_teams = {}
+    all_teams: Dict[str, List[Dict[str, Any]]] = {}
 
     for team_type in team_types:
         try:
-            teams = client.teams.search_teams(
+            teams: List[Dict[str, Any]] = client.teams.search_teams(
                 team_type=team_type,
                 status="ACTIVE",
                 sort_by=[SortField.NAME],
@@ -328,27 +410,43 @@ def discover_teams():
             for team in teams[:3]:
                 print(f"  - {team.get('name', 'N/A')} (ID: {team.get('id')})")
 
-        except Exception as e:
+        except RezenError as e:
             print(f"Error getting {team_type.value} teams: {e}")
 
     return all_teams
 
-teams_by_type = discover_teams()
+teams_by_type: Dict[str, List[Dict[str, Any]]] = discover_teams()
 ```
 
 ### Team Details Analysis
 
 ```python
-def analyze_team_details(team_ids):
-    client = RezenClient()
+from typing import List, Dict, Any
 
-    team_analysis = []
+from rezen import RezenClient
+from rezen.exceptions import RezenError
+
+def analyze_team_details(team_ids: List[str]) -> List[Dict[str, Any]]:
+    """Analyze details for multiple teams.
+
+    Args:
+        team_ids: List of team IDs to analyze
+
+    Returns:
+        List of team analysis data
+
+    Raises:
+        RezenError: If API requests fail
+    """
+    client: RezenClient = RezenClient()
+
+    team_analysis: List[Dict[str, Any]] = []
 
     for team_id in team_ids:
         try:
-            team = client.teams.get_team_without_agents(team_id)
+            team: Dict[str, Any] = client.teams.get_team_without_agents(team_id)
 
-            analysis = {
+            analysis: Dict[str, Any] = {
                 "id": team.get("id"),
                 "name": team.get("name"),
                 "type": team.get("type"),
@@ -361,14 +459,14 @@ def analyze_team_details(team_ids):
 
             print(f"✅ {team.get('name')} - {team.get('type')} ({team.get('status')})")
 
-        except Exception as e:
+        except RezenError as e:
             print(f"❌ Error analyzing team {team_id}: {e}")
 
     return team_analysis
 
 # Usage
-team_ids = ["team-1", "team-2", "team-3"]
-analysis = analyze_team_details(team_ids)
+team_ids: List[str] = ["team-1", "team-2", "team-3"]
+analysis: List[Dict[str, Any]] = analyze_team_details(team_ids)
 ```
 
 ---
@@ -378,6 +476,9 @@ analysis = analyze_team_details(team_ids)
 ### Robust API Calls
 
 ```python
+import time
+from typing import Callable, Any, TypeVar
+
 from rezen.exceptions import (
     AuthenticationError,
     ValidationError,
@@ -386,11 +487,30 @@ from rezen.exceptions import (
     ServerError,
     NetworkError
 )
-import time
 
-def robust_api_call(func, *args, max_retries=3, **kwargs):
-    """Make a robust API call with retries and error handling."""
+T = TypeVar('T')
 
+def robust_api_call(func: Callable[..., T], *args: Any, max_retries: int = 3, **kwargs: Any) -> T:
+    """Make a robust API call with retries and error handling.
+
+    Args:
+        func: Function to call
+        *args: Positional arguments for the function
+        max_retries: Maximum number of retry attempts
+        **kwargs: Keyword arguments for the function
+
+    Returns:
+        Result from the function call
+
+    Raises:
+        AuthenticationError: If authentication fails (not retried)
+        ValidationError: If validation fails (not retried)
+        NotFoundError: If resource not found (not retried)
+        RateLimitError: If rate limited after all retries
+        ServerError: If server error after all retries
+        NetworkError: If network error after all retries
+        Exception: For unexpected errors
+    """
     for attempt in range(max_retries):
         try:
             return func(*args, **kwargs)
@@ -409,7 +529,7 @@ def robust_api_call(func, *args, max_retries=3, **kwargs):
 
         except RateLimitError as e:
             if attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # Exponential backoff
+                wait_time: int = 2 ** attempt  # Exponential backoff
                 print(f"⚠️ Rate limited. Waiting {wait_time}s before retry...")
                 time.sleep(wait_time)
                 continue
@@ -417,7 +537,7 @@ def robust_api_call(func, *args, max_retries=3, **kwargs):
 
         except (ServerError, NetworkError) as e:
             if attempt < max_retries - 1:
-                wait_time = 2 ** attempt
+                wait_time: int = 2 ** attempt
                 print(f"⚠️ Server/Network error. Retrying in {wait_time}s...")
                 time.sleep(wait_time)
                 continue
@@ -429,17 +549,21 @@ def robust_api_call(func, *args, max_retries=3, **kwargs):
             raise
 
 # Usage examples
-client = RezenClient()
+from typing import List, Dict, Any
+
+from rezen import RezenClient
+
+client: RezenClient = RezenClient()
 
 # Robust team search
-teams = robust_api_call(
+teams: List[Dict[str, Any]] = robust_api_call(
     client.teams.search_teams,
     status="ACTIVE",
     page_size=50
 )
 
 # Robust transaction creation
-transaction = robust_api_call(
+transaction: Dict[str, Any] = robust_api_call(
     client.transaction_builder.create_transaction_builder,
     "TRANSACTION"
 )
@@ -448,13 +572,27 @@ transaction = robust_api_call(
 ### Validation Helper
 
 ```python
-def validate_transaction_data(transaction_data):
-    """Validate transaction data before API calls."""
-    errors = []
+from typing import Dict, List, Any
+
+from rezen.exceptions import ValidationError
+
+def validate_transaction_data(transaction_data: Dict[str, Any]) -> bool:
+    """Validate transaction data before API calls.
+
+    Args:
+        transaction_data: Dictionary containing transaction information
+
+    Returns:
+        True if validation passes
+
+    Raises:
+        ValidationError: If validation fails with detailed error messages
+    """
+    errors: List[str] = []
 
     # Required fields
-    required_fields = ['address', 'city', 'state', 'zipCode']
-    property_data = transaction_data.get('property', {})
+    required_fields: List[str] = ['address', 'city', 'state', 'zipCode']
+    property_data: Dict[str, Any] = transaction_data.get('property', {})
 
     for field in required_fields:
         if not property_data.get(field):
@@ -466,9 +604,9 @@ def validate_transaction_data(transaction_data):
         errors.append("Purchase price must be a positive number")
 
     # Email validation (basic)
-    participants = transaction_data.get('participants', [])
+    participants: List[Dict[str, Any]] = transaction_data.get('participants', [])
     for participant in participants:
-        email = participant.get('email')
+        email: str = participant.get('email', '')
         if email and '@' not in email:
             errors.append(f"Invalid email for {participant.get('first_name', 'participant')}: {email}")
 
@@ -478,7 +616,7 @@ def validate_transaction_data(transaction_data):
     return True
 
 # Usage
-transaction_data = {
+transaction_data: Dict[str, Any] = {
     "property": {
         "address": "123 Main St",
         "city": "Anytown",
