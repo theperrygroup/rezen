@@ -105,21 +105,23 @@ graph TB
     A --> C[TransactionsClient]
     A --> D[TeamsClient]
     A --> E[AgentsClient]
+    A --> F[DirectoryClient]
     
-    B --> F[BaseClient]
-    C --> F
-    D --> F
-    E --> F
+    B --> G[BaseClient]
+    C --> G
+    D --> G
+    E --> G
+    F --> G
     
-    F --> G[HTTP Session]
-    F --> H[Error Handling]
-    F --> I[Authentication]
+    G --> H[HTTP Session]
+    G --> I[Error Handling]
+    G --> J[Authentication]
     
     style A fill:#e1f5fe
-    style F fill:#f3e5f5
-    style G fill:#e8f5e8
-    style H fill:#fff3e0
-    style I fill:#fce4ec
+    style G fill:#f3e5f5
+    style H fill:#e8f5e8
+    style I fill:#fff3e0
+    style J fill:#fce4ec
 ```
 
 ### Key Design Principles
@@ -192,6 +194,32 @@ for agent in agents[:5]:
     print(f"Agent {agent['first_name']} {agent['last_name']}:")
     print(f"  Network tiers: {len(network_stats)}")
     print(f"  Front line agents: {len(front_line)}")
+```
+
+### Directory Management
+
+```python
+# Search for vendors
+vendors = client.directory.search_vendors(
+    page_number=0,
+    page_size=20,
+    is_archived=False,
+    state_or_province="CALIFORNIA"
+)
+
+# Create a new person
+person_data = {
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "emailAddress": "jane@example.com",
+    "phoneNumber": "555-0123"
+}
+person = client.directory.create_person(person_data)
+
+# Link person to vendor
+client.directory.link_person(person['id'], {
+    "vendorId": "vendor-123"
+})
 ```
 
 **[→ More Examples](examples.md)**

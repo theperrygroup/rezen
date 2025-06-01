@@ -3,7 +3,7 @@ pip install rezen
 ```
 
 ```python
-from rezen import RezenClient, DirectoryClient
+from rezen import RezenClient
 
 # Initialize main client
 client = RezenClient()
@@ -11,8 +11,8 @@ client = RezenClient()
 # Search for active teams
 teams = client.teams.search_teams(status="ACTIVE")
 
-# Search for agents in California
-agents = client.agents.search_agents(state_or_province="CALIFORNIA")
+# Search for agents in California  
+agents = client.agents.search_active_agents(state_or_province=["CALIFORNIA"])
 
 # Create a transaction
 response = client.transaction_builder.create_transaction_builder()
@@ -26,11 +26,8 @@ client.transaction_builder.update_location_info(transaction_id, {
     "zipCode": "90210"
 })
 
-# Use Directory API for vendor management
-directory = DirectoryClient()
-
-# Search for vendors
-vendors = directory.search_vendors(
+# Use Directory API for vendor management through main client
+vendors = client.directory.search_vendors(
     page_number=0, 
     page_size=20,
     roles=["TITLE_ESCROW", "LENDER"]

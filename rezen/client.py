@@ -3,6 +3,7 @@
 from typing import Optional
 
 from .agents import AgentsClient
+from .directory import DirectoryClient
 from .teams import TeamsClient
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
@@ -38,6 +39,11 @@ class RezenClient:
 
         # Use agents endpoints
         agents = client.agents.search_active_agents(name="John")
+
+        # Use directory endpoints
+        vendors = client.directory.search_vendors(
+            page_number=0, page_size=10, is_archived=False
+        )
         ```
     """
 
@@ -56,6 +62,7 @@ class RezenClient:
         self._transactions: Optional[TransactionsClient] = None
         self._teams: Optional[TeamsClient] = None
         self._agents: Optional[AgentsClient] = None
+        self._directory: Optional[DirectoryClient] = None
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:
@@ -110,3 +117,17 @@ class RezenClient:
                 # Note: agents uses a different base URL, handled in AgentsClient
             )
         return self._agents
+
+    @property
+    def directory(self) -> DirectoryClient:
+        """Access to directory endpoints.
+
+        Returns:
+            DirectoryClient instance
+        """
+        if self._directory is None:
+            self._directory = DirectoryClient(
+                api_key=self._api_key
+                # Note: directory uses a different base URL, handled in DirectoryClient
+            )
+        return self._directory
