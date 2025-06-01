@@ -118,7 +118,7 @@ class StateOrProvince(Enum):
     WISCONSIN = "WISCONSIN"
     WYOMING = "WYOMING"
     PUERTO_RICO = "PUERTO_RICO"
-    
+
     # Canadian Provinces
     ALBERTA = "ALBERTA"
     BRITISH_COLUMBIA = "BRITISH_COLUMBIA"
@@ -230,7 +230,9 @@ class DirectoryClient(BaseClient):
             RezenError: If the API request fails
         """
         response = self.get(f"directory/vendors/{vendor_id}/w9")
-        return str(response) if isinstance(response, str) else str(response.get("url", ""))
+        return (
+            str(response) if isinstance(response, str) else str(response.get("url", ""))
+        )
 
     def update_vendor_w9(self, vendor_id: str, w9_file: BinaryIO) -> Dict[str, Any]:
         """
@@ -249,9 +251,7 @@ class DirectoryClient(BaseClient):
         files = {"w9": w9_file}
         return self._request("PATCH", f"directory/vendors/{vendor_id}/w9", files=files)
 
-    def archive_vendor(
-        self, vendor_id: str, archive: bool = True
-    ) -> Dict[str, Any]:
+    def archive_vendor(self, vendor_id: str, archive: bool = True) -> Dict[str, Any]:
         """
         Archive or unarchive a vendor.
 
@@ -450,9 +450,7 @@ class DirectoryClient(BaseClient):
         """
         return self._request("PATCH", f"directory/persons/{person_id}/unlink")
 
-    def link_person(
-        self, person_id: str, link_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def link_person(self, person_id: str, link_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Link a person to a vendor.
 
@@ -685,7 +683,8 @@ class DirectoryClient(BaseClient):
             params["id"] = entry_id
         if sort_by:
             params["sortBy"] = [
-                s.value if isinstance(s, DirectoryEntrySortField) else s for s in sort_by
+                s.value if isinstance(s, DirectoryEntrySortField) else s
+                for s in sort_by
             ]
 
         return self.get("directory/entries/search/all", params=params)
@@ -709,4 +708,4 @@ class DirectoryClient(BaseClient):
         Returns:
             Parsed response data
         """
-        return self._request("POST", endpoint, json_data=json_data, params=params) 
+        return self._request("POST", endpoint, json_data=json_data, params=params)
