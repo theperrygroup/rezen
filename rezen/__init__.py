@@ -11,9 +11,9 @@ from .agents import (
 from .client import RezenClient
 from .directory import (
     DirectoryClient,
+    DirectoryEntrySortField,
     DirectoryEntryType,
     DirectoryRole,
-    DirectoryEntrySortField,
     PersonSortField,
     VendorSortField,
 )
