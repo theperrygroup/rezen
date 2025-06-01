@@ -2,7 +2,6 @@
 
 from .agents import (
     AgentsClient,
-    AgentSortDirection,
     AgentSortField,
     AgentStatus,
 )
@@ -15,7 +14,7 @@ from .directory import (
     PersonSortField,
     VendorSortField,
 )
-from .enums import Country, StateOrProvince
+from .enums import Country, SortDirection, StateOrProvince
 from .exceptions import (
     AuthenticationError,
     NetworkError,
@@ -25,11 +24,11 @@ from .exceptions import (
     ServerError,
     ValidationError,
 )
-from .teams import SortDirection, SortField, TeamsClient, TeamStatus, TeamType
+from .teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 __all__ = [
     "RezenClient",
     "TransactionBuilderClient",
@@ -37,12 +36,11 @@ __all__ = [
     "TeamsClient",
     "DirectoryClient",
     "SortDirection",
-    "SortField",
+    "TeamSortField",
     "TeamStatus",
     "TeamType",
     "AgentsClient",
     "AgentStatus",
-    "AgentSortDirection",
     "AgentSortField",
     "DirectoryEntryType",
     "DirectoryRole",

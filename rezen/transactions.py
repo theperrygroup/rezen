@@ -1,6 +1,6 @@
 """Transactions client for ReZEN API."""
 
-from typing import Any, BinaryIO, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .base_client import BaseClient
 
