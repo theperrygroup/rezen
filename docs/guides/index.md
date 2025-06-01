@@ -32,6 +32,38 @@ Practical guides, tutorials, and real-world examples to help you master the ReZE
 
     [:octicons-arrow-right-24: People Guide](agents-and-teams.md)
 
+-   :material-speedometer:{ .lg .middle } **Performance & Optimization**
+
+    ---
+
+    Build high-performance applications with best practices and optimization techniques
+
+    [:octicons-arrow-right-24: Performance Guide](performance.md)
+
+-   :material-chef-hat:{ .lg .middle } **Cookbook**
+
+    ---
+
+    Recipe-style solutions for common integration patterns and use cases
+
+    [:octicons-arrow-right-24: View Recipes](cookbook.md)
+
+-   :material-update:{ .lg .middle } **Migration Guide**
+
+    ---
+
+    Upgrade between versions safely with step-by-step migration instructions
+
+    [:octicons-arrow-right-24: Migration Guide](migration.md)
+
+-   :material-frequently-asked-questions:{ .lg .middle } **FAQ**
+
+    ---
+
+    Frequently asked questions and quick solutions to common issues
+
+    [:octicons-arrow-right-24: View FAQ](faq.md)
+
 -   :material-help-circle:{ .lg .middle } **Troubleshooting**
 
     ---
@@ -58,11 +90,17 @@ Practical guides, tutorials, and real-world examples to help you master the ReZE
 - Tracking agent networks
 - Directory integration
 
-### **Data Integration**
+### **Data Integration & Automation**
 - Bulk data operations
 - Error handling patterns
 - Rate limiting strategies
 - Authentication best practices
+
+### **Performance Optimization**
+- Efficient pagination strategies
+- Caching and memory management
+- Concurrent request handling
+- Production deployment tips
 
 ---
 
@@ -74,6 +112,7 @@ Perfect for developers new to the ReZEN API:
 - **[Basic Examples](examples.md#basic-examples)** - Simple API calls to get you started
 - **[Authentication Setup](../getting-started/authentication.md)** - Configure your API key
 - **[First Transaction](examples.md#first-transaction)** - Create your first transaction
+- **[FAQ](faq.md)** - Quick answers to common questions
 
 ### **💼 Business Workflows**
 Real-world business scenarios:
@@ -81,13 +120,15 @@ Real-world business scenarios:
 - **[Complete Transaction Flow](transactions.md)** - End-to-end transaction management
 - **[Agent Onboarding](agents-and-teams.md)** - Adding new agents to your system
 - **[Commission Processing](transactions.md#commission-management)** - Handle commission splits
+- **[Cookbook Recipes](cookbook.md)** - Copy-paste solutions for common tasks
 
 ### **🔧 Advanced Techniques**
 For experienced developers:
 
+- **[Performance Optimization](performance.md)** - Build high-performance applications
 - **[Error Handling](troubleshooting.md#error-handling)** - Robust error management
-- **[Performance Optimization](troubleshooting.md#performance)** - Handle large datasets
-- **[Integration Patterns](examples.md#integration-patterns)** - Common integration scenarios
+- **[Integration Patterns](cookbook.md#integration-recipes)** - Common integration scenarios
+- **[Migration Guide](migration.md)** - Upgrade between versions safely
 
 ---
 
@@ -113,11 +154,17 @@ All guides include:
     **People & Teams**
     → [Agents & Teams Guide](agents-and-teams.md)
 
-    **Code Examples**
-    → [Examples & Tutorials](examples.md)
+    **Performance Issues**
+    → [Performance & Optimization](performance.md)
 
-    **Problems & Solutions**
-    → [Troubleshooting Guide](troubleshooting.md)
+    **Code Examples**
+    → [Examples & Tutorials](examples.md) | [Cookbook](cookbook.md)
+
+    **Quick Solutions**
+    → [FAQ](faq.md) | [Troubleshooting Guide](troubleshooting.md)
+
+    **Version Upgrades**
+    → [Migration Guide](migration.md)
 
 ---
 

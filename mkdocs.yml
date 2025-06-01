@@ -157,6 +157,10 @@ nav:
     - Examples & Tutorials: guides/examples.md
     - Transaction Workflows: guides/transactions.md
     - Agents & Teams: guides/agents-and-teams.md
+    - Performance & Optimization: guides/performance.md
+    - Cookbook: guides/cookbook.md
+    - Migration Guide: guides/migration.md
+    - FAQ: guides/faq.md
     - Troubleshooting: guides/troubleshooting.md
 
   - API Reference:
@@ -176,6 +180,7 @@ nav:
   - Development:
     - development/index.md
     - Contributing: development/contributing.md
+    - Testing: guides/testing.md
     - Deployment: development/deployment.md
 
 # Extra CSS and JavaScript
