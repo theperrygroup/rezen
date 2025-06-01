@@ -9,6 +9,14 @@ from .agents import (
     StateOrProvince,
 )
 from .client import RezenClient
+from .directory import (
+    DirectoryClient,
+    DirectoryEntryType,
+    DirectoryRole,
+    DirectoryEntrySortField,
+    PersonSortField,
+    VendorSortField,
+)
 from .exceptions import (
     AuthenticationError,
     NetworkError,
@@ -22,12 +30,13 @@ from .teams import SortDirection, SortField, TeamsClient, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 
-__version__ = "1.0.7"
+__version__ = "1.1.1"
 __all__ = [
     "RezenClient",
     "TransactionBuilderClient",
     "TransactionsClient",
     "TeamsClient",
+    "DirectoryClient",
     "SortDirection",
     "SortField",
     "TeamStatus",
@@ -36,6 +45,11 @@ __all__ = [
     "AgentStatus",
     "AgentSortDirection",
     "AgentSortField",
+    "DirectoryEntryType",
+    "DirectoryRole",
+    "DirectoryEntrySortField",
+    "PersonSortField",
+    "VendorSortField",
     "Country",
     "StateOrProvince",
     "RezenError",

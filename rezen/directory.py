@@ -230,9 +230,13 @@ class DirectoryClient(BaseClient):
             RezenError: If the API request fails
         """
         response = self.get(f"directory/vendors/{vendor_id}/w9")
-        return (
-            str(response) if isinstance(response, str) else str(response.get("url", ""))
-        )
+        # The API sometimes returns a string directly, sometimes a dict with "url" key
+        # We need to handle both cases at runtime
+        try:
+            return str(response.get("url", ""))
+        except AttributeError:
+            # If response is a string, it doesn't have .get() method
+            return str(response)
 
     def update_vendor_w9(self, vendor_id: str, w9_file: BinaryIO) -> Dict[str, Any]:
         """
@@ -398,7 +402,9 @@ class DirectoryClient(BaseClient):
         if owner_team_id:
             params["ownerTeamId"] = owner_team_id
 
-        return self.post("directory/persons", json_data=person_data, params=params)
+        return self._request(
+            "POST", "directory/persons", json_data=person_data, params=params
+        )
 
     def get_person(self, person_id: str) -> Dict[str, Any]:
         """
@@ -582,7 +588,7 @@ class DirectoryClient(BaseClient):
                 else entry_type
             )
 
-        return self.get("directory/roles", params=params)
+        return self.get("directory/permitted-roles", params=params)
 
     def search_all_entries(
         self,
@@ -687,25 +693,6 @@ class DirectoryClient(BaseClient):
                 for s in sort_by
             ]
 
-        return self.get("directory/entries/search/all", params=params)
+        return self.get("directory/search/all", params=params)
 
     # ===== CONVENIENCE METHODS =====
-
-    def post(
-        self,
-        endpoint: str,
-        json_data: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        """
-        Make POST request with optional parameters.
-
-        Args:
-            endpoint: API endpoint path
-            json_data: JSON data to send
-            params: Query parameters
-
-        Returns:
-            Parsed response data
-        """
-        return self._request("POST", endpoint, json_data=json_data, params=params)

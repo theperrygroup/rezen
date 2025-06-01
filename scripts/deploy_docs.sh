@@ -94,6 +94,12 @@ validate_config() {
 build_docs() {
     print_status "Building documentation..."
     
+    # Update shared content first
+    if [ -f "scripts/sync_docs.py" ]; then
+        print_status "Updating shared content..."
+        $PYTHON_CMD scripts/sync_docs.py update
+    fi
+    
     if mkdocs build --clean; then
         print_success "Documentation built successfully"
         print_status "Built files are in ./site/ directory"

@@ -5,37 +5,13 @@
 [![License](https://img.shields.io/github/license/theperrygroup/rezen.svg)](https://github.com/theperrygroup/rezen/blob/main/LICENSE)
 [![Coverage](https://img.shields.io/codecov/c/github/theperrygroup/rezen.svg)](https://codecov.io/gh/theperrygroup/rezen)
 
-The **official Python client** for the ReZEN Real Estate API. Build powerful real estate applications with comprehensive transaction management, agent networking, and team operations.
+{!_includes/description.md!}
 
 ## 🚀 Quick Start
 
 Get up and running in 60 seconds:
 
-```bash
-pip install rezen
-```
-
-```python
-from rezen import RezenClient
-
-# Initialize client
-client = RezenClient()
-
-# Search for teams
-teams = client.teams.search_teams(status="ACTIVE")
-
-# Create a transaction
-response = client.transaction_builder.create_transaction_builder()
-transaction_id = response['id']
-
-# Add property details
-client.transaction_builder.update_location_info(transaction_id, {
-    "address": "123 Main Street",
-    "city": "Anytown",
-    "state": "CA",
-    "zipCode": "90210"
-})
-```
+{!_includes/quick-start.md!}
 
 **[→ Get Started](quickstart.md)**{ .md-button .md-button--primary }
 **[→ API Reference](api-reference.md)**{ .md-button }
@@ -115,13 +91,7 @@ Integrate ReZEN with your existing systems:
 
 ## 📊 API Coverage
 
-| **API Section** | **Endpoints** | **Status** |
-|-----------------|---------------|------------|
-| Transaction Builder | 60+ endpoints | ✅ Complete |
-| Transactions | 50+ endpoints | ✅ Complete |
-| Agents | 35+ endpoints | ✅ Complete |
-| Teams | 10+ endpoints | ✅ Complete |
-| **Total** | **150+ endpoints** | **✅ Complete** |
+{!_includes/api-coverage.md!}
 
 ---
 
