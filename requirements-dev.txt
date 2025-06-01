@@ -9,6 +9,21 @@ isort>=5.12.0
 pylint>=3.0.0
 types-requests>=2.31.0
 # Documentation dependencies
-mkdocs-material>=9.5.0
-mkdocstrings[python]>=0.24.0
+mkdocs-material>=9.5.48
+mkdocstrings[python]>=0.27.2
 mkdocs-minify-plugin>=0.8.0
+
+# Additional development tools
+pre-commit>=4.0.1
+bandit>=1.8.0
+safety>=3.2.11
+
+# Documentation dependencies
+mkdocs>=1.6.1
+mkdocs-include-markdown-plugin>=6.2.6
+pymdown-extensions>=10.12
+markdown>=3.7
+
+# Testing utilities
+coverage>=7.6.9
+tox>=4.23.2
