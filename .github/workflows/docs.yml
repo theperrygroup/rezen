@@ -69,6 +69,11 @@ jobs:
         run: |
           pip install -e .
 
+      - name: Debug - Check MkDocs installation
+        run: |
+          mkdocs --version
+          python -c "import mkdocs; print('MkDocs installed successfully')"
+
       - name: Run tests with coverage
         run: |
           pytest --cov=rezen --cov-report=xml
@@ -78,13 +83,22 @@ jobs:
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+        continue-on-error: true
 
       - name: Build documentation
         run: |
-          mkdocs build --clean
+          mkdocs build --clean --verbose
         env:
           # Set environment variables for build
-          SITE_URL: ${{ github.event.repository.html_url }}
+          SITE_URL: https://theperrygroup.github.io/rezen/
+
+      - name: Debug - Check build output
+        run: |
+          ls -la site/
+          echo "Documentation build completed"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Upload documentation artifacts
         uses: actions/upload-pages-artifact@v3
