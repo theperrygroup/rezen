@@ -709,7 +709,7 @@ graph TD
 
     Understand data validation and type safety
 
--   [:material-file-document: **Examples**](../examples.md)
+-   [:material-file-document: **Examples**](../guides/examples.md)
 
     See error handling in practical examples
 

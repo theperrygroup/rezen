@@ -465,7 +465,7 @@ def search_active_agents(
 When adding new features, update relevant documentation:
 
 1. **API Reference** (`docs/api/index.md`)
-2. **Examples** (`docs/examples.md`)
+2. **Examples** (`docs/guides/examples.md`)
 3. **README** (if major feature)
 4. **Changelog** (`docs/changelog.md`)
 
