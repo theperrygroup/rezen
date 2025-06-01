@@ -1,0 +1,38 @@
+/* Extra CSS for ReZEN Documentation */
+
+/* Custom styles for better readability */
+.md-content__button {
+  color: var(--md-primary-fg-color);
+}
+
+/* Code block improvements */
+.highlight pre {
+  border-radius: 6px;
+}
+
+/* Grid cards spacing */
+.grid.cards {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Improve table styling */
+.md-typeset table:not([class]) {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Button styling */
+.md-button {
+  border-radius: 6px;
+}
+
+/* Navigation improvements */
+.md-nav__item .md-nav__link--active {
+  font-weight: 600;
+}
+
+/* Admonition improvements */
+.md-typeset .admonition {
+  border-radius: 6px;
+}
