@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rezen"
-version = "1.1.5"
+version = "1.2.0"
 description = "Python wrapper for The Real Brokerage ReZEN API - Transaction Builder, Transactions, Teams, Agents, and Directory management"
 readme = "README.md"
 license = "MIT"
