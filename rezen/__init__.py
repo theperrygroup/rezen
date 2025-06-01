@@ -24,7 +24,7 @@ from .teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 __all__ = [
     "RezenClient",
     "TransactionBuilderClient",
