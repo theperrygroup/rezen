@@ -701,7 +701,7 @@ graph TD
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [:material-hammer-wrench: **Transaction Builder**](../api/transaction-builder.md)
 
     Learn about transaction creation with proper error handling
 
@@ -713,7 +713,7 @@ graph TD
 
     See error handling in practical examples
 
--   [:material-book-open: **API Reference**](index.md)
+-   [:material-book-open: **API Reference**](../api/index.md)
 
     Return to the main API reference
 

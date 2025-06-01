@@ -379,7 +379,7 @@ The following sections provide auto-generated documentation from the source code
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [:material-hammer-wrench: **Transaction Builder**](../api/transaction-builder.md)
 
     Learn about transaction creation and management
 
@@ -391,7 +391,7 @@ The following sections provide auto-generated documentation from the source code
 
     See practical usage examples
 
--   [:material-book-open: **API Reference**](index.md)
+-   [:material-book-open: **API Reference**](../api/index.md)
 
     Return to the main API reference
 
