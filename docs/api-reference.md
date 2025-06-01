@@ -10,7 +10,7 @@ Complete reference for the ReZEN Python API client. This document covers all ava
 - [Teams API](#teams-api)
 - [Agents API](#agents-api)
 - [Exceptions](#exceptions)
-- [Data Types & Enums](#data-types--enums)
+- [Data Types & Enums](#data-types-enums)
 
 ---
 

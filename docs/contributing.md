@@ -712,7 +712,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Resources
 
-- **Style Guide**: [STYLE_GUIDE.md](../STYLE_GUIDE.md)
+- **Style Guide**: Follow PEP 8 and project conventions above
 - **API Documentation**: [docs/api-reference.md](api-reference.md)
 - **Examples**: [docs/examples.md](examples.md)
 - **Python Docs**: [docs.python.org](https://docs.python.org/)
@@ -723,7 +723,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 Contributors will be:
 
-- Listed in the [CONTRIBUTORS.md](../CONTRIBUTORS.md) file
+- Listed in the project contributors
 - Mentioned in release notes for significant contributions
 - Invited to the contributors' Discord/Slack channel (if available)
 
