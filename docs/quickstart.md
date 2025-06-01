@@ -65,15 +65,15 @@ try:
         status="ACTIVE",
         limit=5
     )
-    
+
     print(f"✅ Found {len(teams)} teams")
-    
+
     for team in teams:
         print(f"🏢 Team: {team.get('name', 'N/A')}")
         print(f"   ID: {team.get('id')}")
         print(f"   Type: {team.get('type', 'N/A')}")
         print()
-        
+
 except Exception as e:
     print(f"❌ Error: {e}")
 ```
@@ -105,15 +105,15 @@ try:
         name="John",  # Search by name
         limit=3
     )
-    
+
     print(f"✅ Found {len(agents)} agents")
-    
+
     for agent in agents:
         print(f"👤 Agent: {agent.get('first_name', '')} {agent.get('last_name', '')}")
         print(f"   ID: {agent.get('id')}")
         print(f"   Email: {agent.get('email', 'N/A')}")
         print()
-        
+
 except Exception as e:
     print(f"❌ Error: {e}")
 ```
@@ -132,7 +132,7 @@ transaction_data = {
     "type": "PURCHASE",
     "property": {
         "address": "123 Main Street",
-        "city": "Anytown", 
+        "city": "Anytown",
         "state": "CA",
         "zipCode": "90210"
     },
@@ -142,13 +142,13 @@ transaction_data = {
 try:
     # Create transaction builder
     response = client.transaction_builder.create_transaction_builder(transaction_data)
-    
+
     transaction_id = response.get('id')
     print(f"✅ Transaction created!")
     print(f"🆔 Transaction ID: {transaction_id}")
     print(f"🏠 Property: {transaction_data['property']['address']}")
     print(f"💰 Price: ${transaction_data['purchase_price']:,}")
-    
+
 except Exception as e:
     print(f"❌ Error creating transaction: {e}")
 ```
@@ -175,11 +175,11 @@ try:
         transaction_id=transaction_id,
         buyer_data=buyer_data
     )
-    
+
     print(f"✅ Buyer added!")
     print(f"👤 Name: {buyer_data['first_name']} {buyer_data['last_name']}")
     print(f"📧 Email: {buyer_data['email']}")
-    
+
 except Exception as e:
     print(f"❌ Error adding buyer: {e}")
 ```
@@ -192,19 +192,19 @@ Check your transaction:
 try:
     # Get transaction details
     transaction = client.transactions.get_transaction(transaction_id)
-    
+
     print(f"✅ Transaction Details:")
     print(f"🆔 ID: {transaction.get('id')}")
     print(f"📍 Status: {transaction.get('status', 'N/A')}")
     print(f"🏠 Property: {transaction.get('property', {}).get('address', 'N/A')}")
-    
+
     # Show participants
     participants = transaction.get('participants', [])
     print(f"👥 Participants: {len(participants)}")
-    
+
     for participant in participants:
         print(f"   - {participant.get('type')}: {participant.get('first_name')} {participant.get('last_name')}")
-    
+
 except Exception as e:
     print(f"❌ Error getting transaction: {e}")
 ```
@@ -221,7 +221,7 @@ def main():
     # Initialize client
     print("🚀 Initializing ReZEN client...")
     client = RezenClient()
-    
+
     # 1. Search for teams
     print("\n1️⃣ Searching for teams...")
     try:
@@ -231,7 +231,7 @@ def main():
             print(f"   🏢 {team.get('name', 'N/A')} (ID: {team.get('id')})")
     except Exception as e:
         print(f"❌ Teams error: {e}")
-    
+
     # 2. Search for agents
     print("\n2️⃣ Searching for agents...")
     try:
@@ -242,7 +242,7 @@ def main():
             print(f"   👤 {name} (ID: {agent.get('id')})")
     except Exception as e:
         print(f"❌ Agents error: {e}")
-    
+
     # 3. Create transaction
     print("\n3️⃣ Creating transaction...")
     transaction_data = {
@@ -255,7 +255,7 @@ def main():
         },
         "purchase_price": 750000
     }
-    
+
     try:
         response = client.transaction_builder.create_transaction_builder(transaction_data)
         transaction_id = response.get('id')
@@ -263,7 +263,7 @@ def main():
     except Exception as e:
         print(f"❌ Transaction error: {e}")
         return
-    
+
     # 4. Add buyer
     print("\n4️⃣ Adding buyer...")
     buyer_data = {
@@ -273,7 +273,7 @@ def main():
         "email": "quickstart@demo.com",
         "phone": "+1-555-DEMO-123"
     }
-    
+
     try:
         client.transaction_builder.add_buyer(
             transaction_id=transaction_id,
@@ -282,7 +282,7 @@ def main():
         print(f"✅ Buyer added: {buyer_data['first_name']} {buyer_data['last_name']}")
     except Exception as e:
         print(f"❌ Buyer error: {e}")
-    
+
     # 5. Get final status
     print("\n5️⃣ Checking transaction status...")
     try:
@@ -291,7 +291,7 @@ def main():
         print(f"👥 Participants: {len(transaction.get('participants', []))}")
     except Exception as e:
         print(f"❌ Status error: {e}")
-    
+
     print("\n🎉 Quick start complete!")
     print(f"🆔 Your transaction ID: {transaction_id}")
 
@@ -317,19 +317,19 @@ client = RezenClient()
 try:
     teams = client.teams.search_teams()
     print(f"Success: {len(teams)} teams found")
-    
+
 except AuthenticationError:
     print("❌ Check your API key")
-    
+
 except ValidationError as e:
     print(f"❌ Invalid request: {e}")
-    
+
 except NotFoundError:
     print("❌ Resource not found")
-    
+
 except RateLimitError:
     print("❌ Rate limit exceeded - wait and retry")
-    
+
 except Exception as e:
     print(f"❌ Unexpected error: {e}")
 ```
@@ -386,7 +386,7 @@ teams: List[Dict[str, Any]] = client.teams.search_teams()
 ## 🆘 Need Help?
 
 - **📖 Documentation**: [Full API Reference](api-reference.md)
-- **💡 Examples**: [Common Patterns](examples.md)  
+- **💡 Examples**: [Common Patterns](examples.md)
 - **🐛 Issues**: [Troubleshooting Guide](troubleshooting.md)
 - **💬 Support**: [Contact Support](mailto:support@rezen.com)
 
@@ -394,9 +394,9 @@ teams: List[Dict[str, Any]] = client.teams.search_teams()
 
 **🎉 Congratulations!** You've successfully:
 - ✅ Connected to the ReZEN API
-- ✅ Searched teams and agents  
+- ✅ Searched teams and agents
 - ✅ Created a transaction
 - ✅ Added participants
 - ✅ Retrieved transaction status
 
-**Ready for more?** Continue to the [API Reference](api-reference.md) for complete documentation. 
+**Ready for more?** Continue to the [API Reference](api-reference.md) for complete documentation.

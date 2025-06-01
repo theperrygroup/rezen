@@ -643,7 +643,7 @@ Archive or unarchive a vendor.
 # Archive vendor
 directory.archive_vendor(vendor_id, archive=True)
 
-# Unarchive vendor  
+# Unarchive vendor
 directory.archive_vendor(vendor_id, archive=False)
 ```
 
@@ -871,7 +871,7 @@ StateOrProvince.ONTARIO
 
 ```python
 from rezen import (
-    DirectoryEntryType, DirectoryRole, VendorSortField, 
+    DirectoryEntryType, DirectoryRole, VendorSortField,
     PersonSortField, DirectoryEntrySortField
 )
 
@@ -935,7 +935,7 @@ transaction_id = response['id']
 # 2. Add property details
 location_data = {
     "address": "123 Main St",
-    "city": "Anytown", 
+    "city": "Anytown",
     "state": "CA",
     "zipCode": "90210"
 }
@@ -989,7 +989,7 @@ directory = DirectoryClient()
 # 1. Create a vendor
 vendor_data = {
     "name": "Premier Title Company",
-    "emailAddress": "contact@premiertitle.com", 
+    "emailAddress": "contact@premiertitle.com",
     "phoneNumber": "+1-555-123-4567",
     "roles": ["TITLE_ESCROW"]
 }
@@ -1039,4 +1039,4 @@ help(client.agents)
 
 # For DirectoryClient
 help(directory)  # where directory = DirectoryClient()
-``` 
+```

@@ -1,7 +1,5 @@
 """Tests for ReZEN API exceptions."""
 
-import pytest
-
 from rezen.exceptions import (
     AuthenticationError,
     NetworkError,

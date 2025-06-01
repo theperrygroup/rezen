@@ -8,4 +8,4 @@
 - 📝 **Complete documentation** with real-world examples
 - 🔧 **Easy configuration** with environment variables and .env support
 - 🚨 **Robust error handling** with custom exceptions and detailed messages
-- 🔄 **Async support** planned for future versions 
+- 🔄 **Async support** planned for future versions

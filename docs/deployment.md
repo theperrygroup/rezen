@@ -293,7 +293,7 @@ pip install -e ".[dev]"
    ```bash
    # Check configuration
    mkdocs build --strict
-   
+
    # Validate locally
    ./scripts/deploy_docs.sh validate
    ```
@@ -310,7 +310,7 @@ pip install -e ".[dev]"
    ```bash
    # Run specific test suite
    pytest tests/ -v
-   
+
    # Check coverage
    pytest --cov=rezen --cov-report=html
    ```
@@ -340,4 +340,4 @@ This deployment guide consolidates what were previously scattered across:
 - Manual deployment scripts
 - Platform-specific setups
 
-All deployment processes are now documented in this single location for easier maintenance and troubleshooting. 
+All deployment processes are now documented in this single location for easier maintenance and troubleshooting.

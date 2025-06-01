@@ -11,7 +11,7 @@ client = RezenClient()
 # Search for active teams
 teams = client.teams.search_teams(status="ACTIVE")
 
-# Search for agents in California  
+# Search for agents in California
 agents = client.agents.search_active_agents(state_or_province=["CALIFORNIA"])
 
 # Create a transaction
@@ -28,7 +28,7 @@ client.transaction_builder.update_location_info(transaction_id, {
 
 # Use Directory API for vendor management through main client
 vendors = client.directory.search_vendors(
-    page_number=0, 
+    page_number=0,
     page_size=20,
     roles=["TITLE_ESCROW", "LENDER"]
-) 
+)

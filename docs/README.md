@@ -249,4 +249,4 @@ Add custom tracking code to `docs/javascripts/extra.js`.
 
 ---
 
-**Happy documenting!** 📚 
+**Happy documenting!** 📚

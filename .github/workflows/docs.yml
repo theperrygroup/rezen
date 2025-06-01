@@ -151,28 +151,28 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('📚 Documentation Preview')
             );
-            
+
             const commentBody = `📚 **Documentation Preview**
-            
+
             ✅ Documentation builds successfully!
-            
+
             The documentation will be automatically deployed when this PR is merged to main.
-            
+
             **Changed files:**
             - Documentation files: \`docs/\`
             - Configuration: \`mkdocs.yml\`
-            
+
             **Preview locally:**
             \`\`\`bash
             pip install -r docs/requirements.txt
             mkdocs serve
             \`\`\``;
-            
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -187,4 +187,4 @@ jobs:
                 issue_number: context.issue.number,
                 body: commentBody
               });
-            } 
+            }

@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from rezen.agents import AgentsClient
 from rezen.client import RezenClient
 from rezen.directory import DirectoryClient

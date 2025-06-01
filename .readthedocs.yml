@@ -38,4 +38,4 @@ search:
     api_reference.md: 2
     examples.md: 1
   ignore:
-    - "404.html" 
+    - "404.html"

@@ -8,4 +8,4 @@ Or for development:
 git clone <repository-url>
 cd rezen
 pip install -r requirements-dev.txt
-``` 
+```

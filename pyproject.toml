@@ -15,11 +15,11 @@ maintainers = [
     {name = "The Perry Group", email = "dev@theperrygroup.com"}
 ]
 keywords = [
-    "real-estate", 
-    "api", 
-    "transactions", 
-    "realty", 
-    "rezen", 
+    "real-estate",
+    "api",
+    "transactions",
+    "realty",
+    "rezen",
     "the-real-brokerage",
     "real-estate-api",
     "transaction-management"
@@ -157,4 +157,12 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
-] 
+]
+
+[tool.pydocstyle]
+convention = "google"
+add-ignore = ["D212", "D205"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503", "F841"]

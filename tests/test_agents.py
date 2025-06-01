@@ -1,15 +1,13 @@
 """Tests for AgentsClient."""
 
 from datetime import date
-from typing import Any
-from unittest.mock import Mock
 
 import pytest
 import responses
 
 from rezen.agents import AgentsClient, AgentSortField, AgentStatus
 from rezen.enums import Country, SortDirection, StateOrProvince
-from rezen.exceptions import AuthenticationError, NetworkError, ValidationError
+from rezen.exceptions import AuthenticationError, ValidationError
 
 
 class TestAgentsClient:
@@ -239,6 +237,7 @@ class TestAgentsClient:
         assert "pageNumber=0" in request_url
         assert "pageSize=10" in request_url
         assert "sortDirection=DESC" in request_url
+        assert result["agentId"] == agent_id
 
     @responses.activate
     def test_get_payment_details(self, client: AgentsClient) -> None:

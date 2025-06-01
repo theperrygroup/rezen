@@ -51,11 +51,11 @@ from .exceptions import RezenError, ValidationError
 ```python
 class AgentsClient:
     """Client for agent-related API endpoints."""
-    
+
     def __init__(self, base_client: BaseClient) -> None:
         """Initialize the agents client."""
         self._client = base_client
-    
+
     def get_agent(self, agent_id: str) -> Dict[str, Any]:
         """Get agent by ID."""
         # Implementation
@@ -81,7 +81,7 @@ Use comprehensive type hints for all function/method signatures:
 
 ```python
 def process_lead(
-    lead_data: Dict[str, str], 
+    lead_data: Dict[str, str],
     reference_id: str,
     create_date: Optional[datetime] = None
 ) -> Optional[Lead]:
@@ -96,13 +96,13 @@ Use Google-style docstrings for all public methods, functions, and classes:
 ```python
 def clean_phone(phone: str) -> str:
     """Clean and standardize phone number format.
-    
+
     Args:
         phone: Raw phone number string
-        
+
     Returns:
         Cleaned phone number in format (XXX) XXX-XXXX
-        
+
     Raises:
         ValueError: If the phone number is invalid
     """
@@ -163,14 +163,14 @@ from datetime import datetime
 
 class Agent(BaseModel):
     """Agent data model."""
-    
+
     id: str = Field(..., description="Unique agent identifier")
     email: str = Field(..., description="Agent email address")
     first_name: str = Field(..., description="Agent first name")
     last_name: str = Field(..., description="Agent last name")
     status: str = Field(..., description="Agent status")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
-    
+
     class Config:
         """Pydantic model configuration."""
         allow_population_by_field_name = True
@@ -181,4 +181,4 @@ class Agent(BaseModel):
 
 - Write descriptive commit messages
 - Use present tense ("Add feature" not "Added feature")
-- Reference issue numbers in commit messages 
+- Reference issue numbers in commit messages

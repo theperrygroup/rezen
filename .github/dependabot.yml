@@ -48,4 +48,4 @@ updates:
     assignees:
       - "theperrygroup"
     commit-message:
-      prefix: "ci:" 
+      prefix: "ci:"
