@@ -106,17 +106,17 @@ graph TB
     A --> D[TeamsClient]
     A --> E[AgentsClient]
     A --> F[DirectoryClient]
-    
+
     B --> G[BaseClient]
     C --> G
     D --> G
     E --> G
     F --> G
-    
+
     G --> H[HTTP Session]
     G --> I[Error Handling]
     G --> J[Authentication]
-    
+
     style A fill:#e1f5fe
     style G fill:#f3e5f5
     style H fill:#e8f5e8
@@ -186,11 +186,11 @@ agents = client.agents.search_active_agents(
 # Analyze agent's network
 for agent in agents[:5]:
     agent_id = agent['id']
-    
+
     # Get network statistics
     network_stats = client.agents.get_network_size_by_tier(agent_id)
     front_line = client.agents.get_front_line_agents_info(agent_id)
-    
+
     print(f"Agent {agent['first_name']} {agent['last_name']}:")
     print(f"  Network tiers: {len(network_stats)}")
     print(f"  Front line agents: {len(front_line)}")
@@ -342,4 +342,4 @@ The ReZEN Python client is released under the [MIT License](https://github.com/t
 
 ---
 
-**Ready to build powerful real estate applications?** **[Get Started →](quickstart.md)** 
+**Ready to build powerful real estate applications?** **[Get Started →](quickstart.md)**

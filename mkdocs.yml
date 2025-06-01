@@ -79,9 +79,7 @@ markdown_extensions:
       smart_enable: all
   - pymdownx.caret
   - pymdownx.details
-  - pymdownx.emoji:
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.emoji
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -94,11 +92,7 @@ markdown_extensions:
       repo: rezen
   - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist:
@@ -117,6 +111,7 @@ nav:
   - Guides:
     - Troubleshooting: troubleshooting.md
   - Development:
+    - Development Guide: development.md
     - Contributing: contributing.md
     - Release Notes: changelog.md
     - Deployment Guide: deployment.md
@@ -144,7 +139,7 @@ extra:
     property: G-XXXXXXXXXX  # Replace with actual Google Analytics ID
   consent:
     title: Cookie consent
-    description: >- 
+    description: >-
       We use cookies to recognize your repeated visits and preferences, as well
       as to measure the effectiveness of our documentation and whether users
       find what they're searching for. With your consent, you're helping us to
@@ -152,4 +147,4 @@ extra:
 
 # Watch extra directories
 watch:
-  - rezen/ 
+  - rezen/

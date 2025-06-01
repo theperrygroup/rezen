@@ -186,6 +186,7 @@ tramp
 .AppleDouble
 .LSOverride
 Icon
+**/.DS_Store
 
 # Thumbnails
 ._*
@@ -247,7 +248,7 @@ debug_*.py
 explore_*.py
 check_*.py
 
-# Live API test files  
+# Live API test files
 *_live.py
 live_*.py
 test_live_*.py

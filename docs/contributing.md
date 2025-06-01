@@ -107,20 +107,20 @@ We follow [PEP 8](https://pep8.org/) with some specific guidelines:
 # ✅ Good: Clear function names with type hints
 def get_agent_by_email(email_address: str) -> Dict[str, Any]:
     """Get agent information by email address.
-    
+
     Args:
         email_address: The agent's email address
-        
+
     Returns:
         Agent data dictionary
-        
+
     Raises:
         NotFoundError: If agent is not found
         ValidationError: If email format is invalid
     """
     if '@' not in email_address:
         raise ValidationError(f"Invalid email format: {email_address}")
-    
+
     return self.get("agents", params={"email": email_address})
 
 # ❌ Bad: No type hints, unclear naming
@@ -170,34 +170,34 @@ Use Google-style docstrings for all public methods:
 ```python
 def create_transaction_builder(self, builder_type: str = "TRANSACTION") -> Dict[str, Any]:
     """Create a new transaction builder.
-    
+
     Creates a new transaction builder instance that can be used to construct
     real estate transactions with participants, property details, and financial information.
-    
+
     Args:
         builder_type: Type of builder to create. Must be "TRANSACTION" or "LISTING".
                      Defaults to "TRANSACTION".
-    
+
     Returns:
         Dictionary containing the created transaction builder data with at least:
         - id: Unique identifier for the transaction builder
         - type: The builder type that was created
         - status: Current status of the builder
-    
+
     Raises:
         ValidationError: If builder_type is not valid
         AuthenticationError: If API key is invalid
         ServerError: If the API server encounters an error
-    
+
     Example:
         Create a basic transaction builder:
-        
+
         >>> client = RezenClient()
         >>> response = client.transaction_builder.create_transaction_builder()
         >>> transaction_id = response['id']
-        
+
         Create a listing builder:
-        
+
         >>> response = client.transaction_builder.create_transaction_builder("LISTING")
     """
 ```
@@ -213,10 +213,10 @@ def get_transaction(self, transaction_id: str) -> Dict[str, Any]:
     """Get transaction details."""
     if not transaction_id:
         raise ValidationError("Transaction ID cannot be empty")
-    
+
     if not isinstance(transaction_id, str):
         raise ValidationError(f"Transaction ID must be string, got {type(transaction_id)}")
-    
+
     try:
         return self.get(f"transactions/{transaction_id}")
     except NotFoundError:
@@ -258,33 +258,33 @@ from rezen import RezenClient
 from rezen.exceptions import ValidationError, NotFoundError
 
 class TestTransactionBuilder:
-    
+
     def setup_method(self):
         """Set up test fixtures before each test method."""
         self.client = RezenClient(api_key="test_key")
-    
+
     @patch('rezen.transaction_builder.TransactionBuilderClient._request')
     def test_create_transaction_builder_success(self, mock_request):
         """Test successful transaction builder creation."""
         # Arrange
         expected_response = {"id": "tx-12345", "type": "TRANSACTION"}
         mock_request.return_value = expected_response
-        
+
         # Act
         result = self.client.transaction_builder.create_transaction_builder()
-        
+
         # Assert
         assert result == expected_response
         mock_request.assert_called_once_with(
-            "POST", "transaction-builder", 
+            "POST", "transaction-builder",
             params={"type": "TRANSACTION"}
         )
-    
+
     def test_create_transaction_builder_invalid_type(self):
         """Test transaction builder creation with invalid type."""
         with pytest.raises(ValidationError, match="Invalid builder type"):
             self.client.transaction_builder.create_transaction_builder("INVALID")
-    
+
     @pytest.mark.parametrize("builder_type,expected_params", [
         ("TRANSACTION", {"type": "TRANSACTION"}),
         ("LISTING", {"type": "LISTING"}),
@@ -293,9 +293,9 @@ class TestTransactionBuilder:
         """Test transaction builder creation with different types."""
         with patch.object(self.client.transaction_builder, '_request') as mock_request:
             mock_request.return_value = {"id": "test"}
-            
+
             self.client.transaction_builder.create_transaction_builder(builder_type)
-            
+
             mock_request.assert_called_once_with(
                 "POST", "transaction-builder", params=expected_params
             )
@@ -309,17 +309,17 @@ from rezen import RezenClient
 
 class TestIntegration:
     """Integration tests that hit real API endpoints."""
-    
+
     @pytest.mark.integration
     def test_teams_search_integration(self):
         """Test actual teams search API call."""
         client = RezenClient()  # Uses real API key from environment
-        
+
         teams = client.teams.search_teams(status="ACTIVE", page_size=5)
-        
+
         assert isinstance(teams, list)
         assert len(teams) <= 5
-        
+
         if teams:
             team = teams[0]
             assert 'id' in team
@@ -419,36 +419,36 @@ def search_active_agents(
     name: Optional[str] = None
 ) -> Dict[str, Any]:
     """Search for active agents with filtering options.
-    
+
     Searches the agent database for active agents matching the specified
     criteria. Results are paginated and can be filtered by various attributes.
-    
+
     Args:
         page_number: Page number for pagination (0-based). Defaults to 0.
         page_size: Number of results per page (1-200). Defaults to 20.
         name: Filter agents by name (partial match, case-insensitive).
               Searches both first and last names.
-    
+
     Returns:
         Dictionary containing:
         - content: List of agent dictionaries
         - page: Current page information
         - total: Total number of matching agents
-    
+
     Raises:
         ValidationError: If page_size is outside valid range (1-200)
         AuthenticationError: If API key is invalid or missing
         RateLimitError: If too many requests made in short time
-    
+
     Example:
         Search for agents named "John":
-        
+
         >>> client = RezenClient()
         >>> agents = client.agents.search_active_agents(name="John", page_size=10)
         >>> print(f"Found {len(agents['content'])} agents")
-        
+
         Paginate through all agents:
-        
+
         >>> page = 0
         >>> all_agents = []
         >>> while True:
@@ -662,15 +662,15 @@ We use [Semantic Versioning](https://semver.org/):
 2. **Update changelog**:
    ```markdown
    ## [1.2.0] - 2024-01-15
-   
+
    ### Added
    - New agent search by location endpoint
    - Support for team member management
-   
+
    ### Fixed
    - Transaction validation error handling
    - Memory leak in batch operations
-   
+
    ### Changed
    - Improved error messages for authentication failures
    ```
@@ -731,4 +731,4 @@ Contributors will be:
 
 **Thank you for contributing to the ReZEN Python client!** 🎉
 
-Your contributions help make real estate technology more accessible to developers worldwide. 
+Your contributions help make real estate technology more accessible to developers worldwide.

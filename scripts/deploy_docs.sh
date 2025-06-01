@@ -44,24 +44,24 @@ check_python() {
         print_error "Python is not installed or not in PATH"
         exit 1
     fi
-    
+
     # Check Python version
     PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | cut -d' ' -f2)
     PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d'.' -f1)
     PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d'.' -f2)
-    
+
     if [ "$PYTHON_MAJOR" -lt 3 ] || [ "$PYTHON_MAJOR" -eq 3 -a "$PYTHON_MINOR" -lt 7 ]; then
         print_error "Python 3.7+ is required, found $PYTHON_VERSION"
         exit 1
     fi
-    
+
     print_success "Python $PYTHON_VERSION found"
 }
 
 # Function to install dependencies
 install_deps() {
     print_status "Installing documentation dependencies..."
-    
+
     if [ -f "docs/requirements.txt" ]; then
         $PYTHON_CMD -m pip install -r docs/requirements.txt
         print_success "Dependencies installed"
@@ -74,12 +74,12 @@ install_deps() {
 # Function to validate configuration
 validate_config() {
     print_status "Validating MkDocs configuration..."
-    
+
     if [ ! -f "mkdocs.yml" ]; then
         print_error "mkdocs.yml not found"
         exit 1
     fi
-    
+
     # Test MkDocs configuration (without strict mode for validation)
     if mkdocs build --clean --quiet >/dev/null 2>&1; then
         print_success "Configuration is valid"
@@ -93,17 +93,17 @@ validate_config() {
 # Function to build documentation
 build_docs() {
     print_status "Building documentation..."
-    
+
     # Update shared content first
     if [ -f "scripts/sync_docs.py" ]; then
         print_status "Updating shared content..."
         $PYTHON_CMD scripts/sync_docs.py update
     fi
-    
+
     if mkdocs build --clean; then
         print_success "Documentation built successfully"
         print_status "Built files are in ./site/ directory"
-        
+
         # Show warnings if any
         if mkdocs build --clean --strict >/dev/null 2>&1; then
             print_success "No warnings detected"
@@ -121,19 +121,19 @@ serve_docs() {
     print_status "Starting local development server..."
     print_status "Documentation will be available at: http://127.0.0.1:8000"
     print_status "Press Ctrl+C to stop the server"
-    
+
     mkdocs serve
 }
 
 # Function to deploy to GitHub Pages
 deploy_github() {
     print_status "Deploying to GitHub Pages..."
-    
+
     if [ ! -d ".git" ]; then
         print_error "Not a git repository"
         exit 1
     fi
-    
+
     # Check if gh-pages branch exists
     if git show-ref --verify --quiet refs/heads/gh-pages; then
         print_status "gh-pages branch exists"
@@ -144,7 +144,7 @@ deploy_github() {
         git commit --allow-empty -m "Initial gh-pages commit"
         git checkout main || git checkout master
     fi
-    
+
     mkdocs gh-deploy --clean
     print_success "Deployed to GitHub Pages"
 }
@@ -152,10 +152,10 @@ deploy_github() {
 # Function to check deployment readiness
 check_deployment() {
     print_status "Checking deployment readiness..."
-    
+
     # Check for required files
     REQUIRED_FILES=("mkdocs.yml" "docs/requirements.txt" ".github/workflows/docs.yml")
-    
+
     for file in "${REQUIRED_FILES[@]}"; do
         if [ -f "$file" ]; then
             print_success "✓ $file exists"
@@ -164,7 +164,7 @@ check_deployment() {
             exit 1
         fi
     done
-    
+
     # Check for documentation files
     if [ -d "docs" ] && [ "$(ls -A docs)" ]; then
         print_success "✓ Documentation files found"
@@ -172,7 +172,7 @@ check_deployment() {
         print_error "✗ No documentation files found in docs/"
         exit 1
     fi
-    
+
     print_success "Deployment ready!"
 }
 
@@ -243,4 +243,4 @@ case "${1:-help}" in
         show_help
         exit 1
         ;;
-esac 
+esac

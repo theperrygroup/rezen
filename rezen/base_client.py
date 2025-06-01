@@ -63,7 +63,7 @@ class BaseClient:
             Various RezenError subclasses based on status code
         """
         try:
-            response_data = response.json() if response.content else {}
+            response_data: Dict[str, Any] = response.json() if response.content else {}
         except ValueError:
             response_data = {"message": response.text}
 

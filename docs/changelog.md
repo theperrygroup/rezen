@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Complete API wrapper implementation for all ReZEN endpoints
 - Transaction Builder API with 60+ endpoints
-- Transactions API with 50+ endpoints  
+- Transactions API with 50+ endpoints
 - Agents API with 35+ endpoints
 - Teams API with 10+ endpoints
 - Comprehensive error handling with custom exceptions
@@ -208,7 +208,7 @@ Introduced comprehensive team management capabilities:
 Added powerful agent network management:
 
 - **Agent Search**: Find agents by name, location, status with advanced filtering
-- **Network Analysis**: Explore agent sponsor trees and downline hierarchies  
+- **Network Analysis**: Explore agent sponsor trees and downline hierarchies
 - **Geographic Filtering**: Search by country, state, or province
 - **Financial Integration**: Access tax forms, payment details, and commission plans
 
@@ -278,4 +278,4 @@ Found a bug or want to contribute? See our [Contributing Guide](contributing.md)
 
 - **Documentation**: [Full Documentation](index.md)
 - **GitHub Issues**: [Report Issues](https://github.com/your-org/rezen-python-client/issues)
-- **Email**: [support@rezen.com](mailto:support@rezen.com) 
+- **Email**: [support@rezen.com](mailto:support@rezen.com)

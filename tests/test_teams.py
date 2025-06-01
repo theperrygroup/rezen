@@ -1,6 +1,5 @@
 """Tests for teams client."""
 
-import json
 from datetime import date
 from typing import Any, Dict
 from unittest.mock import patch

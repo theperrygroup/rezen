@@ -1,9 +1,6 @@
 """Tests for the DirectoryClient."""
 
-import json
-from datetime import date
 from io import BytesIO
-from typing import Any, Dict, List
 from unittest.mock import patch
 
 import pytest

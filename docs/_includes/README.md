@@ -33,4 +33,4 @@ python scripts/sync_docs.py update
 python scripts/sync_docs.py build
 ```
 
-The build process automatically updates shared content, so API coverage numbers stay accurate. 
+The build process automatically updates shared content, so API coverage numbers stay accurate.

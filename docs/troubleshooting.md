@@ -194,7 +194,7 @@ import random
 def rate_limited_request(func, *args, **kwargs):
     max_retries = 5
     base_delay = 1
-    
+
     for attempt in range(max_retries):
         try:
             return func(*args, **kwargs)
@@ -224,7 +224,7 @@ import time
 
 def handle_server_errors(func, *args, **kwargs):
     max_retries = 3
-    
+
     for attempt in range(max_retries):
         try:
             return func(*args, **kwargs)
@@ -234,7 +234,7 @@ def handle_server_errors(func, *args, **kwargs):
                 print(f"Server error. Retrying in {wait_time}s...")
                 time.sleep(wait_time)
                 continue
-            
+
             # Log the error for investigation
             print(f"Server error after {max_retries} attempts: {e}")
             raise
@@ -260,7 +260,7 @@ def safe_get_transaction(client, transaction_id):
         return client.transactions.get_transaction(transaction_id)
     except NotFoundError:
         print(f"❌ Transaction {transaction_id} not found")
-        
+
         # Try to find similar transactions
         try:
             builders = client.transaction_builder.get_transaction_builders(
@@ -279,7 +279,7 @@ def safe_get_team(client, team_id):
         return client.teams.get_team_without_agents(team_id)
     except NotFoundError:
         print(f"❌ Team {team_id} not found")
-        
+
         # Search for similar teams
         teams = client.teams.search_teams(page_size=5)
         print(f"Available teams: {len(teams)}")
@@ -309,29 +309,29 @@ def fix_date_formats():
         "01-15-2024",  # Wrong order
         "2024-1-5",    # Missing zero padding
     ]
-    
+
     # ✅ Correct format: YYYY-MM-DD
     good_date = "2024-01-15"
-    
+
     return good_date
 
 # 2. Missing required fields
 def validate_buyer_data(buyer_data):
     required_fields = ['first_name', 'last_name', 'email']
-    
+
     missing_fields = []
     for field in required_fields:
         if not buyer_data.get(field):
             missing_fields.append(field)
-    
+
     if missing_fields:
         raise ValidationError(f"Missing required fields: {missing_fields}")
-    
+
     # Email validation
     email = buyer_data.get('email')
     if email and '@' not in email:
         raise ValidationError(f"Invalid email format: {email}")
-    
+
     return True
 
 # Usage
@@ -408,23 +408,23 @@ def timer(description):
 def get_all_teams_paginated(client, page_size=50):
     all_teams = []
     page_number = 0
-    
+
     while True:
         with timer(f"Page {page_number}"):
             teams = client.teams.search_teams(
                 page_number=page_number,
                 page_size=page_size
             )
-        
+
         if not teams:
             break
-            
+
         all_teams.extend(teams)
         page_number += 1
-        
+
         # Add small delay to avoid rate limiting
         time.sleep(0.1)
-    
+
     return all_teams
 
 # 2. Use smaller page sizes for initial testing
@@ -432,7 +432,7 @@ def debug_slow_request(client):
     # Start with small request
     with timer("Small request (5 items)"):
         teams = client.teams.search_teams(page_size=5)
-    
+
     # Gradually increase if needed
     with timer("Medium request (50 items)"):
         teams = client.teams.search_teams(page_size=50)
@@ -453,27 +453,27 @@ from typing import Iterator, Dict, Any
 def process_teams_in_batches(client, batch_size=100) -> Iterator[Dict[str, Any]]:
     """Process teams in batches to avoid memory issues."""
     page_number = 0
-    
+
     while True:
         try:
             teams = client.teams.search_teams(
                 page_number=page_number,
                 page_size=batch_size
             )
-            
+
             if not teams:
                 break
-            
+
             # Yield each team individually
             for team in teams:
                 yield team
-            
+
             # Clean up
             del teams
             gc.collect()
-            
+
             page_number += 1
-            
+
         except Exception as e:
             print(f"Error processing page {page_number}: {e}")
             break
@@ -484,7 +484,7 @@ for team in process_teams_in_batches(client):
     # Process one team at a time
     print(f"Processing team: {team.get('name')}")
     processed_count += 1
-    
+
     if processed_count % 100 == 0:
         print(f"Processed {processed_count} teams")
 ```
@@ -505,24 +505,24 @@ for team in process_teams_in_batches(client):
 ```python
 def debug_transaction_not_found(client, transaction_id):
     print(f"Debugging transaction: {transaction_id}")
-    
+
     # 1. Check transaction ID format
     if not transaction_id or len(transaction_id) < 10:
         print("❌ Transaction ID seems too short")
         return
-    
+
     # 2. List available transactions
     try:
         builders = client.transaction_builder.get_transaction_builders(
             limit=10, from_offset=0, yenta_id="your-user-id"
         )
         print(f"Available transaction builders: {len(builders)}")
-        
+
         for builder in builders:
             builder_id = builder.get('id')
             if builder_id and transaction_id in builder_id:
                 print(f"✅ Found similar ID: {builder_id}")
-            
+
     except Exception as e:
         print(f"Error listing transactions: {e}")
 ```
@@ -572,13 +572,13 @@ def debug_connection_issues():
     except Exception as e:
         print(f"❌ Internet connection issue: {e}")
         return
-    
+
     # 2. Test ReZEN API endpoints
     base_urls = [
         "https://yenta.therealbrokerage.com/api/v1",
         "https://production-api.rezen.com"  # Example
     ]
-    
+
     for url in base_urls:
         try:
             response = requests.get(f"{url}/health", timeout=10)
@@ -626,13 +626,13 @@ class DebugClient(BaseClient):
             print(f"   Params: {kwargs['params']}")
         if kwargs.get('json_data'):
             print(f"   Data: {json.dumps(kwargs['json_data'], indent=2)}")
-        
+
         # Make the request
         response = super()._request(method, endpoint, **kwargs)
-        
+
         # Log response details
         print(f"✅ RESPONSE: {len(json.dumps(response)) if response else 0} bytes")
-        
+
         return response
 
 # Use debug client
@@ -654,23 +654,23 @@ from io import StringIO
 def profile_api_calls():
     # Create a profiler
     pr = cProfile.Profile()
-    
+
     # Start profiling
     pr.enable()
-    
+
     # Your API calls here
     client = RezenClient()
     teams = client.teams.search_teams(page_size=50)
     agents = client.agents.search_active_agents(page_size=20)
-    
+
     # Stop profiling
     pr.disable()
-    
+
     # Print results
     s = StringIO()
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
-    
+
     print(s.getvalue())
 
 profile_api_calls()
@@ -783,7 +783,7 @@ def collect_debug_info():
     print(f"Platform: {platform.platform()}")
     print(f"ReZEN version: {rezen.__version__}")
     print(f"Requests version: {requests.__version__}")
-    
+
     # Check API connectivity
     try:
         client = rezen.RezenClient()
@@ -791,12 +791,12 @@ def collect_debug_info():
         print("✅ API connectivity: Working")
     except Exception as e:
         print(f"❌ API connectivity: {e}")
-    
+
     # Check environment
     import os
     api_key = os.getenv('REZEN_API_KEY')
     print(f"API key set: {'Yes' if api_key else 'No'}")
-    
+
     print("========================")
 
 collect_debug_info()
@@ -811,4 +811,4 @@ collect_debug_info()
 
 ---
 
-**💡 Pro Tip:** Always test with the smallest possible data set first, then scale up. This helps isolate whether issues are related to data size, specific values, or configuration problems. 
+**💡 Pro Tip:** Always test with the smallest possible data set first, then scale up. This helps isolate whether issues are related to data size, specific values, or configuration problems.
