@@ -24,14 +24,18 @@ permissions:
   pages: write
   id-token: write
 
+env:
+  PYTHON_VERSION: "3.11"
+
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build job
-  build:
+  # Sync and validate documentation
+  sync-docs:
+    name: Sync Documentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,7 +46,123 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install package for analysis
+        run: |
+          pip install --upgrade pip
+          pip install -e .
+
+      - name: Update API coverage
+        run: |
+          python -c "
+          import re
+          from pathlib import Path
+          
+          # Count endpoints in each module
+          rezen_dir = Path('rezen')
+          modules = {
+              'Transaction Builder': 'transaction_builder.py',
+              'Transactions': 'transactions.py', 
+              'Agents': 'agents.py',
+              'Teams': 'teams.py',
+              'Directory': 'directory.py',
+          }
+          
+          coverage_data = {}
+          total_endpoints = 0
+          
+          for module_name, filename in modules.items():
+              module_path = rezen_dir / filename
+              if module_path.exists():
+                  content = module_path.read_text()
+                  methods = re.findall(r'\n    def ([a-zA-Z][a-zA-Z0-9_]*)\(', content)
+                  exclude_methods = {'__init__', 'get', 'post', '_request'}
+                  endpoint_count = len([m for m in methods if m not in exclude_methods])
+                  coverage_data[module_name] = endpoint_count
+                  total_endpoints += endpoint_count
+                  print(f'✅ {module_name}: {endpoint_count} endpoints')
+              else:
+                  coverage_data[module_name] = 0
+          
+          # Create includes directory if it doesn't exist
+          includes_dir = Path('docs/_includes')
+          includes_dir.mkdir(exist_ok=True)
+          
+          # Update API coverage include file
+          coverage_file = includes_dir / 'api-coverage.md'
+          coverage_content = '| **API Section** | **Endpoints** | **Status** |\n'
+          coverage_content += '|-----------------|---------------|------------|\n'
+          
+          for module_name, count in coverage_data.items():
+              status = '✅ Complete' if count > 0 else '❌ Incomplete'
+              coverage_content += f'| {module_name} | {count} endpoints | {status} |\n'
+          
+          coverage_content += f'| **Total** | **{total_endpoints} endpoints** | **✅ Complete** |'
+          coverage_file.write_text(coverage_content)
+          print(f'✅ Updated API coverage: {total_endpoints} total endpoints')
+          "
+
+      - name: Validate includes
+        run: |
+          python -c "
+          import re
+          from pathlib import Path
+          
+          includes_dir = Path('docs/_includes')
+          if not includes_dir.exists():
+              print('❌ _includes directory does not exist')
+              exit(1)
+          
+          include_files = list(includes_dir.glob('*.md'))
+          if not include_files:
+              print('❌ No include files found')
+              exit(1)
+          
+          print(f'✅ Found {len(include_files)} include files')
+          
+          # Check references
+          include_pattern = re.compile(r'\{!.*?!\}')
+          
+          readme_path = Path('README.md')
+          if readme_path.exists():
+              readme_includes = len(include_pattern.findall(readme_path.read_text()))
+              print(f'✅ README.md uses {readme_includes} includes')
+          
+          index_path = Path('docs/index.md')
+          if index_path.exists():
+              index_includes = len(include_pattern.findall(index_path.read_text()))
+              print(f'✅ docs/index.md uses {index_includes} includes')
+          "
+
+      - name: Commit updated includes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if git diff --quiet docs/_includes/; then
+            echo "No changes to commit"
+          else
+            git add docs/_includes/
+            git commit -m "docs: update API coverage [skip ci]"
+            git push
+          fi
+
+  # Build job
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    needs: sync-docs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git info
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Cache dependencies
@@ -105,8 +225,16 @@ jobs:
         with:
           path: ./site
 
-  # Deployment job (only on main/master branch pushes)
-  deploy:
+      - name: Upload build for Vercel
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build
+          path: ./site
+          retention-days: 1
+
+  # GitHub Pages deployment (only on main/master branch pushes)
+  deploy-github-pages:
+    name: Deploy to GitHub Pages
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     environment:
       name: github-pages
@@ -118,10 +246,37 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+  # Vercel deployment (replaces vercel.json)
+  deploy-vercel:
+    name: Deploy to Vercel
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download documentation build
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-build
+          path: ./site
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./site
+          vercel-args: '--prod'
+
   # Test build job for PRs
   test-build:
+    name: Test Documentation Build
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    needs: sync-docs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -129,7 +284,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Install dependencies
@@ -171,7 +326,12 @@ jobs:
             \`\`\`bash
             pip install -r docs/requirements.txt
             mkdocs serve
-            \`\`\``;
+            \`\`\`
+
+            **Deployments:**
+            - 🚀 GitHub Pages: Will update automatically
+            - ⚡ Vercel: Will update automatically
+            `;
 
             if (botComment) {
               await github.rest.issues.updateComment({

@@ -4,19 +4,126 @@ on:
   push:
     tags:
       - 'v*'  # Triggers on version tags like v1.0.0, v1.2.3
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as prerelease'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # Required for creating releases
 
+env:
+  PYTHON_VERSION: "3.11"
+
 jobs:
-  test:
+  # Version validation and bump (for manual releases)
+  version-bump:
+    name: Version Bump
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Validate and bump version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+          
+          echo "Requested version: $VERSION"
+          echo "Tag: $TAG"
+          
+          # Validate semantic version format
+          if ! echo "$VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' > /dev/null; then
+            echo "❌ Invalid version format. Use semantic versioning (e.g., 1.2.3)"
+            exit 1
+          fi
+          
+          # Check if tag already exists
+          if git tag -l | grep -q "^$TAG$"; then
+            echo "❌ Tag $TAG already exists"
+            exit 1
+          fi
+          
+          # Get current version from pyproject.toml
+          CURRENT_VERSION=$(grep -E '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Update pyproject.toml
+          sed -i.bak "s/version = \"$CURRENT_VERSION\"/version = \"$VERSION\"/" pyproject.toml
+          
+          # Update __init__.py
+          sed -i.bak "s/__version__ = \"$CURRENT_VERSION\"/__version__ = \"$VERSION\"/" rezen/__init__.py
+          
+          # Verify changes
+          NEW_PYPROJECT_VERSION=$(grep -E '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          NEW_INIT_VERSION=$(grep -E '^__version__ = ' rezen/__init__.py | sed 's/__version__ = "\(.*\)"/\1/')
+          
+          if [ "$NEW_PYPROJECT_VERSION" != "$VERSION" ] || [ "$NEW_INIT_VERSION" != "$VERSION" ]; then
+            echo "❌ Version update failed"
+            echo "pyproject.toml: $NEW_PYPROJECT_VERSION"
+            echo "__init__.py: $NEW_INIT_VERSION"
+            exit 1
+          fi
+          
+          echo "✅ Updated versions successfully"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          
+          # Stage and commit changes
+          git add pyproject.toml rezen/__init__.py
+          git commit -m "Bump version to $VERSION"
+          
+          # Create tag
+          git tag -a "$TAG" -m "Release $TAG"
+          
+          # Push changes and tag
+          git push origin main
+          git push origin "$TAG"
+          
+          echo "✅ Created and pushed tag: $TAG"
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: version-bump
+    if: always() && (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped')
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -35,17 +142,20 @@ jobs:
         pytest --cov=rezen --cov-report=term-missing
 
   build:
+    name: Build Package
     runs-on: ubuntu-latest
-    needs: test
+    needs: [version-bump, test]
+    if: always() && (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped') && needs.test.result == 'success'
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Full history for proper versioning
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Install build dependencies
       run: |
@@ -55,7 +165,11 @@ jobs:
     - name: Verify version consistency
       run: |
         # Extract version from tag (remove 'v' prefix)
-        TAG_VERSION=${GITHUB_REF#refs/tags/v}
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG_VERSION="${{ needs.version-bump.outputs.version }}"
+        else
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+        fi
         echo "Tag version: $TAG_VERSION"
 
         # Extract version from pyproject.toml
@@ -88,8 +202,10 @@ jobs:
       with:
         name: dist
         path: dist/
+        retention-days: 30
 
   publish-pypi:
+    name: Publish to PyPI
     runs-on: ubuntu-latest
     needs: build
     environment: release  # Use environment for additional protection
@@ -109,13 +225,16 @@ jobs:
         # repository-url: https://test.pypi.org/legacy/
 
   create-github-release:
+    name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build, publish-pypi]
+    needs: [version-bump, build, publish-pypi]
+    if: always() && needs.build.result == 'success' && needs.publish-pypi.result == 'success'
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Download build artifacts
       uses: actions/download-artifact@v4
@@ -123,65 +242,109 @@ jobs:
         name: dist
         path: dist/
 
-    - name: Generate changelog
+    - name: Generate changelog and release info
       id: changelog
       run: |
-        # Extract version from tag
-        VERSION=${GITHUB_REF#refs/tags/}
+        # Extract version from tag or input
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ needs.version-bump.outputs.version }}"
+          TAG="v$VERSION"
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+          TAG=${GITHUB_REF#refs/tags/}
+        fi
+        
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-        # Generate changelog (you can customize this)
-        echo "## Changes in $VERSION" > CHANGELOG.md
+        # Generate changelog
+        echo "## 🚀 ReZEN Python Client $TAG" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📦 Package Information" >> CHANGELOG.md
+        echo "- **Version**: $VERSION" >> CHANGELOG.md
+        echo "- **Python Support**: 3.8 - 3.12" >> CHANGELOG.md
+        echo "- **PyPI Package**: [rezen $VERSION](https://pypi.org/project/rezen/$VERSION/)" >> CHANGELOG.md
+        echo "- **Documentation**: [GitHub Pages](https://theperrygroup.github.io/rezen/)" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
 
         # Get commits since last tag
         LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
         if [ -n "$LAST_TAG" ]; then
-          echo "### Commits since $LAST_TAG:" >> CHANGELOG.md
-          git log --pretty=format:"- %s" $LAST_TAG..HEAD >> CHANGELOG.md
+          echo "### 🔄 Changes since $LAST_TAG:" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          
+          # Group commits by type
+          git log --pretty=format:"%s" $LAST_TAG..HEAD | while read -r commit; do
+            case "$commit" in
+              feat*|feature*) echo "- ✨ $commit" ;;
+              fix*) echo "- 🐛 $commit" ;;
+              docs*) echo "- 📚 $commit" ;;
+              test*) echo "- 🧪 $commit" ;;
+              ci*|workflow*) echo "- 🔧 $commit" ;;
+              refactor*) echo "- ♻️ $commit" ;;
+              perf*) echo "- ⚡ $commit" ;;
+              *) echo "- 🔄 $commit" ;;
+            esac
+          done >> CHANGELOG.md
         else
-          echo "### Initial release" >> CHANGELOG.md
-          git log --pretty=format:"- %s" >> CHANGELOG.md
+          echo "### 🎉 Initial Release" >> CHANGELOG.md
+          echo "- First stable release of ReZEN Python client" >> CHANGELOG.md
         fi
-
+        
         echo "" >> CHANGELOG.md
-        echo "### Package Information" >> CHANGELOG.md
-        echo "- **Python Support**: 3.8 - 3.12" >> CHANGELOG.md
-        echo "- **PyPI Package**: [rezen $VERSION](https://pypi.org/project/rezen/$VERSION/)" >> CHANGELOG.md
-        echo "- **Documentation**: [GitHub Docs](https://github.com/theperrygroup/rezen/blob/main/docs/README.md)" >> CHANGELOG.md
+        echo "### 🛠️ Installation" >> CHANGELOG.md
+        echo "\`\`\`bash" >> CHANGELOG.md
+        echo "pip install rezen==$VERSION" >> CHANGELOG.md
+        echo "\`\`\`" >> CHANGELOG.md
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        name: ReZEN ${{ steps.changelog.outputs.VERSION }}
+        name: ReZEN ${{ steps.changelog.outputs.TAG }}
+        tag_name: ${{ steps.changelog.outputs.TAG }}
         body_path: CHANGELOG.md
         files: |
           dist/*.tar.gz
           dist/*.whl
         draft: false
-        prerelease: ${{ contains(github.ref, '-') }}  # Mark as prerelease if version contains '-' (e.g., v1.0.0-beta)
+        prerelease: ${{ github.event.inputs.prerelease == 'true' || contains(steps.changelog.outputs.VERSION, '-') }}
         generate_release_notes: true  # Auto-generate additional release notes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   post-release:
+    name: Post-Release Notifications
     runs-on: ubuntu-latest
-    needs: [publish-pypi, create-github-release]
-    if: always()  # Run even if previous jobs fail
+    needs: [version-bump, publish-pypi, create-github-release]
+    if: always()
 
     steps:
     - name: Notify on success
       if: needs.publish-pypi.result == 'success' && needs.create-github-release.result == 'success'
       run: |
-        echo "🎉 Successfully released ReZEN ${GITHUB_REF#refs/tags/}!"
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ needs.version-bump.outputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+        fi
+        
+        echo "🎉 Successfully released ReZEN v$VERSION!"
         echo "✅ Published to PyPI"
         echo "✅ Created GitHub release"
+        echo "✅ Documentation updated"
         echo "📦 Package available at: https://pypi.org/project/rezen/"
+        echo "📚 Docs available at: https://theperrygroup.github.io/rezen/"
 
     - name: Notify on failure
       if: needs.publish-pypi.result == 'failure' || needs.create-github-release.result == 'failure'
       run: |
-        echo "❌ Release failed for ReZEN ${GITHUB_REF#refs/tags/}"
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ needs.version-bump.outputs.version }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+        fi
+        
+        echo "❌ Release failed for ReZEN v$VERSION"
         echo "PyPI publish: ${{ needs.publish-pypi.result }}"
         echo "GitHub release: ${{ needs.create-github-release.result }}"
         exit 1
