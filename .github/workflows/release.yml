@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write  # Required for creating releases
-  id-token: write  # Required for PyPI trusted publishing
 
 jobs:
   test:
@@ -94,6 +93,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment: release  # Use environment for additional protection
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
     
     steps:
     - name: Download build artifacts
@@ -104,10 +105,10 @@ jobs:
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        # Uncomment the next line to publish to Test PyPI first
-        # repository-url: https://test.pypi.org/legacy/
+      # No password needed - uses OIDC trusted publishing!
+      # Uncomment the next line to publish to Test PyPI first  
+      # with:
+      #   repository-url: https://test.pypi.org/legacy/
 
   create-github-release:
     runs-on: ubuntu-latest
