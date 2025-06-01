@@ -227,28 +227,32 @@ $RECYCLE.BIN/
 # Linux
 *~
 
-# Project-specific files
-# API response files
-*.json
-!package.json
-!tsconfig.json
-!**/fixtures/**/*.json
+# Project-specific exclusions
+# Large API documentation files
+rezen_api.json
+
+# Test/sample data files
+live_*.json
+*_live.json
+test_data.json
+sample_data.json
 
 # Log files
 *.log
 
-# Temporary test files
-# test_*.py
-*_test.py
+# Temporary development files
 temp_*.py
 scratch_*.py
+debug_*.py
+explore_*.py
+check_*.py
 
-# Live API test files
+# Live API test files  
 *_live.py
 live_*.py
 test_live_*.py
 
-# Data files
+# Data files (but allow fixture data in tests)
 *.csv
 *.xlsx
 *.xls
@@ -261,27 +265,10 @@ test_live_*.py
 config.local.*
 settings.local.*
 
-# Documentation build
-docs/build/
-
-# Task files
-tasks/
-
-# Local development scripts
-dev_*.py
-debug_*.py
-explore_*.py
-check_*.py
-
 # Runtime data
 pid.txt
 *.pid
 *.lock
-
-# Coverage reports
-.coverage*
-coverage/
-htmlcov/
 
 # Profiling data
 *.prof
@@ -297,7 +284,11 @@ htmlcov/
 .env.local
 .env.development
 .env.test
-.env.production 
+.env.production
 
-# Cursor
-.cursor/rules
+# Cursor IDE
+.cursor/
+
+# Development artifacts
+API_WRAPPER_TEMPLATE.md
+get_transaction.py
