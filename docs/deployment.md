@@ -1,278 +1,281 @@
-# Documentation Deployment Guide
+# ReZEN Deployment Guide
 
-This guide covers all available options for deploying the ReZEN Python client documentation automatically.
+This document consolidates all deployment processes for the ReZEN Python client, including documentation deployment, package publishing, and CI/CD workflows.
 
-## 📋 Table of Contents
+## Overview
 
-- [GitHub Pages (Recommended)](#github-pages-recommended)
-- [Netlify](#netlify)
-- [Vercel](#vercel)
-- [Read the Docs](#read-the-docs)
-- [Manual Deployment](#manual-deployment)
-- [Custom Domain Setup](#custom-domain-setup)
-- [Troubleshooting](#troubleshooting)
+The ReZEN project supports multiple deployment targets:
 
----
+### Documentation Deployment
+- **GitHub Pages** (Primary)
+- **Read the Docs** (Secondary)
+- **Vercel** (Alternative)
+- **Netlify** (Alternative)
+- **Local Development** (Testing)
 
-## GitHub Pages (Recommended)
+### Package Publishing
+- **PyPI** (Production)
+- **Test PyPI** (Testing)
 
-**✅ Automatic | ✅ Free | ✅ Custom Domain Support**
-
-The recommended deployment method using GitHub Actions for automatic builds and GitHub Pages for hosting.
-
-### Setup Steps
-
-1. **Enable GitHub Pages**:
-   - Go to your repository **Settings** → **Pages**
-   - Set **Source** to "GitHub Actions"
-   - The workflow is already configured in `.github/workflows/docs.yml`
-
-2. **Verify Workflow**:
-   ```yaml
-   # The workflow automatically triggers on:
-   # - Pushes to main/master branch
-   # - Changes to docs/ folder
-   # - Changes to mkdocs.yml
-   # - Manual trigger via GitHub UI
-   ```
-
-3. **Access Documentation**:
-   - Your docs will be available at: `https://username.github.io/repository-name/`
-   - Check the Actions tab for deployment status
-
-### Features
-
-- ✅ **Automatic deployment** on every push to main
-- ✅ **PR preview builds** (test-only, not deployed)
-- ✅ **Build caching** for faster deployments
-- ✅ **Strict mode** catches documentation errors
-- ✅ **Custom domain** support with HTTPS
-
-### Configuration
-
-The GitHub Actions workflow (`.github/workflows/docs.yml`) includes:
-
-- **Build job**: Builds documentation and uploads artifacts
-- **Deploy job**: Deploys to GitHub Pages (main branch only)
-- **Test job**: Tests documentation builds on PRs
+### CI/CD
+- **GitHub Actions** (Primary CI/CD)
+- **Continuous Integration** (Testing & Quality Checks)
 
 ---
 
-## Netlify
+## Documentation Deployment
 
-**✅ Automatic | ✅ Free Tier | ✅ Preview Deployments**
+### 1. GitHub Pages (Primary - Automated)
 
-Deploy to Netlify for enhanced features like form handling and edge functions.
+**Configuration**: `.github/workflows/docs.yml`
 
-### Setup Steps
+**Triggers**:
+- Push to `main`/`master` with changes to docs, mkdocs.yml, or rezen code
+- Pull requests (build test only)
+- Manual workflow dispatch
 
-1. **Get Netlify Credentials**:
-   ```bash
-   # Install Netlify CLI
-   npm install -g netlify-cli
-   
-   # Login and get tokens
-   netlify login
-   netlify sites:create --name rezen-python-docs
-   ```
+**Process**:
+1. Builds documentation with MkDocs
+2. Runs tests with coverage
+3. Uploads coverage to Codecov
+4. Deploys to GitHub Pages (on main branch only)
+5. Comments on PRs with build status
 
-2. **Set GitHub Secrets**:
-   - Go to **Settings** → **Secrets and variables** → **Actions**
-   - Add secrets:
-     - `NETLIFY_AUTH_TOKEN`: Your Netlify personal access token
-     - `NETLIFY_SITE_ID`: Your site ID from Netlify dashboard
+**Setup Required**:
+```bash
+# GitHub repository settings
+Settings → Pages → Source: GitHub Actions
+```
 
-3. **Enable Workflow**:
-   ```bash
-   # The workflow file is already created at:
-   # .github/workflows/deploy-netlify.yml
-   
-   # To enable it, uncomment or create the file
-   git add .github/workflows/deploy-netlify.yml
-   git commit -m "Enable Netlify deployment"
-   git push
-   ```
+**Manual Deployment**:
+```bash
+# Using the provided script
+./scripts/deploy_docs.sh deploy
 
-### Features
+# Or directly with MkDocs
+mkdocs gh-deploy --clean
+```
 
-- ✅ **Branch previews** for every PR
-- ✅ **Form handling** (if you add contact forms)
-- ✅ **Edge functions** for advanced features
-- ✅ **Analytics** and performance monitoring
-- ✅ **Custom headers** and redirects
+### 2. Read the Docs (Secondary - Automated)
 
----
+**Configuration**: `.readthedocs.yml`
 
-## Vercel
+**Features**:
+- Automatic builds on git pushes
+- PDF and ePub format generation
+- Search functionality
+- Multiple Python version support
 
-**✅ Automatic | ✅ Free Tier | ✅ Global CDN**
+**Setup Required**:
+1. Connect repository to Read the Docs
+2. Configure webhook in GitHub repository
+3. Set environment variables if needed
 
-Deploy to Vercel for excellent performance and developer experience.
+### 3. Vercel (Alternative - Automated)
 
-### Setup Steps
+**Configuration**: `vercel.json`
 
-1. **Connect Repository**:
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click **"New Project"**
-   - Import your GitHub repository
+**Features**:
+- Automatic deployment on git pushes
+- CDN distribution
+- Custom domain support
+- Build caching
 
-2. **Configure Build Settings**:
-   ```json
-   // vercel.json is already configured with:
-   {
-     "buildCommand": "pip install -r docs/requirements.txt && mkdocs build",
-     "installCommand": "pip install -r docs/requirements.txt",
-     "framework": null
-   }
-   ```
+**Setup Required**:
+1. Connect repository to Vercel
+2. Configure build settings
+3. Set environment variables
 
-3. **Deploy**:
-   - Vercel automatically detects the `vercel.json` configuration
-   - Pushes to main branch trigger automatic deployments
-   - PRs get preview deployments
+### 4. Netlify (Alternative - Manual Trigger)
 
-### Features
+**Configuration**: `.github/workflows/deploy-netlify.yml`
 
-- ✅ **Zero-config deployment** with `vercel.json`
-- ✅ **Preview URLs** for every commit
-- ✅ **Global CDN** with edge caching
-- ✅ **Analytics** and Web Vitals monitoring
-- ✅ **Custom domains** with automatic HTTPS
+**Triggers**:
+- Push to `main` with docs changes
+- Manual workflow dispatch
 
----
+**Setup Required**:
+Set GitHub secrets:
+```
+NETLIFY_AUTH_TOKEN=your_netlify_token
+NETLIFY_SITE_ID=your_site_id
+```
 
-## Read the Docs
+### 5. Local Development
 
-**✅ Automatic | ✅ Free | ✅ Multiple Formats**
+**Configuration**: `scripts/deploy_docs.sh`
 
-Use Read the Docs for comprehensive documentation hosting with PDF/ePub generation.
-
-### Setup Steps
-
-1. **Create RTD Account**:
-   - Go to [Read the Docs](https://readthedocs.org/)
-   - Sign up with your GitHub account
-
-2. **Import Project**:
-   - Click **"Import a Project"**
-   - Select your repository
-   - RTD automatically detects the `.readthedocs.yml` configuration
-
-3. **Configure Build**:
-   ```yaml
-   # .readthedocs.yml is already configured with:
-   # - Python 3.11
-   # - MkDocs build system
-   # - PDF/ePub generation
-   # - Custom requirements
-   ```
-
-### Features
-
-- ✅ **Multiple formats**: HTML, PDF, ePub
-- ✅ **Version management** for different branches/tags
-- ✅ **Search integration** with Elasticsearch
-- ✅ **Analytics** and download tracking
-- ✅ **Custom themes** and branding
-
----
-
-## Manual Deployment
-
-For custom hosting or one-time deployments.
-
-### Build Locally
-
+**Commands**:
 ```bash
 # Install dependencies
-pip install -r docs/requirements.txt
+./scripts/deploy_docs.sh install
 
-# Build documentation
-mkdocs build
+# Serve locally (development)
+./scripts/deploy_docs.sh serve
 
-# The built site is in ./site/ directory
-# Upload contents to your web server
-```
+# Build locally (testing)
+./scripts/deploy_docs.sh build
 
-### Deploy to Any Static Host
+# Validate configuration
+./scripts/deploy_docs.sh validate
 
-```bash
-# Examples for popular hosts:
-
-# Amazon S3
-aws s3 sync site/ s3://your-bucket-name/ --delete
-
-# Google Cloud Storage
-gsutil -m rsync -r -d site/ gs://your-bucket-name/
-
-# Azure Blob Storage
-az storage blob upload-batch -s site/ -d '$web' --account-name youraccount
-
-# Firebase Hosting
-firebase deploy --only hosting
-
-# Surge.sh
-npm install -g surge
-cd site/
-surge . your-domain.com
+# Check deployment readiness
+./scripts/deploy_docs.sh check
 ```
 
 ---
 
-## Custom Domain Setup
+## Package Publishing
 
-Configure a custom domain for your documentation.
+### 1. PyPI (Production - Automated)
 
-### GitHub Pages
+**Configuration**: `.github/workflows/release.yml`
 
-1. **Add CNAME file**:
-   ```bash
-   echo "docs.yourdomain.com" > docs/CNAME
-   git add docs/CNAME
-   git commit -m "Add custom domain"
-   git push
-   ```
+**Triggers**:
+- Git tags matching `v*` pattern (e.g., `v1.0.0`)
 
-2. **Configure DNS**:
-   ```
-   # Add these DNS records:
-   Type: CNAME
-   Name: docs (or your subdomain)
-   Value: username.github.io
-   ```
+**Process**:
+1. **Testing**: Runs tests across Python 3.8-3.12
+2. **Version Verification**: Ensures consistency across:
+   - Git tag
+   - `pyproject.toml`
+   - `rezen/__init__.py`
+3. **Build**: Creates source and wheel distributions
+4. **Publish**: Uploads to PyPI using trusted publishing
+5. **GitHub Release**: Creates release with changelog
+6. **Artifacts**: Attaches build files to release
 
-3. **Enable HTTPS**:
-   - Go to **Settings** → **Pages**
-   - Check **"Enforce HTTPS"**
+**Manual Release Process**:
+```bash
+# 1. Update version in all files
+./scripts/bump_version.py 1.0.8
 
-### Netlify
+# 2. Commit and tag
+git add .
+git commit -m "Bump version to 1.0.8"
+git tag v1.0.8
 
-1. **Add Domain**:
-   ```bash
-   netlify domains:add docs.yourdomain.com
-   ```
+# 3. Push with tags
+git push origin main --tags
+```
 
-2. **Configure DNS**:
-   ```
-   # Add CNAME record:
-   Type: CNAME
-   Name: docs
-   Value: your-site-name.netlify.app
-   ```
+**Setup Required**:
+Set GitHub secrets:
+```
+PYPI_API_TOKEN=your_pypi_token
+REZEN_API_KEY=your_rezen_api_key
+```
 
-### Vercel
+### 2. Manual Publishing
 
-1. **Add Domain**:
-   - Go to project **Settings** → **Domains**
-   - Add your custom domain
+**Local Build and Upload**:
+```bash
+# Install build tools
+pip install build twine
 
-2. **Configure DNS**:
-   ```
-   # Add CNAME record:
-   Type: CNAME
-   Name: docs
-   Value: cname.vercel-dns.com
-   ```
+# Build package
+python -m build
+
+# Check package
+twine check dist/*
+
+# Upload to PyPI
+twine upload dist/*
+
+# Upload to Test PyPI (testing)
+twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
+
+---
+
+## Continuous Integration
+
+### 1. CI Workflow (Automated)
+
+**Configuration**: `.github/workflows/ci.yml`
+
+**Triggers**:
+- Push to `main`/`develop`
+- Pull requests to `main`/`develop`
+
+**Process**:
+1. **Testing**: Multi-version Python testing (3.8-3.12)
+2. **Linting**: Flake8 code quality checks
+3. **Formatting**: Black code formatting validation
+4. **Import Sorting**: isort validation
+5. **Type Checking**: MyPy static analysis
+6. **Security**: Safety vulnerability scanning
+7. **Coverage**: Test coverage reporting to Codecov
+8. **Build**: Package build verification
+
+**Local Development Commands**:
+```bash
+# Run all checks locally
+black --check .
+isort --check-only .
+flake8 .
+mypy rezen/
+pytest --cov=rezen
+safety check
+```
+
+---
+
+## Environment Configuration
+
+### Required GitHub Secrets
+
+```bash
+# PyPI Publishing
+PYPI_API_TOKEN=pypi-...
+
+# API Testing
+REZEN_API_KEY=real_v2neAIGs...
+
+# Netlify (if using)
+NETLIFY_AUTH_TOKEN=...
+NETLIFY_SITE_ID=...
+```
+
+### Local Environment
+
+**`.env` file**:
+```env
+REZEN_API_KEY=your_api_key_here 
+```
+
+**Development Dependencies**:
+```bash
+pip install -r requirements-dev.txt
+pip install -e ".[dev]"
+```
+
+---
+
+## Deployment Checklist
+
+### Before Release
+
+- [ ] All tests passing locally
+- [ ] Code formatted with Black
+- [ ] Version updated in all locations
+- [ ] Documentation updated
+- [ ] CHANGELOG updated
+- [ ] Security scan clean
+
+### Documentation Deployment
+
+- [ ] MkDocs configuration valid
+- [ ] All documentation files present
+- [ ] Links working correctly
+- [ ] Examples tested
+
+### Package Release
+
+- [ ] Version numbers consistent
+- [ ] Build artifacts clean
+- [ ] Dependencies up to date
+- [ ] Tests cover new features
 
 ---
 
@@ -280,131 +283,55 @@ Configure a custom domain for your documentation.
 
 ### Common Issues
 
-#### Build Failures
+1. **Documentation Build Fails**:
+   ```bash
+   # Check configuration
+   mkdocs build --strict
+   
+   # Validate locally
+   ./scripts/deploy_docs.sh validate
+   ```
 
-```bash
-# Check MkDocs configuration
-mkdocs serve --strict
+2. **Release Workflow Fails**:
+   ```bash
+   # Check version consistency
+   grep version pyproject.toml
+   grep __version__ rezen/__init__.py
+   git tag --list | tail -5
+   ```
 
-# Validate YAML syntax
-python -c "import yaml; yaml.safe_load(open('mkdocs.yml'))"
+3. **Test Failures**:
+   ```bash
+   # Run specific test suite
+   pytest tests/ -v
+   
+   # Check coverage
+   pytest --cov=rezen --cov-report=html
+   ```
 
-# Check for missing dependencies
-pip install -r docs/requirements.txt
-```
+### Emergency Procedures
 
-#### Missing Files
+1. **Rollback Release**:
+   ```bash
+   # Delete tag and release
+   git tag -d v1.0.x
+   git push origin :refs/tags/v1.0.x
+   ```
 
-```bash
-# Ensure all navigation files exist
-mkdocs build --strict
-
-# Check for broken links
-pip install mkdocs-linkcheck
-mkdocs build --strict --config-file mkdocs.yml
-```
-
-#### GitHub Actions Failures
-
-```yaml
-# Common fixes in .github/workflows/docs.yml:
-
-# 1. Check permissions (already configured)
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# 2. Verify Python version
-python-version: '3.11'
-
-# 3. Check path filters
-paths:
-  - 'docs/**'
-  - 'mkdocs.yml'
-```
-
-#### Deployment Issues
-
-```bash
-# GitHub Pages not showing changes
-# - Check Actions tab for build status
-# - Verify Pages settings in repository
-# - Clear browser cache
-
-# Netlify build failures
-# - Check build logs in Netlify dashboard
-# - Verify environment variables
-# - Test build locally
-
-# Vercel deployment issues
-# - Check build logs in Vercel dashboard
-# - Verify vercel.json configuration
-# - Test with Vercel CLI locally
-```
-
-### Debug Commands
-
-```bash
-# Test local build
-mkdocs build --clean --strict
-
-# Serve locally with auto-reload
-mkdocs serve --dev-addr=0.0.0.0:8000
-
-# Check for plugin issues
-mkdocs serve --verbose
-
-# Validate all links
-pip install mkdocs-linkcheck
-mkdocs build --strict
-
-# Performance profiling
-mkdocs build --clean --strict --verbose --timing
-```
+2. **Force Documentation Rebuild**:
+   ```bash
+   # Trigger manual workflow
+   gh workflow run docs.yml
+   ```
 
 ---
 
-## Monitoring & Analytics
+## Migration Notes
 
-### GitHub Pages
+This deployment guide consolidates what were previously scattered across:
+- Multiple GitHub Actions workflows
+- Various configuration files
+- Manual deployment scripts
+- Platform-specific setups
 
-```html
-<!-- Add to docs/extra.html -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'GA_MEASUREMENT_ID');
-</script>
-```
-
-### Update mkdocs.yml
-
-```yaml
-extra:
-  analytics:
-    provider: google
-    property: G-XXXXXXXXXX  # Replace with your GA4 ID
-```
-
----
-
-## Recommended Setup
-
-For most projects, we recommend:
-
-1. **Primary**: GitHub Pages with GitHub Actions (free, reliable)
-2. **Preview**: Enable PR comments for build status
-3. **Custom Domain**: Set up `docs.yourdomain.com`
-4. **Analytics**: Add Google Analytics for usage insights
-5. **Monitoring**: Set up alerts for build failures
-
-**Next Steps**:
-- ✅ Push to main branch to trigger first deployment
-- ✅ Set up custom domain (optional)
-- ✅ Configure analytics (optional)
-- ✅ Monitor build status and fix any issues
-
-Your documentation will be automatically deployed and updated whenever you make changes to the `docs/` folder or `mkdocs.yml` file! 
+All deployment processes are now documented in this single location for easier maintenance and troubleshooting. 

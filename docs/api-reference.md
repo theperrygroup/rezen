@@ -9,6 +9,7 @@ Complete reference for the ReZEN Python API client. This document covers all ava
 - [Transactions API](#transactions-api)
 - [Teams API](#teams-api)
 - [Agents API](#agents-api)
+- [Directory API](#directory-api)
 - [Exceptions](#exceptions)
 - [Data Types & Enums](#data-types-enums)
 
@@ -42,6 +43,22 @@ client = RezenClient(api_key="your_api_key", base_url="https://custom.api.url")
 - `client.transactions` → [TransactionsClient](#transactions-api)
 - `client.teams` → [TeamsClient](#teams-api)
 - `client.agents` → [AgentsClient](#agents-api)
+
+### DirectoryClient
+
+Dedicated client for Directory API operations.
+
+```python
+from rezen import DirectoryClient
+
+# Initialize DirectoryClient separately
+directory = DirectoryClient()
+
+# Or with custom parameters
+directory = DirectoryClient(api_key="your_api_key", base_url="https://custom.api.url")
+```
+
+**Note:** DirectoryClient uses a different base URL (`https://yenta.therealbrokerage.com/api/v1`) than other APIs.
 
 ---
 
@@ -530,6 +547,232 @@ plan = client.agents.get_commission_plan("plan-uuid")
 
 ---
 
+## Directory API
+
+Comprehensive vendor and person management with advanced search capabilities.
+
+### DirectoryClient Initialization
+
+```python
+from rezen import DirectoryClient
+
+# Initialize with environment variable
+directory = DirectoryClient()
+
+# Initialize with API key
+directory = DirectoryClient(api_key="your_api_key")
+
+# Custom base URL (uses yenta API by default)
+directory = DirectoryClient(api_key="your_api_key", base_url="https://custom.api.url")
+```
+
+### Vendor Management
+
+#### `create_vendor(vendor_data)`
+
+Create a new vendor in the directory.
+
+```python
+vendor_data = {
+    "name": "Premier Title Company",
+    "emailAddress": "contact@premiertitle.com",
+    "phoneNumber": "+1-555-123-4567",
+    "street": "123 Business Ave",
+    "city": "Los Angeles",
+    "stateOrProvince": "CALIFORNIA",
+    "country": "UNITED_STATES",
+    "postalCode": "90210"
+}
+
+response = directory.create_vendor(vendor_data)
+vendor_id = response['id']
+```
+
+#### `get_vendor(vendor_id)`
+
+Get detailed vendor information.
+
+```python
+vendor = directory.get_vendor("vendor-uuid")
+print(f"Vendor: {vendor['name']} - Status: {vendor['status']}")
+```
+
+#### `update_vendor(vendor_id, vendor_data)`
+
+Update vendor information.
+
+```python
+update_data = {
+    "phoneNumber": "+1-555-999-8888",
+    "emailAddress": "new-contact@premiertitle.com"
+}
+
+response = directory.update_vendor(vendor_id, update_data)
+```
+
+#### `search_vendors(page_number, page_size, **filters)`
+
+Search vendors with comprehensive filtering.
+
+```python
+from rezen import DirectoryRole, VendorSortField, StateOrProvince
+
+# Basic search
+vendors = directory.search_vendors(
+    page_number=0,
+    page_size=20,
+    name="Title Company"
+)
+
+# Advanced search with filtering
+vendors = directory.search_vendors(
+    page_number=0,
+    page_size=50,
+    roles=[DirectoryRole.TITLE_ESCROW, DirectoryRole.LENDER],
+    state_or_province=StateOrProvince.CALIFORNIA,
+    is_verified=True,
+    sort_by=[VendorSortField.NAME, VendorSortField.CITY]
+)
+```
+
+#### `archive_vendor(vendor_id, archive=True)`
+
+Archive or unarchive a vendor.
+
+```python
+# Archive vendor
+directory.archive_vendor(vendor_id, archive=True)
+
+# Unarchive vendor  
+directory.archive_vendor(vendor_id, archive=False)
+```
+
+### W9 File Management
+
+#### `get_vendor_w9_url(vendor_id)`
+
+Get vendor's W9 file URL.
+
+```python
+w9_url = directory.get_vendor_w9_url(vendor_id)
+print(f"W9 file available at: {w9_url}")
+```
+
+#### `update_vendor_w9(vendor_id, w9_file)`
+
+Upload or update vendor's W9 file.
+
+```python
+with open("vendor_w9.pdf", "rb") as w9_file:
+    response = directory.update_vendor_w9(vendor_id, w9_file)
+```
+
+### Person Management
+
+#### `create_person(person_data, owner_agent_id=None, owner_team_id=None)`
+
+Create a new person in the directory.
+
+```python
+person_data = {
+    "firstName": "John",
+    "lastName": "Smith",
+    "emailAddress": "john.smith@email.com",
+    "phoneNumber": "+1-555-987-6543",
+    "isPublic": True
+}
+
+response = directory.create_person(
+    person_data,
+    owner_agent_id="agent-uuid",
+    owner_team_id="team-uuid"
+)
+person_id = response['id']
+```
+
+#### `search_persons(page_number, page_size, **filters)`
+
+Search persons with filtering.
+
+```python
+from rezen import PersonSortField
+
+# Basic search
+persons = directory.search_persons(
+    page_number=0,
+    page_size=20,
+    first_name="John"
+)
+
+# Advanced search
+persons = directory.search_persons(
+    page_number=0,
+    page_size=50,
+    is_public=True,
+    roles=[DirectoryRole.CLIENT],
+    sort_by=[PersonSortField.LAST_NAME, PersonSortField.FIRST_NAME]
+)
+```
+
+### Person-Vendor Linking
+
+#### `link_person(person_id, link_data)`
+
+Link a person to a vendor.
+
+```python
+link_data = {
+    "vendorId": "vendor-uuid",
+    "role": "EMPLOYEE"
+}
+
+response = directory.link_person(person_id, link_data)
+```
+
+#### `unlink_person(person_id)`
+
+Unlink a person from their linked vendor.
+
+```python
+response = directory.unlink_person(person_id)
+```
+
+### Directory Search
+
+#### `search_all_entries(page_number, page_size, **filters)`
+
+Search across both vendors and persons.
+
+```python
+from rezen import DirectoryEntrySortField
+
+# Search all directory entries
+entries = directory.search_all_entries(
+    page_number=0,
+    page_size=20,
+    search_text="title company",
+    roles=[DirectoryRole.TITLE_ESCROW]
+)
+```
+
+### Role Management
+
+#### `get_permitted_roles(entry_type=None)`
+
+Get available roles for directory entries.
+
+```python
+from rezen import DirectoryEntryType
+
+# Get all roles
+all_roles = directory.get_permitted_roles()
+
+# Get roles for vendors
+vendor_roles = directory.get_permitted_roles(DirectoryEntryType.VENDOR)
+```
+
+---
+
 ## Exceptions
 
 The ReZEN client provides specific exceptions for different error scenarios.
@@ -624,6 +867,56 @@ StateOrProvince.ONTARIO
 # ... (all US states and Canadian provinces available)
 ```
 
+### Directory Enums
+
+```python
+from rezen import (
+    DirectoryEntryType, DirectoryRole, VendorSortField, 
+    PersonSortField, DirectoryEntrySortField
+)
+
+# Directory entry types
+DirectoryEntryType.VENDOR
+DirectoryEntryType.PERSON
+
+# Directory roles
+DirectoryRole.CLIENT
+DirectoryRole.LANDLORD
+DirectoryRole.TENANT
+DirectoryRole.TITLE_ESCROW
+DirectoryRole.LENDER
+DirectoryRole.LAWYER
+DirectoryRole.TRUSTEE
+DirectoryRole.OTHER_AGENT
+DirectoryRole.VENDOR
+DirectoryRole.REFERRAL
+DirectoryRole.OTHER
+
+# Vendor sort fields
+VendorSortField.NAME
+VendorSortField.EMAIL_ADDRESS
+VendorSortField.PHONE_NUMBER
+VendorSortField.CITY
+VendorSortField.STATE_OR_PROVINCE
+VendorSortField.STATUS
+
+# Person sort fields
+PersonSortField.FIRST_NAME
+PersonSortField.LAST_NAME
+PersonSortField.EMAIL_ADDRESS
+PersonSortField.PHONE_NUMBER
+PersonSortField.IS_PUBLIC
+
+# Directory entry sort fields
+DirectoryEntrySortField.NAME
+DirectoryEntrySortField.NAME_LOGICAL
+DirectoryEntrySortField.EMAIL_ADDRESS
+DirectoryEntrySortField.PHONE_NUMBER
+DirectoryEntrySortField.CITY
+DirectoryEntrySortField.STATE_OR_PROVINCE
+DirectoryEntrySortField.STATUS
+```
+
 ---
 
 ## Example Workflows
@@ -686,6 +979,54 @@ tier_2 = client.agents.get_down_line_agents(agent_id, tier=2)
 print(f"Network size: Tier 1: {len(tier_1)}, Tier 2: {len(tier_2)}")
 ```
 
+### Directory Management
+
+```python
+from rezen import DirectoryClient, DirectoryRole, VendorSortField
+
+directory = DirectoryClient()
+
+# 1. Create a vendor
+vendor_data = {
+    "name": "Premier Title Company",
+    "emailAddress": "contact@premiertitle.com", 
+    "phoneNumber": "+1-555-123-4567",
+    "roles": ["TITLE_ESCROW"]
+}
+vendor_response = directory.create_vendor(vendor_data)
+vendor_id = vendor_response['id']
+
+# 2. Upload W9 file
+with open("w9_form.pdf", "rb") as w9_file:
+    directory.update_vendor_w9(vendor_id, w9_file)
+
+# 3. Create and link a person
+person_data = {
+    "firstName": "Sarah",
+    "lastName": "Johnson",
+    "emailAddress": "sarah@premiertitle.com",
+    "roles": ["TITLE_ESCROW"]
+}
+person_response = directory.create_person(person_data)
+person_id = person_response['id']
+
+# 4. Link person to vendor
+link_data = {"vendorId": vendor_id, "role": "EMPLOYEE"}
+directory.link_person(person_id, link_data)
+
+# 5. Search for title companies in California
+title_companies = directory.search_vendors(
+    page_number=0,
+    page_size=50,
+    roles=[DirectoryRole.TITLE_ESCROW],
+    state_or_province="CALIFORNIA",
+    is_verified=True,
+    sort_by=[VendorSortField.NAME]
+)
+
+print(f"Found {len(title_companies['content'])} title companies")
+```
+
 ---
 
 **📝 Note:** This reference covers the most commonly used methods. For a complete list of all available methods and their parameters, use Python's built-in help:
@@ -695,4 +1036,7 @@ help(client.transaction_builder)
 help(client.transactions)
 help(client.teams)
 help(client.agents)
+
+# For DirectoryClient
+help(directory)  # where directory = DirectoryClient()
 ``` 

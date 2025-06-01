@@ -241,6 +241,29 @@ class TestTeamsClient:
         assert "createdAtEnd=2023-12-31" in request.url
 
     @responses.activate
+    def test_search_teams_with_string_end_date_only(self) -> None:
+        """Test search teams with string end date only to hit specific branch."""
+        mock_response: Dict[str, Any] = {"content": []}
+
+        responses.add(
+            responses.GET,
+            "https://yenta.therealbrokerage.com/api/v1/teams",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.search_teams(
+            created_at_end="2023-12-31",  # String end date without start date
+        )
+
+        assert result == mock_response
+
+        # Verify query parameters - this should hit the missing line 145
+        request = responses.calls[0].request
+        assert request.url is not None
+        assert "createdAtEnd=2023-12-31" in request.url
+
+    @responses.activate
     def test_search_teams_pagination_only(self) -> None:
         """Test search teams with only pagination parameters."""
         mock_response: Dict[str, Any] = {
@@ -364,3 +387,28 @@ class TestTeamsClient:
         assert TeamType.GROUP.value == "GROUP"
         assert TeamType.DOMESTIC.value == "DOMESTIC"
         assert TeamType.PRO.value == "PRO"
+
+    @responses.activate
+    def test_search_teams_with_string_sort_by_list(self) -> None:
+        """Test search teams with list of string sort fields to hit line 145."""
+        mock_response: Dict[str, Any] = {"content": []}
+
+        responses.add(
+            responses.GET,
+            "https://yenta.therealbrokerage.com/api/v1/teams",
+            json=mock_response,
+            status=200,
+        )
+
+        # Use a list with string values (not enum values) to hit the else branch in line 145
+        result = self.client.search_teams(
+            sort_by=["NAME", "TEAM_TYPE"],  # List of strings instead of enums
+        )
+
+        assert result == mock_response
+
+        # Verify query parameters - this should hit line 145
+        request = responses.calls[0].request
+        assert request.url is not None
+        assert "sortBy=NAME" in request.url
+        assert "sortBy=TEAM_TYPE" in request.url

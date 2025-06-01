@@ -8,18 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive MkDocs documentation with Material theme
-- Complete API reference documentation
-- Real-world usage examples and patterns
-- Troubleshooting guide with common issues and solutions
-- Contributing guide for developers
+- Future improvements and features
 
 ### Changed
-- Enhanced error messages with more context
-- Improved type hints throughout the codebase
+- Future changes
 
 ### Fixed
-- Various documentation improvements
+- Future fixes
+
+## [1.1.1] - 2024-01-21
+
+### Fixed
+- **Type Safety**: Resolved all mypy type checking errors for stricter type safety
+- **Code Quality**: Applied black code formatting for consistent code style
+- **Directory API**: Fixed `get_vendor_w9_url` method to handle both string and dict API responses
+- **Method Signatures**: Removed problematic `post` method override that conflicted with base class signature
+
+### Technical Improvements
+- All 263 tests passing with 100% code coverage maintained
+- Full mypy compliance with strict type checking enabled
+- Consistent code formatting with black applied across entire codebase
+
+## [1.1.0] - 2024-01-20
+
+### Added
+- **Directory API Client**: Complete implementation of Directory API with vendor and person management
+- **Vendor Management**: Create, update, search, archive vendors with W9 file handling
+- **Person Management**: Create, update, search, link/unlink persons to vendors
+- **Directory Search**: Unified search across vendors and persons with advanced filtering
+- **Role Management**: Get permitted roles for directory entries with type filtering
+- **Geographic Support**: US states, Canadian provinces, and country enums for address data
+- **Comprehensive Testing**: 41 new tests achieving 100% test coverage across all modules
+- **DirectoryClient Export**: Added DirectoryClient and related enums to main package exports
+
+### Changed
+- **Enhanced API Coverage**: Now covers Transaction Builder, Transactions, Teams, Agents, and Directory APIs
+- **Improved Package Description**: Updated to reflect all supported API modules
+- **Better Test Coverage**: Achieved 100% test coverage across entire codebase (1,004 statements)
+
+### Fixed
+- **Missing Test Coverage**: Added tests for previously uncovered code paths in TeamsClient and RezenClient
+- **Type Safety**: Improved type hints and error handling in all client modules
+- **API Endpoint URLs**: Corrected directory API endpoint paths for proper functionality
 
 ## [1.0.7] - 2024-01-15
 

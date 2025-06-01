@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from rezen.agents import AgentsClient
 from rezen.client import RezenClient
 from rezen.teams import TeamsClient
 from rezen.transaction_builder import TransactionBuilderClient
@@ -21,6 +22,7 @@ class TestRezenClient:
         assert client._transaction_builder is None
         assert client._transactions is None
         assert client._teams is None
+        assert client._agents is None
 
     def test_init_with_parameters(self) -> None:
         """Test initialization with API key and base URL."""
@@ -30,6 +32,7 @@ class TestRezenClient:
         assert client._transaction_builder is None
         assert client._transactions is None
         assert client._teams is None
+        assert client._agents is None
 
     def test_transaction_builder_property_lazy_loading(self) -> None:
         """Test that transaction_builder property creates client on first access."""
@@ -144,17 +147,58 @@ class TestRezenClient:
         tb_client = client.transaction_builder
         transactions_client = client.transactions
         teams_client = client.teams
+        agents_client = client.agents
 
         # Verify they are different instances
-        assert tb_client is not transactions_client
-        assert tb_client is not teams_client
-        assert transactions_client is not teams_client
+        assert tb_client is not transactions_client  # type: ignore[comparison-overlap]
+        assert tb_client is not teams_client  # type: ignore[comparison-overlap]
+        assert tb_client is not agents_client  # type: ignore[comparison-overlap]
+        assert transactions_client is not teams_client  # type: ignore[comparison-overlap]
+        assert transactions_client is not agents_client  # type: ignore[comparison-overlap]
+        assert teams_client is not agents_client  # type: ignore[comparison-overlap]
 
         assert isinstance(tb_client, TransactionBuilderClient)
         assert isinstance(transactions_client, TransactionsClient)
         assert isinstance(teams_client, TeamsClient)
+        assert isinstance(agents_client, AgentsClient)
 
         # Verify they all have the same API key
         assert tb_client.api_key == "test_key"
         assert transactions_client.api_key == "test_key"
         assert teams_client.api_key == "test_key"
+        assert agents_client.api_key == "test_key"
+
+    def test_agents_property_lazy_loading(self) -> None:
+        """Test that agents property creates client on first access."""
+        client = RezenClient(api_key="test_key")
+
+        # Initially None
+        assert client._agents is None
+
+        # First access creates the client
+        agents_client = client.agents
+        assert isinstance(agents_client, AgentsClient)
+        assert client._agents is agents_client
+
+        # Second access returns the same instance
+        agents_client2 = client.agents
+        assert agents_client2 is agents_client
+
+    def test_agents_property_passes_api_key(self) -> None:
+        """Test that agents property passes API key (but not base URL due to different API)."""
+        api_key = "test_key"
+
+        client = RezenClient(api_key=api_key, base_url="https://test.example.com")
+        agents_client = client.agents
+
+        assert agents_client.api_key == api_key
+        # Agents uses different base URL, so it should not inherit the main base URL
+        assert agents_client.base_url == "https://yenta.therealbrokerage.com/api/v1"
+
+    @patch.dict("os.environ", {"REZEN_API_KEY": "env_test_key"})
+    def test_agents_with_env_api_key(self) -> None:
+        """Test agents with API key from environment."""
+        client = RezenClient()
+        agents_client = client.agents
+
+        assert agents_client.api_key == "env_test_key"
