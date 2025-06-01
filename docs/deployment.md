@@ -47,6 +47,12 @@ The ReZEN project supports multiple deployment targets:
 Settings → Pages → Source: GitHub Actions
 ```
 
+**Recent Updates** (v1.1.2):
+- Enhanced workflow with debugging steps
+- Fixed GitHub Pages configuration with `actions/configure-pages@v4`
+- Improved error handling for Codecov uploads
+- Added verbose MkDocs build output for troubleshooting
+
 **Manual Deployment**:
 ```bash
 # Using the provided script
