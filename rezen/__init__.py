@@ -1,10 +1,6 @@
 """ReZEN API Python Client."""
 
-from .agents import (
-    AgentsClient,
-    AgentSortField,
-    AgentStatus,
-)
+from .agents import AgentsClient, AgentSortField, AgentStatus
 from .client import RezenClient
 from .directory import (
     DirectoryClient,
