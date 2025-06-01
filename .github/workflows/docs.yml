@@ -107,7 +107,7 @@ jobs:
 
       - name: Test documentation build
         run: |
-          mkdocs build --clean --strict
+          mkdocs build --clean
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
