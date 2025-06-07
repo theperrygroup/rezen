@@ -503,33 +503,29 @@ class TransactionBuilderClient(BaseClient):
     # POST endpoints
     def create_transaction_builder(
         self, builder_type: str = "TRANSACTION"
-    ) -> Dict[str, Any]:
+    ) -> str:
         """Create empty transaction builder.
 
         Args:
             builder_type: Type of builder ('TRANSACTION' or 'LISTING')
 
         Returns:
-            Dict containing transaction builder ID
+            Transaction builder ID
         """
         endpoint = "transaction-builder"
         params = {"type": builder_type}
         response = self._request("POST", endpoint, params=params)
-        # Ensure consistent response format
-        if isinstance(response, dict):
-            if "id" in response:
-                return {"id": str(response["id"])}
-            else:
-                return response
+        # Extract ID from response
+        if isinstance(response, dict) and "id" in response:
+            return str(response["id"])
         else:
-            # If response is a string or other type
-            return {"id": str(response)}
+            return str(response)
 
-    def create_listing_builder(self) -> Dict[str, Any]:
+    def create_listing_builder(self) -> str:
         """Create a listing builder (wrapper for create_transaction_builder).
 
         Returns:
-            Dict containing listing builder ID
+            Listing builder ID
         """
         return self.create_transaction_builder(builder_type="LISTING")
 
