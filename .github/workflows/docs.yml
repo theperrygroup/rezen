@@ -225,13 +225,6 @@ jobs:
         with:
           path: ./site
 
-      - name: Upload build for Vercel
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs-build
-          path: ./site
-          retention-days: 1
-
   # GitHub Pages deployment (only on main/master branch pushes)
   deploy-github-pages:
     name: Deploy to GitHub Pages
@@ -245,31 +238,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-  # Vercel deployment (replaces vercel.json)
-  deploy-vercel:
-    name: Deploy to Vercel
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download documentation build
-        uses: actions/download-artifact@v4
-        with:
-          name: docs-build
-          path: ./site
-
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./site
-          vercel-args: '--prod'
 
   # Test build job for PRs
   test-build:
@@ -331,7 +299,6 @@ jobs:
 
             **Deployments:**
             - 🚀 GitHub Pages: Will update automatically
-            - ⚡ Vercel: Will update automatically
             `;
 
             if (botComment) {

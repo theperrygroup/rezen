@@ -24,11 +24,6 @@ GITHUB_TOKEN                  # Auto-provided
 
 # Required for PyPI publishing
 PYPI_API_TOKEN               # PyPI API token
-
-# Optional for Vercel deployment
-VERCEL_TOKEN                 # Vercel deployment token
-VERCEL_ORG_ID               # Vercel organization ID  
-VERCEL_PROJECT_ID           # Vercel project ID
 ```
 
 ## 🔄 Automated Workflows
@@ -52,7 +47,6 @@ VERCEL_PROJECT_ID           # Vercel project ID
 - 🔄 Auto-sync API coverage
 - 📚 Build documentation with MkDocs
 - 🚀 Deploy to GitHub Pages
-- ⚡ Deploy to Vercel (if configured)
 - 💬 PR comments with build status
 
 ### 3. Release (`release.yml`)
@@ -140,7 +134,6 @@ mypy rezen/
 The following files are **no longer needed** and have been consolidated into GitHub Actions:
 
 - ❌ `.pre-commit-config.yaml` → Integrated into CI workflow
-- ❌ `vercel.json` → Integrated into docs workflow  
 - ❌ `scripts/bump_version.py` → Integrated into release workflow
 - ❌ `scripts/sync_docs.py` → Integrated into docs workflow
 - ⚠️ `.readthedocs.yml` → Optional (if using RTD alongside GitHub Pages)
@@ -177,11 +170,6 @@ grep __version__ rezen/__init__.py
 - Verify all referenced files exist
 - Check for syntax errors in markdown
 
-**Vercel deployment fails**:
-- Verify Vercel secrets are configured
-- Check Vercel project settings
-- Ensure build output is correct
-
 ### CI Issues
 
 **Code quality failures**:
@@ -208,7 +196,6 @@ Monitor deployments at:
 - **GitHub Actions**: Repository → Actions tab
 - **PyPI**: https://pypi.org/project/rezen/
 - **GitHub Pages**: https://theperrygroup.github.io/rezen/
-- **Vercel**: Vercel dashboard (if configured)
 
 ### Coverage Reports
 
