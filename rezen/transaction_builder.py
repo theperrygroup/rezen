@@ -501,9 +501,7 @@ class TransactionBuilderClient(BaseClient):
         return self.get(endpoint)
 
     # POST endpoints
-    def create_transaction_builder(
-        self, builder_type: str = "TRANSACTION"
-    ) -> str:
+    def create_transaction_builder(self, builder_type: str = "TRANSACTION") -> str:
         """Create empty transaction builder.
 
         Args:
