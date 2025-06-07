@@ -12,6 +12,8 @@ Work with live transactions, manage participants, and handle financial operation
     - **Participant Management**: Add and modify transaction participants
     - **Financial Operations**: Process payments and commission splits
     - **Document Management**: Generate reports and handle transaction documents
+    - **Agent Transactions**: Retrieve agent-specific transaction lists
+    - **Termination**: Request transaction termination
 
 ---
 
@@ -24,6 +26,9 @@ client = RezenClient()
 
 # Get transaction details
 transaction = client.transactions.get_transaction("tx-12345")
+
+# Get agent's current transactions
+agent_transactions = client.transactions.get_agent_current_transactions("agent-uuid")
 
 # Add participant to existing transaction
 participant = {
@@ -46,9 +51,46 @@ client.transactions.create_participant(transaction_id, participant)
       show_source: false
       heading_level: 4
 
+### Agent Transaction Methods
+
+::: rezen.transactions.TransactionsClient.get_agent_transactions
+    options:
+      show_source: false
+      heading_level: 4
+
+::: rezen.transactions.TransactionsClient.get_agent_current_transactions
+    options:
+      show_source: false
+      heading_level: 4
+
+::: rezen.transactions.TransactionsClient.get_agent_current_listings
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! note "Wrapper Methods"
+    The agent transaction methods are convenience wrappers around the participant transaction methods for backward compatibility.
+
+### Transaction Termination
+
+::: rezen.transactions.TransactionsClient.request_termination
+    options:
+      show_source: false
+      heading_level: 4
+
 ### Participant Management
 
 ::: rezen.transactions.TransactionsClient.create_participant
+    options:
+      show_source: false
+      heading_level: 4
+
+::: rezen.transactions.TransactionsClient.get_participant_transactions
+    options:
+      show_source: false
+      heading_level: 4
+
+::: rezen.transactions.TransactionsClient.get_participant_current_transactions
     options:
       show_source: false
       heading_level: 4
@@ -86,6 +128,22 @@ client.transactions.create_participant(transaction_id, participant)
         print(f"Property: {transaction['property']['address']}")
         ```
 
+    === "Agent Transactions"
+
+        ```python
+        # Get all agent transactions
+        all_transactions = client.transactions.get_agent_transactions("agent-uuid")
+        
+        # Get current active transactions
+        current_transactions = client.transactions.get_agent_current_transactions("agent-uuid")
+        
+        # Get current listings only
+        current_listings = client.transactions.get_agent_current_listings("agent-uuid")
+        
+        for listing in current_listings:
+            print(f"Listing: {listing['address']} - Status: {listing['status']}")
+        ```
+
     === "Add Participant"
 
         ```python
@@ -115,6 +173,49 @@ client.transactions.create_participant(transaction_id, participant)
         print(f"Payment amount: {payment_info['amount']}")
         print(f"Payment status: {payment_info['status']}")
         ```
+
+    === "Request Termination"
+
+        ```python
+        # Request to terminate a transaction
+        termination_response = client.transactions.request_termination("tx-12345")
+        print(f"Termination status: {termination_response['status']}")
+        ```
+
+---
+
+## Agent Transaction Retrieval
+
+!!! info "Transaction Filtering"
+
+    The library provides several methods to retrieve agent-specific transactions:
+
+    - **All Transactions**: Get complete transaction history
+    - **Current Transactions**: Get only active/current transactions
+    - **Current Listings**: Get only listing-type transactions that are current
+
+!!! example "Agent Transaction Examples"
+
+    ```python
+    from rezen import RezenClient
+
+    client = RezenClient()
+    agent_id = "agent-uuid-here"
+
+    # Get all transactions for an agent
+    all_transactions = client.transactions.get_agent_transactions(agent_id)
+    print(f"Total transactions: {len(all_transactions)}")
+
+    # Get only current/active transactions
+    current = client.transactions.get_agent_current_transactions(agent_id)
+    print(f"Active transactions: {len(current)}")
+
+    # Get only current listings
+    listings = client.transactions.get_agent_current_listings(agent_id)
+    for listing in listings:
+        print(f"Property: {listing['property']['address']}")
+        print(f"List price: ${listing['listPrice']:,}")
+    ```
 
 ---
 
@@ -153,6 +254,10 @@ client.transactions.create_participant(transaction_id, participant)
 -   [:material-account-tie: **Agents API**](agents.md)
 
     Find agents to add to transactions
+
+-   [:material-file-document-check: **Checklist API**](checklist.md)
+
+    Manage transaction checklists and documents
 
 -   [:material-alert-circle: **Exceptions**](exceptions.md)
 

@@ -5,7 +5,9 @@ from typing import Optional
 from .agents import AgentsClient
 from .api_keys import ApiKeysClient
 from .auth import AuthClient
+from .checklist import ChecklistClient
 from .directory import DirectoryClient
+from .documents import DocumentClient, SignatureClient
 from .mfa import MfaClient
 from .teams import TeamsClient
 from .transaction_builder import TransactionBuilderClient
@@ -62,6 +64,12 @@ class RezenClient:
         vendors = client.directory.search_vendors(
             page_number=0, page_size=10, is_archived=False
         )
+
+        # Use checklist endpoints
+        checklist = client.checklist.get_checklist("checklist-123")
+
+        # Use document/signature endpoints
+        document = client.documents.post_document({"title": "Contract"})
         ```
     """
 
@@ -84,6 +92,8 @@ class RezenClient:
         self._teams: Optional[TeamsClient] = None
         self._agents: Optional[AgentsClient] = None
         self._directory: Optional[DirectoryClient] = None
+        self._checklist: Optional[ChecklistClient] = None
+        self._documents: Optional[DocumentClient] = None
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:
@@ -182,3 +192,38 @@ class RezenClient:
             # API keys uses keymaker API, so don't pass custom base_url
             self._api_keys = ApiKeysClient(api_key=self._api_key)
         return self._api_keys
+
+    @property
+    def checklist(self) -> ChecklistClient:
+        """Access to checklist endpoints.
+
+        Returns:
+            ChecklistClient instance
+        """
+        if self._checklist is None:
+            self._checklist = ChecklistClient(
+                api_key=self._api_key, base_url=self._base_url
+            )
+        return self._checklist
+
+    @property
+    def documents(self) -> DocumentClient:
+        """Access to document/signature endpoints.
+
+        Returns:
+            DocumentClient instance
+        """
+        if self._documents is None:
+            self._documents = DocumentClient(
+                api_key=self._api_key, base_url=self._base_url
+            )
+        return self._documents
+
+    @property
+    def signature(self) -> SignatureClient:
+        """Access to signature endpoints (alias for documents).
+
+        Returns:
+            SignatureClient (DocumentClient) instance
+        """
+        return self.documents

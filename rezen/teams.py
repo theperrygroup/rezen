@@ -197,3 +197,45 @@ class TeamsClient(BaseClient):
             ```
         """
         return self.get(f"teams/{team_id}/without-agents")
+
+    def get_team_members(self, team_id: str) -> Dict[str, Any]:
+        """Get team members for a specific team.
+
+        Args:
+            team_id: UUID of the team to retrieve members for
+
+        Returns:
+            Dictionary containing team members information
+
+        Raises:
+            RezenError: If the API request fails
+
+        Example:
+            ```python
+            members = client.teams.get_team_members("550e8400-e29b-41d4-a716-446655440000")
+            for member in members.get('members', []):
+                print(f"Member: {member['name']} - {member['role']}")
+            ```
+        """
+        return self.get(f"teams/{team_id}/members")
+
+    def get_team(self, team_id: str) -> Dict[str, Any]:
+        """Get team by ID with full information including agents.
+
+        Args:
+            team_id: UUID of the team to retrieve
+
+        Returns:
+            Dictionary containing full team details including agent information
+
+        Raises:
+            RezenError: If the API request fails
+
+        Example:
+            ```python
+            team = client.teams.get_team("550e8400-e29b-41d4-a716-446655440000")
+            print(f"Team name: {team['name']}")
+            print(f"Team members: {len(team.get('agents', []))}")
+            ```
+        """
+        return self.get(f"teams/{team_id}")
