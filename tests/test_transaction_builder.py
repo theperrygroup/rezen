@@ -570,7 +570,7 @@ class TestTransactionBuilderClient:
 
         result = self.client.create_transaction_builder("LISTING")
 
-        assert result == "new-builder-123"  # Method extracts ID from response
+        assert result == {"id": "new-builder-123"}  # Method returns consistent dict format
         request = responses.calls[0].request
         assert "type=LISTING" in request.url
 
