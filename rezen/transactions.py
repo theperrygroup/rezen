@@ -762,13 +762,65 @@ class TransactionsClient(BaseClient):
         return self.get(endpoint)
 
     def get_participant_current_transactions(self, yenta_id: str) -> Dict[str, Any]:
-        """Get current transactions for participant.
+        """Get participant's current transactions.
 
         Args:
-            yenta_id: Participant (user) ID
+            yenta_id: User/participant ID
 
         Returns:
             Current transactions data
         """
         endpoint = f"transactions/participant/{yenta_id}/current"
         return self.get(endpoint)
+
+    # ===== BACKWARD COMPATIBILITY METHODS =====
+
+    def get_agent_transactions(self, yenta_id: str) -> Dict[str, Any]:
+        """Get agent's transactions (wrapper for get_participant_transactions).
+
+        Args:
+            yenta_id: Agent's user ID
+
+        Returns:
+            Agent's transactions data
+        """
+        return self.get_participant_transactions(yenta_id)
+
+    def get_agent_current_transactions(self, yenta_id: str) -> Dict[str, Any]:
+        """Get agent's current transactions (wrapper for get_participant_current_transactions).
+
+        Args:
+            yenta_id: Agent's user ID
+
+        Returns:
+            Agent's current transactions data
+        """
+        return self.get_participant_current_transactions(yenta_id)
+
+    def get_agent_current_listings(self, yenta_id: str) -> Dict[str, Any]:
+        """Get agent's current listings.
+
+        Args:
+            yenta_id: Agent's user ID
+
+        Returns:
+            Agent's current listings data
+        """
+        # Use the participant listing transactions endpoint with 'CURRENT' lifecycle group
+        return self.get_participant_listing_transactions(
+            yenta_id=yenta_id, lifecycle_group="CURRENT", page_number=0, page_size=100
+        )
+
+    # ===== TRANSACTION TERMINATION =====
+
+    def request_termination(self, transaction_id: str) -> Dict[str, Any]:
+        """Request termination for a transaction.
+
+        Args:
+            transaction_id: Transaction ID
+
+        Returns:
+            Termination request response data
+        """
+        endpoint = f"transactions/{transaction_id}/request-termination"
+        return self.post(endpoint)

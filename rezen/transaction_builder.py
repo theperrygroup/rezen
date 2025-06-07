@@ -513,7 +513,30 @@ class TransactionBuilderClient(BaseClient):
         endpoint = "transaction-builder"
         params = {"type": builder_type}
         response = self._request("POST", endpoint, params=params)
-        return str(response.get("id", ""))
+        # Extract ID from response
+        if isinstance(response, dict) and "id" in response:
+            return str(response["id"])
+        else:
+            return str(response)
+
+    def create_listing_builder(self) -> str:
+        """Create a listing builder (wrapper for create_transaction_builder).
+
+        Returns:
+            Listing builder ID
+        """
+        return self.create_transaction_builder(builder_type="LISTING")
+
+    def convert_listing_to_transaction(self, listing_id: str) -> Dict[str, Any]:
+        """Convert a listing to a transaction (wrapper for create_builder_from_transaction).
+
+        Args:
+            listing_id: Listing ID to convert
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.create_builder_from_transaction(listing_id)
 
     def create_builder_from_transaction(self, transaction_id: str) -> Dict[str, Any]:
         """Create transaction builder from given transaction.
@@ -838,3 +861,102 @@ class TransactionBuilderClient(BaseClient):
         """
         endpoint = f"transaction-builder/{transaction_id}/buyer/{buyer_id}"
         return self.delete(endpoint)
+
+    # Backward compatibility aliases
+    def put_buyer_to_draft(
+        self, transaction_id: str, buyer_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Add a new buyer (backward compatibility alias).
+
+        Args:
+            transaction_id: Transaction builder ID
+            buyer_info: Buyer information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.add_buyer(transaction_id, buyer_info)
+
+    def put_seller_to_draft(
+        self, transaction_id: str, seller_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Add a new seller (backward compatibility alias).
+
+        Args:
+            transaction_id: Transaction builder ID
+            seller_info: Seller information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.add_seller(transaction_id, seller_info)
+
+    def put_location_to_draft(
+        self, transaction_id: str, location_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Update location information (backward compatibility alias).
+
+        Args:
+            transaction_id: Transaction builder ID
+            location_info: Location information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.update_location_info(transaction_id, location_info)
+
+    def put_price_and_date_to_draft(
+        self, transaction_id: str, price_date_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Update price and date information (backward compatibility alias).
+
+        Args:
+            transaction_id: Transaction builder ID
+            price_date_info: Price and date information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.update_price_and_date_info(transaction_id, price_date_info)
+
+    def update_commission_payer(
+        self, transaction_id: str, commission_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Update commission payer information (alias for add_commission_payer).
+
+        Args:
+            transaction_id: Transaction builder ID
+            commission_info: Commission payer information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.add_commission_payer(transaction_id, commission_info)
+
+    def update_personal_deal(
+        self, transaction_id: str, deal_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Update personal deal (alias for update_personal_deal_info).
+
+        Args:
+            transaction_id: Transaction builder ID
+            deal_info: Personal deal information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.update_personal_deal_info(transaction_id, deal_info)
+
+    def update_real_title(
+        self, transaction_id: str, title_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Update real title (alias for update_title_info).
+
+        Args:
+            transaction_id: Transaction builder ID
+            title_info: Title information data
+
+        Returns:
+            Transaction builder response data
+        """
+        return self.update_title_info(transaction_id, title_info)
