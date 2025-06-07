@@ -1,51 +1,63 @@
 version: 2
 updates:
-  # Enable version updates for Python pip
+  # Python dependencies
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "theperrygroup"
-    assignees:
-      - "theperrygroup"
-    commit-message:
-      prefix: "deps:"
-      prefix-development: "deps-dev:"
-    # Group updates by type
+    open-pull-requests-limit: 10
     groups:
-      testing:
+      core-dependencies:
+        patterns:
+          - "requests"
+          - "python-dotenv"
+          - "pydantic"
+          - "typing-extensions"
+      testing-dependencies:
         patterns:
           - "pytest*"
           - "responses"
-          - "pytest-*"
-      linting:
+          - "coverage"
+          - "tox"
+      linting-dependencies:
         patterns:
           - "black"
-          - "flake8"
+          - "flake8*"
           - "mypy"
           - "isort"
           - "pylint"
-      core:
+          - "types-*"
+          - "bandit"
+          - "safety"
+          - "pre-commit"
+      documentation-dependencies:
         patterns:
-          - "requests"
-          - "pydantic"
-          - "python-dotenv"
+          - "mkdocs*"
+          - "pymdown-extensions"
+          - "markdown"
+    assignees:
+      - "theperrygroup"
+    reviewers:
+      - "theperrygroup"
 
-  # Enable version updates for GitHub Actions
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 3
-    reviewers:
-      - "theperrygroup"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+          - "codecov/*"
+          - "softprops/*"
+          - "pypa/*"
     assignees:
       - "theperrygroup"
-    commit-message:
-      prefix: "ci:"
+    reviewers:
+      - "theperrygroup"
