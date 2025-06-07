@@ -166,6 +166,8 @@ nav:
     - Teams: api/teams.md
     - Agents: api/agents.md
     - Directory: api/directory.md
+    - Checklist: api/checklist.md
+    - Documents: api/documents.md
 
   - Reference:
     - reference/index.md

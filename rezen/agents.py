@@ -54,6 +54,82 @@ class AgentsClient(BaseClient):
         agents_base_url = base_url or "https://yenta.therealbrokerage.com/api/v1"
         super().__init__(api_key=api_key, base_url=agents_base_url)
 
+    def get_agent(self, agent_id: str) -> Dict[str, Any]:
+        """
+        Get a single agent by ID.
+
+        Args:
+            agent_id: The agent's ID
+
+        Returns:
+            Dict containing agent information
+
+        Raises:
+            RezenError: If agent not found or API error
+        """
+        try:
+            # Use existing batch method with single ID
+            response = self.get_agents_by_ids([agent_id])
+
+            # The response is expected to be a dictionary with agent data
+            # Check if the response contains agents
+            if isinstance(response, dict):
+                # Handle different possible response formats
+                if "agents" in response and response["agents"]:
+                    agent_data = response["agents"][0]
+                    return agent_data if isinstance(agent_data, dict) else {}
+                elif "data" in response and response["data"]:
+                    agent_data = response["data"][0]
+                    return agent_data if isinstance(agent_data, dict) else {}
+                elif isinstance(response, dict) and len(response) > 0:
+                    # If response is a direct agent object
+                    return response
+
+            raise Exception(f"Agent {agent_id} not found")
+
+        except Exception as e:
+            # Log error and re-raise with context
+            from .exceptions import RezenError
+
+            raise RezenError(f"Failed to get agent {agent_id}: {str(e)}")
+
+    def get_cap_info(self, agent_id: str) -> Dict[str, Any]:
+        """
+        Get agent's cap information.
+
+        Args:
+            agent_id: UUID of the agent
+
+        Returns:
+            Agent's cap information
+
+        Raises:
+            RezenError: If the API request fails
+        """
+        return self.get(f"agents/{agent_id}/cap-info")
+
+    def agent_search(self, email: str = "", phone: str = "") -> Dict[str, Any]:
+        """
+        Search agents by email or phone - backward compatibility method.
+
+        Args:
+            email: Email address to search for
+            phone: Phone number to search for
+
+        Returns:
+            Dict containing search results
+
+        Raises:
+            RezenError: If the API request fails
+        """
+        if email:
+            return self.get_agents_by_email(email)
+        elif phone:
+            # Search by phone using the search_active_agents method
+            return self.search_active_agents(phone=phone)
+        else:
+            return {"results": []}
+
     def get_agents_by_email(self, email_address: str) -> Dict[str, Any]:
         """
         Get agent(s) by email address.
@@ -381,6 +457,8 @@ class AgentsClient(BaseClient):
         sort_direction: Optional[Union[SortDirection, str]] = None,
         sort_by: Optional[List[Union[AgentSortField, str]]] = None,
         name: Optional[str] = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
         non_reportable: Optional[List[bool]] = None,
         country: Optional[List[Union[Country, str]]] = None,
         state_or_province: Optional[List[Union[StateOrProvince, str]]] = None,
@@ -394,6 +472,8 @@ class AgentsClient(BaseClient):
             sort_direction: Sort direction (default: ASC)
             sort_by: Fields to sort by (default: ["FIRST_NAME", "LAST_NAME"])
             name: Filter by agent name
+            email: Filter by email address
+            phone: Filter by phone number
             non_reportable: Filter by non-reportable status
             country: Filter by country
             state_or_province: Filter by state or province
@@ -421,6 +501,10 @@ class AgentsClient(BaseClient):
             ]
         if name:
             params["name"] = name
+        if email:
+            params["email"] = email
+        if phone:
+            params["phone"] = phone
         if non_reportable:
             params["nonReportable"] = non_reportable
         if country:

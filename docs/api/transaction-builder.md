@@ -14,6 +14,8 @@ Create and manage transaction builders with full participant and property manage
     - **Configure** property details, participants, and financial information
     - **Manage** buyers, sellers, agents, and other transaction participants
     - **Submit** completed transactions for processing
+    - **Convert** listings to transactions
+    - **Backward Compatibility** with legacy method names
 
 ---
 
@@ -63,10 +65,8 @@ Create and manage transaction builders with full participant and property manage
 
     client: RezenClient = RezenClient()
 
-    # Create listing builder instead of transaction
-    response: Dict[str, Any] = client.transaction_builder.create_transaction_builder(
-        builder_type="LISTING"
-    )
+    # Create listing builder using dedicated method
+    response: Dict[str, Any] = client.transaction_builder.create_listing_builder()
     listing_id: str = response['id']
 
     # Configure listing-specific details
@@ -79,6 +79,22 @@ Create and manage transaction builders with full participant and property manage
     client.transaction_builder.add_seller(listing_id, seller_data)
     ```
 
+=== ":material-swap-horizontal: Convert Listing"
+
+    ```python
+    from typing import Dict, Any
+
+    from rezen import RezenClient
+
+    client: RezenClient = RezenClient()
+
+    # Convert existing listing to transaction
+    listing_id: str = "existing-listing-id"
+    response: Dict[str, Any] = client.transaction_builder.convert_listing_to_transaction(listing_id)
+    transaction_id: str = response['id']
+    print(f"Converted listing {listing_id} to transaction {transaction_id}")
+    ```
+
 ---
 
 ## Core Transaction Management
@@ -86,6 +102,26 @@ Create and manage transaction builders with full participant and property manage
 ### Create Transaction Builder
 
 ::: rezen.transaction_builder.TransactionBuilderClient.create_transaction_builder
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! note "Consistent Response Format"
+    The method now returns a consistent `{"id": "transaction_id"}` format instead of a raw string.
+
+### Create Listing Builder
+
+::: rezen.transaction_builder.TransactionBuilderClient.create_listing_builder
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! tip "Convenience Method"
+    This is a wrapper around `create_transaction_builder(builder_type='LISTING')` for easier listing creation.
+
+### Convert Listing to Transaction
+
+::: rezen.transaction_builder.TransactionBuilderClient.convert_listing_to_transaction
     options:
       show_source: false
       heading_level: 4
@@ -115,11 +151,24 @@ Create and manage transaction builders with full participant and property manage
 
         client: RezenClient = RezenClient()
 
-        # Listing-specific builder
-        response: Dict[str, Any] = client.transaction_builder.create_transaction_builder(
-            builder_type="LISTING"
-        )
+        # Using dedicated listing builder method
+        response: Dict[str, Any] = client.transaction_builder.create_listing_builder()
         print(f"Listing ID: {response['id']}")
+        ```
+
+    === "Convert Existing Listing"
+
+        ```python
+        from typing import Dict, Any
+
+        from rezen import RezenClient
+
+        client: RezenClient = RezenClient()
+
+        # Convert listing to transaction
+        listing_id = "existing-listing-id"
+        response: Dict[str, Any] = client.transaction_builder.convert_listing_to_transaction(listing_id)
+        print(f"New transaction ID: {response['id']}")
         ```
 
 ### Get Transaction Builder
@@ -215,7 +264,11 @@ Create and manage transaction builders with full participant and property manage
             "address": "456 Business Ave, Business City, BC 12345"
         }
 
+        # Using new method name
         response: Dict[str, Any] = client.transaction_builder.add_buyer(transaction_id, buyer_data)
+        
+        # Or using backward compatibility alias
+        response: Dict[str, Any] = client.transaction_builder.put_buyer_to_draft(transaction_id, buyer_data)
         ```
 
 ### Sellers
@@ -245,7 +298,11 @@ Create and manage transaction builders with full participant and property manage
             "phone": "+1-555-987-6543"
         }
 
+        # Using new method name
         response: Dict[str, Any] = client.transaction_builder.add_seller(transaction_id, seller_data)
+        
+        # Or using backward compatibility alias
+        response: Dict[str, Any] = client.transaction_builder.put_seller_to_draft(transaction_id, seller_data)
         ```
 
 ### Agents & Co-Agents
@@ -377,6 +434,9 @@ Create and manage transaction builders with full participant and property manage
       show_source: false
       heading_level: 4
 
+!!! note "Backward Compatibility"
+    You can also use `put_location_to_draft()` which is an alias for `update_location_info()`.
+
 !!! example "Property Location Examples"
 
     === "Residential Property"
@@ -398,7 +458,12 @@ Create and manage transaction builders with full participant and property manage
             "unit": "Unit 2A",  # For condos/apartments
             "subdivision": "Maple Grove"
         }
+        
+        # Using new method name
         client.transaction_builder.update_location_info(transaction_id, location_data)
+        
+        # Or using backward compatibility alias
+        client.transaction_builder.put_location_to_draft(transaction_id, location_data)
         ```
 
     === "Commercial Property"
@@ -429,6 +494,9 @@ Create and manage transaction builders with full participant and property manage
     options:
       show_source: false
       heading_level: 4
+
+!!! note "Backward Compatibility"
+    You can also use `put_price_and_date_to_draft()` which is an alias for `update_price_and_date_info()`.
 
 **Key Date Fields:**
 
@@ -473,6 +541,16 @@ Create and manage transaction builders with full participant and property manage
       show_source: false
       heading_level: 4
 
+### Update Real Title
+
+::: rezen.transaction_builder.TransactionBuilderClient.update_real_title
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! tip "Alias Method"
+    This is an alias for `update_title_info()` provided for backward compatibility.
+
 !!! example "Title Company Details"
 
     ```python
@@ -492,8 +570,28 @@ Create and manage transaction builders with full participant and property manage
         "policy_number": "PT-2024-001234"
     }
 
+    # Using either method works the same
     client.transaction_builder.update_title_info(transaction_id, title_data)
+    # or
+    client.transaction_builder.update_real_title(transaction_id, title_data)
     ```
+
+### Personal Deal Information
+
+::: rezen.transaction_builder.TransactionBuilderClient.update_personal_deal_info
+    options:
+      show_source: false
+      heading_level: 4
+
+### Update Personal Deal
+
+::: rezen.transaction_builder.TransactionBuilderClient.update_personal_deal
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! tip "Alias Method"
+    This is an alias for `update_personal_deal_info()` provided for backward compatibility.
 
 ---
 
@@ -573,6 +671,16 @@ Create and manage transaction builders with full participant and property manage
       show_source: false
       heading_level: 4
 
+### Update Commission Payer
+
+::: rezen.transaction_builder.TransactionBuilderClient.update_commission_payer
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! tip "Alias Method"
+    This is an alias for `add_commission_payer()` provided for backward compatibility.
+
 **Payer Types:**
 
 | Type | Description |
@@ -597,7 +705,55 @@ Create and manage transaction builders with full participant and property manage
         "flat_fee": False  # Percentage-based, not flat fee
     }
 
+    # Using either method works the same
     client.transaction_builder.add_commission_payer(transaction_id, payer_data)
+    # or
+    client.transaction_builder.update_commission_payer(transaction_id, payer_data)
+    ```
+
+---
+
+## Backward Compatibility
+
+!!! info "Legacy Method Names"
+    
+    The library provides backward compatibility aliases for users migrating from older versions:
+    
+    | Old Method Name | New Method Name |
+    |----------------|-----------------|
+    | `put_buyer_to_draft()` | `add_buyer()` |
+    | `put_seller_to_draft()` | `add_seller()` |
+    | `put_location_to_draft()` | `update_location_info()` |
+    | `put_price_and_date_to_draft()` | `update_price_and_date_info()` |
+    | `update_commission_payer()` | `add_commission_payer()` |
+    | `update_personal_deal()` | `update_personal_deal_info()` |
+    | `update_real_title()` | `update_title_info()` |
+
+!!! example "Using Backward Compatibility"
+
+    ```python
+    from rezen import RezenClient
+
+    client = RezenClient()
+    transaction_id = "your-transaction-id"
+
+    # These method pairs do the same thing:
+    
+    # Add buyer
+    client.transaction_builder.add_buyer(transaction_id, buyer_data)
+    client.transaction_builder.put_buyer_to_draft(transaction_id, buyer_data)
+    
+    # Add seller
+    client.transaction_builder.add_seller(transaction_id, seller_data)
+    client.transaction_builder.put_seller_to_draft(transaction_id, seller_data)
+    
+    # Update location
+    client.transaction_builder.update_location_info(transaction_id, location_data)
+    client.transaction_builder.put_location_to_draft(transaction_id, location_data)
+    
+    # Update price and date
+    client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+    client.transaction_builder.put_price_and_date_to_draft(transaction_id, price_data)
     ```
 
 ---
