@@ -42,10 +42,11 @@ class ApiKeysClient(BaseClient):
                 print(f"Created: {key.get('createdAt')}")
             ```
         """
-        response = self.get("api-keys")
+        # Override the return type since this endpoint returns a list
+        response: Any = self.get("api-keys")
         # The API returns a list directly
         if isinstance(response, list):
-            return [item for item in response if isinstance(item, dict)]
+            return response
         return []
 
     def generate_api_key(
