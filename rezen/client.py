@@ -182,5 +182,3 @@ class RezenClient:
             # API keys uses keymaker API, so don't pass custom base_url
             self._api_keys = ApiKeysClient(api_key=self._api_key)
         return self._api_keys
-
-
