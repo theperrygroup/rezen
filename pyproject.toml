@@ -4,21 +4,30 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rezen"
-version = "1.5.3"
-description = "A Python wrapper for The Real Brokerage ReZEN API"
+version = "1.5.4"
+description = "Python wrapper for The Real Brokerage ReZEN API - Transaction Builder, Transactions, Teams, Agents, and Directory management"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Trevor Hobenshield", email = "trevor@hobenshield.com"},
+    {name = "The Perry Group", email = "dev@theperrygroup.com"}
 ]
 maintainers = [
-    {name = "Trevor Hobenshield", email = "trevor@hobenshield.com"},
+    {name = "The Perry Group", email = "dev@theperrygroup.com"}
 ]
-keywords = ["real estate", "api", "rezen", "real brokerage"]
+keywords = [
+    "real-estate",
+    "api",
+    "transactions",
+    "realty",
+    "rezen",
+    "the-real-brokerage",
+    "real-estate-api",
+    "transaction-management"
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Financial and Insurance Industry",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -26,8 +35,10 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Typing :: Typed"
 ]
 requires-python = ">=3.8"
 dependencies = [
