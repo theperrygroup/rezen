@@ -3,7 +3,10 @@
 from typing import Optional
 
 from .agents import AgentsClient
+from .api_keys import ApiKeysClient
+from .auth import AuthClient
 from .directory import DirectoryClient
+from .mfa import MfaClient
 from .teams import TeamsClient
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
@@ -24,6 +27,21 @@ class RezenClient:
 
         # Or provide API key directly
         client = RezenClient(api_key="your_api_key_here")
+
+        # Use authentication endpoints
+        auth_response = client.auth.signin(
+            username="user@example.com",
+            password="password"
+        )
+
+        # Use MFA endpoints
+        mfa_response = client.mfa.signin_with_mfa(
+            username="user@example.com",
+            mfa_code="123456"
+        )
+
+        # Use API keys endpoints
+        api_keys = client.api_keys.get_api_keys()
 
         # Use transaction builder endpoints
         response = client.transaction_builder.update_title_info(
@@ -58,6 +76,9 @@ class RezenClient:
         """
         self._api_key = api_key
         self._base_url = base_url
+        self._auth: Optional[AuthClient] = None
+        self._mfa: Optional[MfaClient] = None
+        self._api_keys: Optional[ApiKeysClient] = None
         self._transaction_builder: Optional[TransactionBuilderClient] = None
         self._transactions: Optional[TransactionsClient] = None
         self._teams: Optional[TeamsClient] = None
@@ -125,3 +146,39 @@ class RezenClient:
             # Directory uses yenta API, so don't pass custom base_url
             self._directory = DirectoryClient(api_key=self._api_key)
         return self._directory
+
+    @property
+    def auth(self) -> AuthClient:
+        """Access to authentication endpoints.
+
+        Returns:
+            AuthClient instance
+        """
+        if self._auth is None:
+            # Auth uses keymaker API, so don't pass custom base_url
+            self._auth = AuthClient(api_key=self._api_key)
+        return self._auth
+
+    @property
+    def mfa(self) -> MfaClient:
+        """Access to multi-factor authentication endpoints.
+
+        Returns:
+            MfaClient instance
+        """
+        if self._mfa is None:
+            # MFA uses keymaker API, so don't pass custom base_url
+            self._mfa = MfaClient(api_key=self._api_key)
+        return self._mfa
+
+    @property
+    def api_keys(self) -> ApiKeysClient:
+        """Access to API keys endpoints.
+
+        Returns:
+            ApiKeysClient instance
+        """
+        if self._api_keys is None:
+            # API keys uses keymaker API, so don't pass custom base_url
+            self._api_keys = ApiKeysClient(api_key=self._api_key)
+        return self._api_keys

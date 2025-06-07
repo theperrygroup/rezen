@@ -8,9 +8,10 @@ Comprehensive agent search, network management, and detailed information retriev
 
 !!! abstract "Agents API Features"
 
-    - **Agent Search**: Find agents with advanced filtering
+    - **Agent Search**: Find agents with advanced filtering including email and phone
+    - **Agent Details**: Get individual agent information and cap details
     - **Network Management**: Access sponsor trees and downlines
-    - **Contact Information**: Get agent details by email or ID
+    - **Contact Information**: Get agent details by email, ID, or phone
     - **Geographic Filtering**: Search by location and region
 
 ---
@@ -24,9 +25,31 @@ Comprehensive agent search, network management, and detailed information retriev
 
     client = RezenClient()
 
+    # Get a single agent by ID
+    agent = client.agents.get_agent("agent-uuid")
+    print(f"Agent: {agent['name']}")
+    
     # Simple agent search by name
-    agents = client.agents.search_active_agents(name="John", limit=10)
+    agents = client.agents.search_active_agents(name="John", page_size=10)
     print(f"Found {len(agents)} agents named John")
+    ```
+
+=== ":material-magnify: Search Options"
+
+    ```python
+    from rezen import RezenClient
+
+    client = RezenClient()
+
+    # Search by email
+    agents = client.agents.search_active_agents(email="john@example.com")
+    
+    # Search by phone
+    agents = client.agents.search_active_agents(phone="+1234567890")
+    
+    # Using backward compatibility method
+    agents = client.agents.agent_search(email="john@example.com")
+    agents = client.agents.agent_search(phone="+1234567890")
     ```
 
 === ":material-cog: Advanced Filtering"
@@ -55,11 +78,10 @@ Comprehensive agent search, network management, and detailed information retriev
     client = RezenClient()
 
     try:
-        agents = client.agents.search_active_agents(name="John")
-        if not agents:
-            print("No agents found with that name")
-        else:
-            print(f"Successfully found {len(agents)} agents")
+        agent = client.agents.get_agent("agent-uuid")
+        print(f"Found agent: {agent['name']}")
+    except NotFoundError:
+        print("Agent not found")
     except RezenError as e:
         print(f"API error occurred: {e}")
     ```
@@ -68,9 +90,33 @@ Comprehensive agent search, network management, and detailed information retriev
 
 ## Core Methods
 
+### Get Single Agent
+
+::: rezen.agents.AgentsClient.get_agent
+    options:
+      show_source: false
+      heading_level: 4
+
+### Get Agent Cap Information
+
+::: rezen.agents.AgentsClient.get_cap_info
+    options:
+      show_source: false
+      heading_level: 4
+
 ### Search Active Agents
 
 ::: rezen.agents.AgentsClient.search_active_agents
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! note "New Parameters"
+    The `search_active_agents` method now supports `email` and `phone` parameters for direct contact search.
+
+### Agent Search (Backward Compatibility)
+
+::: rezen.agents.AgentsClient.agent_search
     options:
       show_source: false
       heading_level: 4
@@ -107,6 +153,23 @@ Comprehensive agent search, network management, and detailed information retriev
 
 !!! example "Advanced Agent Search"
 
+    === "Contact Search"
+
+        ```python
+        # Search by email
+        agents = client.agents.search_active_agents(
+            email="john.doe@example.com"
+        )
+        
+        # Search by phone
+        agents = client.agents.search_active_agents(
+            phone="+1234567890"
+        )
+        
+        # Using compatibility method
+        agents = client.agents.agent_search(email="john@example.com")
+        ```
+
     === "Geographic Search"
 
         ```python
@@ -123,14 +186,38 @@ Comprehensive agent search, network management, and detailed information retriev
     === "Sorted Results"
 
         ```python
-        from rezen.enums import AgentSortField, AgentSortDirection
+        from rezen.enums import AgentSortField, SortDirection
 
         agents = client.agents.search_active_agents(
             sort_by=[AgentSortField.LAST_NAME, AgentSortField.FIRST_NAME],
-            sort_direction=AgentSortDirection.ASC,
+            sort_direction=SortDirection.ASC,
             page_size=25
         )
         ```
+
+---
+
+## Agent Information
+
+!!! info "Agent Details"
+
+    Get comprehensive agent information including cap details and profile scores.
+
+!!! example "Agent Information Retrieval"
+
+    ```python
+    # Get single agent details
+    agent = client.agents.get_agent("agent-uuid")
+    
+    # Get agent cap information
+    cap_info = client.agents.get_cap_info("agent-uuid")
+    
+    # Get profile score
+    profile_score = client.agents.get_profile_score("agent-uuid")
+    
+    # Get payment details
+    payment_details = client.agents.get_payment_details("agent-uuid")
+    ```
 
 ---
 
@@ -152,6 +239,9 @@ Comprehensive agent search, network management, and detailed information retriev
         tier=1,
         status_in=["ACTIVE"]
     )
+    
+    # Get front line agents info
+    front_line = client.agents.get_front_line_agents_info("agent-uuid")
     ```
 
 ---

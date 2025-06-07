@@ -51,6 +51,22 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Directory API](directory.md)
 
+-   :material-checkbox-marked:{ .lg .middle } **Checklist**
+
+    ---
+
+    Manage transaction checklists and document uploads
+
+    [:octicons-arrow-right-24: Checklist API](checklist.md)
+
+-   :material-file-document:{ .lg .middle } **Documents**
+
+    ---
+
+    Handle documents, digital signatures, and workflows
+
+    [:octicons-arrow-right-24: Documents API](documents.md)
+
 </div>
 
 ---
@@ -59,11 +75,13 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
 | **API Section** | **Status** | **Endpoints** | **Coverage** |
 |-----------------|------------|---------------|--------------|
-| Transaction Builder | ✅ **Available** | 52 endpoints | Complete |
-| Transactions | ✅ **Available** | 49 endpoints | Complete |
-| Agents | ✅ **Available** | 36 endpoints | Complete |
-| Teams | ✅ **Available** | 2 endpoints | Complete |
+| Transaction Builder | ✅ **Available** | 52+ endpoints | Complete |
+| Transactions | ✅ **Available** | 49+ endpoints | Complete |
+| Agents | ✅ **Available** | 36+ endpoints | Complete |
+| Teams | ✅ **Available** | 4 endpoints | Complete |
 | Directory | ✅ **Available** | 16 endpoints | Complete |
+| Checklist | ✅ **Available** | 9 endpoints | Complete |
+| Documents | ✅ **Available** | 13 endpoints | Complete |
 
 ---
 
@@ -82,6 +100,8 @@ Complete method reference for the ReZEN Python API client. This section covers a
     - **Teams**: Search and filter team information
     - **Agents**: Comprehensive agent search and network management
     - **Directory**: Standalone directory services
+    - **Checklist**: Transaction checklists and item management
+    - **Documents**: Document uploads and digital signatures
 
 ### Common Patterns
 
@@ -96,6 +116,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
     # Access specialized APIs
     teams = client.teams.search_teams(status="ACTIVE")
     agents = client.agents.search_active_agents(name="John")
+    checklist = client.checklist.get_checklist("checklist-123")
     ```
 
 === "Error Handling"
@@ -158,6 +179,7 @@ Build and manage real estate transactions:
 
 - **[Transaction Builder](transaction-builder.md)** - Create new transactions with participants
 - **[Transactions](transactions.md)** - Manage live transactions and processing
+- **[Checklist](checklist.md)** - Track transaction requirements and documents
 
 ### **👥 People & Organizations**
 Work with agents, teams, and contacts:
@@ -165,6 +187,12 @@ Work with agents, teams, and contacts:
 - **[Teams](teams.md)** - Search and manage team information
 - **[Agents](agents.md)** - Agent search and network management
 - **[Directory](directory.md)** - Contact and agent directory services
+
+### **📄 Documents & Compliance**
+Handle documents and digital workflows:
+
+- **[Documents](documents.md)** - Digital signatures and document management
+- **[Checklist](checklist.md)** - Transaction checklists and compliance tracking
 
 ---
 
@@ -218,3 +246,5 @@ Looking for a specific method? Use the search function above or browse by catego
 - **Team management** → [Teams API](teams.md)
 - **Payment processing** → [Transactions API](transactions.md)
 - **Contact lookup** → [Directory API](directory.md)
+- **Document signatures** → [Documents API](documents.md)
+- **Checklist tracking** → [Checklist API](checklist.md)
