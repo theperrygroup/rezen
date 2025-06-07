@@ -298,7 +298,7 @@ jobs:
         echo "\`\`\`" >> CHANGELOG.md
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: ReZEN ${{ steps.changelog.outputs.TAG }}
         tag_name: ${{ steps.changelog.outputs.TAG }}
