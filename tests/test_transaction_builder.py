@@ -150,7 +150,7 @@ class TestTransactionBuilderClient:
             "propertyType": "RESIDENTIAL",
             "salePrice": {"amount": 500000, "currency": "USD"},
             "representationType": "BUYER",
-            "closingDate": "2024-01-15"
+            "closingDate": "2024-01-15",
         }
         result = self.client.update_price_and_date_info(self.transaction_id, price_info)
 
@@ -248,7 +248,11 @@ class TestTransactionBuilderClient:
             status=200,
         )
 
-        location_info = {"street": "123 Main St", "city": "Anytown", "state": "CALIFORNIA"}
+        location_info = {
+            "street": "123 Main St",
+            "city": "Anytown",
+            "state": "CALIFORNIA",
+        }
         result = self.client.update_location_info(self.transaction_id, location_info)
 
         assert result == expected_response
