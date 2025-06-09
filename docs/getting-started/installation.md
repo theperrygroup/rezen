@@ -42,17 +42,17 @@ You'll need a ReZEN API key. Get one from the ReZEN platform dashboard.
 
 **Linux/macOS:**
 ```bash
-export REZEN_API_KEY="your_api_key_here "
+export REZEN_API_KEY="your_api_key_here"
 ```
 
 **Windows Command Prompt:**
 ```cmd
-set REZEN_API_KEY=your_api_key_here 
+set REZEN_API_KEY=your_api_key_here
 ```
 
 **Windows PowerShell:**
 ```powershell
-$env:REZEN_API_KEY="your_api_key_here "
+$env:REZEN_API_KEY="your_api_key_here"
 ```
 
 #### Option B: `.env` File
@@ -60,7 +60,7 @@ $env:REZEN_API_KEY="your_api_key_here "
 Create a `.env` file in your project root:
 
 ```bash
-REZEN_API_KEY=your_api_key_here 
+REZEN_API_KEY=your_api_key_here
 ```
 
 Then load it in your Python code:
@@ -78,7 +78,7 @@ client = RezenClient()  # Will automatically use the API key from .env
 ```python
 from rezen import RezenClient
 
-client = RezenClient(api_key="your_api_key_here ")
+client = RezenClient(api_key="your_api_key_here")
 ```
 
 ### 2. Virtual Environment Setup (Recommended)

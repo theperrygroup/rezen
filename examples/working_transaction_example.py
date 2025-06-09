@@ -10,7 +10,7 @@ from rezen import RezenClient
 
 def test_complete_working_sequence() -> str:
     """Test the complete sequence with all discovered requirements."""
-    api_key = os.getenv("REZEN_API_KEY", "your_api_key_here ")
+    api_key = os.getenv("REZEN_API_KEY", "your_api_key_here")
     client = RezenClient(api_key=api_key)
 
     print("🎯 Testing COMPLETE Working Sequence with All Requirements...")

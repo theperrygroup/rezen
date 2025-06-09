@@ -28,7 +28,7 @@ pip install rezen
 
 ```bash
 # Set environment variable (recommended)
-export REZEN_API_KEY="your_api_key_here "
+export REZEN_API_KEY="your_api_key_here"
 ```
 
 ## 🔌 Step 2: First Connection
