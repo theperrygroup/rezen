@@ -1,0 +1,545 @@
+name: Unified Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0, v1.2.3
+    branches:
+      - main  # Triggers on pushes to main for docs updates
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'rezen/**'
+      - '.github/workflows/unified-deployment.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: false
+        type: string
+      prerelease:
+        description: 'Mark as prerelease'
+        required: false
+        type: boolean
+        default: false
+      deploy_docs_only:
+        description: 'Deploy documentation only (no release)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  packages: write
+
+env:
+  PYTHON_VERSION: "3.11"
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "deployment-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  # Determine what type of deployment to run
+  deployment-type:
+    name: Determine Deployment Type
+    runs-on: ubuntu-latest
+    outputs:
+      is_release: ${{ steps.check.outputs.is_release }}
+      is_docs_only: ${{ steps.check.outputs.is_docs_only }}
+      version: ${{ steps.check.outputs.version }}
+      tag: ${{ steps.check.outputs.tag }}
+    steps:
+      - name: Check deployment type
+        id: check
+        run: |
+          # Check if this is a release deployment
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.version }}" ]]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "is_docs_only=false" >> $GITHUB_OUTPUT
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "is_docs_only=false" >> $GITHUB_OUTPUT
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.deploy_docs_only }}" == "true" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "is_docs_only=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "is_docs_only=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Version bump (for manual releases)
+  version-bump:
+    name: Version Bump
+    if: needs.deployment-type.outputs.is_release == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''
+    needs: deployment-type
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Validate and bump version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+          
+          # Validate semantic version format
+          if ! echo "$VERSION" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' > /dev/null; then
+            echo "❌ Invalid version format. Use semantic versioning (e.g., 1.2.3)"
+            exit 1
+          fi
+          
+          # Check if tag already exists
+          if git tag -l | grep -q "^$TAG$"; then
+            echo "❌ Tag $TAG already exists"
+            exit 1
+          fi
+          
+          # Get current version from pyproject.toml
+          CURRENT_VERSION=$(grep -E '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          
+          # Update pyproject.toml
+          sed -i.bak "s/version = \"$CURRENT_VERSION\"/version = \"$VERSION\"/" pyproject.toml
+          
+          # Update __init__.py
+          sed -i.bak "s/__version__ = \"$CURRENT_VERSION\"/__version__ = \"$VERSION\"/" rezen/__init__.py
+          
+          # Verify changes
+          NEW_PYPROJECT_VERSION=$(grep -E '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          NEW_INIT_VERSION=$(grep -E '^__version__ = ' rezen/__init__.py | sed 's/__version__ = "\(.*\)"/\1/')
+          
+          if [ "$NEW_PYPROJECT_VERSION" != "$VERSION" ] || [ "$NEW_INIT_VERSION" != "$VERSION" ]; then
+            echo "❌ Version update failed"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          
+          git add pyproject.toml rezen/__init__.py
+          git commit -m "Bump version to $VERSION"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin main
+          git push origin "$TAG"
+
+  # Code quality and security checks
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    needs: [deployment-type, version-bump]
+    if: |
+      always() &&
+      (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped') &&
+      (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-quality-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-quality-
+          ${{ runner.os }}-pip-
+
+    - name: Install quality tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install black isort flake8 mypy bandit safety
+        pip install flake8-docstrings flake8-import-order types-requests
+
+    - name: Check code formatting with Black
+      run: black --check --diff --line-length=88 .
+
+    - name: Check import sorting with isort
+      run: isort --check-only --diff --profile=black --line-length=88 .
+
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Type checking with mypy
+      run: mypy rezen/ --strict --ignore-missing-imports
+
+    - name: Security scanning with bandit
+      run: bandit -r rezen/ --skip B404,B603,B607 -f json -o bandit-report.json || true
+
+    - name: Check for security vulnerabilities
+      run: safety check --json || true
+
+  # Test suite
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: [deployment-type, version-bump, code-quality]
+    if: |
+      always() &&
+      needs.code-quality.result == 'success' &&
+      (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Test with pytest
+      env:
+        REZEN_API_KEY: ${{ secrets.REZEN_API_KEY }}
+      run: |
+        pytest --cov=rezen --cov-report=xml --cov-report=term-missing
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      if: matrix.python-version == env.PYTHON_VERSION
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  # Build package
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [deployment-type, version-bump, test]
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deployment-type.outputs.is_release == 'true'
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Verify version consistency
+      run: |
+        # Extract version from tag
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG_VERSION="${{ needs.deployment-type.outputs.version }}"
+        else
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+        fi
+        
+        PYPROJECT_VERSION=$(grep -E '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+        INIT_VERSION=$(grep -E '^__version__ = ' rezen/__init__.py | sed 's/__version__ = "\(.*\)"/\1/')
+        
+        if [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ] || [ "$TAG_VERSION" != "$INIT_VERSION" ]; then
+          echo "Version mismatch detected!"
+          exit 1
+        fi
+
+    - name: Build package
+      run: python -m build
+
+    - name: Check package
+      run: twine check dist/*
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        retention-days: 30
+
+  # Build documentation
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    needs: [deployment-type, version-bump, test]
+    if: |
+      always() &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped') &&
+      (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.version-bump.outputs.tag || github.ref }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+
+      - name: Update API coverage
+        run: |
+          python -c "
+          import re
+          from pathlib import Path
+          
+          # Count endpoints in each module
+          rezen_dir = Path('rezen')
+          modules = {
+              'Transaction Builder': 'transaction_builder.py',
+              'Transactions': 'transactions.py', 
+              'Agents': 'agents.py',
+              'Teams': 'teams.py',
+              'Directory': 'directory.py',
+          }
+          
+          coverage_data = {}
+          total_endpoints = 0
+          
+          for module_name, filename in modules.items():
+              module_path = rezen_dir / filename
+              if module_path.exists():
+                  content = module_path.read_text()
+                  methods = re.findall(r'\n    def ([a-zA-Z][a-zA-Z0-9_]*)\(', content)
+                  exclude_methods = {'__init__', 'get', 'post', '_request'}
+                  endpoint_count = len([m for m in methods if m not in exclude_methods])
+                  coverage_data[module_name] = endpoint_count
+                  total_endpoints += endpoint_count
+              else:
+                  coverage_data[module_name] = 0
+          
+          # Create includes directory if it doesn't exist
+          includes_dir = Path('docs/_includes')
+          includes_dir.mkdir(exist_ok=True)
+          
+          # Update API coverage include file
+          coverage_file = includes_dir / 'api-coverage.md'
+          coverage_content = '| **API Section** | **Endpoints** | **Status** |\n'
+          coverage_content += '|-----------------|---------------|------------|\n'
+          
+          for module_name, count in coverage_data.items():
+              status = '✅ Complete' if count > 0 else '❌ Incomplete'
+              coverage_content += f'| {module_name} | {count} endpoints | {status} |\n'
+          
+          coverage_content += f'| **Total** | **{total_endpoints} endpoints** | **✅ Complete** |'
+          coverage_file.write_text(coverage_content)
+          print(f'✅ Updated API coverage: {total_endpoints} total endpoints')
+          "
+
+      - name: Configure Git for MkDocs
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build documentation
+        run: |
+          mkdocs build --clean --verbose
+        env:
+          SITE_URL: https://theperrygroup.github.io/rezen/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload documentation artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  # Publish to PyPI
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [deployment-type, build]
+    if: |
+      needs.build.result == 'success' &&
+      needs.deployment-type.outputs.is_release == 'true'
+    environment: release
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # Deploy documentation to GitHub Pages
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: [deployment-type, build-docs]
+    if: |
+      needs.build-docs.result == 'success' &&
+      (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Create GitHub release
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [deployment-type, version-bump, build, publish-pypi]
+    if: |
+      needs.build.result == 'success' &&
+      needs.publish-pypi.result == 'success' &&
+      needs.deployment-type.outputs.is_release == 'true'
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ needs.version-bump.outputs.tag || github.ref }}
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        VERSION="${{ needs.deployment-type.outputs.version }}"
+        TAG="${{ needs.deployment-type.outputs.tag }}"
+        
+        echo "## 🚀 ReZEN Python Client $TAG" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📦 Package Information" >> CHANGELOG.md
+        echo "- **Version**: $VERSION" >> CHANGELOG.md
+        echo "- **Python Support**: 3.8 - 3.12" >> CHANGELOG.md
+        echo "- **PyPI Package**: [rezen $VERSION](https://pypi.org/project/rezen/$VERSION/)" >> CHANGELOG.md
+        echo "- **Documentation**: [GitHub Pages](https://theperrygroup.github.io/rezen/)" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          echo "### 🔄 Changes since $LAST_TAG:" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          
+          git log --pretty=format:"%s" $LAST_TAG..HEAD | while read -r commit; do
+            case "$commit" in
+              feat*|feature*) echo "- ✨ $commit" ;;
+              fix*) echo "- 🐛 $commit" ;;
+              docs*) echo "- 📚 $commit" ;;
+              test*) echo "- 🧪 $commit" ;;
+              ci*|workflow*) echo "- 🔧 $commit" ;;
+              refactor*) echo "- ♻️ $commit" ;;
+              perf*) echo "- ⚡ $commit" ;;
+              *) echo "- 🔄 $commit" ;;
+            esac
+          done >> CHANGELOG.md
+        else
+          echo "### 🎉 Initial Release" >> CHANGELOG.md
+        fi
+        
+        echo "" >> CHANGELOG.md
+        echo "### 🛠️ Installation" >> CHANGELOG.md
+        echo "\`\`\`bash" >> CHANGELOG.md
+        echo "pip install rezen==$VERSION" >> CHANGELOG.md
+        echo "\`\`\`" >> CHANGELOG.md
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: ReZEN ${{ needs.deployment-type.outputs.tag }}
+        tag_name: ${{ needs.deployment-type.outputs.tag }}
+        body_path: CHANGELOG.md
+        files: |
+          dist/*.tar.gz
+          dist/*.whl
+        draft: false
+        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Summary
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deployment-type, publish-pypi, deploy-docs, create-github-release]
+    if: always()
+    steps:
+    - name: Summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.deployment-type.outputs.is_release }}" == "true" ]]; then
+          echo "### 📦 Release Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ needs.deployment-type.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **PyPI Publish**: ${{ needs.publish-pypi.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Release**: ${{ needs.create-github-release.result }}" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ needs.deployment-type.outputs.is_docs_only }}" == "true" || "${{ needs.deployment-type.outputs.is_release }}" == "true" ]]; then
+          echo "### 📚 Documentation Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docs Build**: ${{ needs.build-docs.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Pages**: ${{ needs.deploy-docs.result }}" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+        echo "- [PyPI Package](https://pypi.org/project/rezen/)" >> $GITHUB_STEP_SUMMARY
+        echo "- [Documentation](https://theperrygroup.github.io/rezen/)" >> $GITHUB_STEP_SUMMARY
+        echo "- [GitHub Repository](https://github.com/theperrygroup/rezen)" >> $GITHUB_STEP_SUMMARY 
