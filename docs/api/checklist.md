@@ -1,6 +1,6 @@
 # Checklist API
 
-Manage transaction checklists, checklist items, and document uploads.
+Comprehensive API for managing checklists, checklist items, documents, and progress tracking.
 
 ---
 
@@ -8,317 +8,684 @@ Manage transaction checklists, checklist items, and document uploads.
 
 !!! abstract "Checklist API Features"
 
-    - **Checklist Management**: Get and manage transaction checklists
-    - **Item Tracking**: Monitor checklist item completion
-    - **Document Upload**: Attach documents to checklist items
-    - **Template Support**: Create checklists from templates
+    The ChecklistClient provides complete access to ReZEN's checklist functionality:
+    
+    - **✅ Checklist Management**: Create, retrieve, and update checklists
+    - **📋 Item Operations**: Add, update, delete, and complete checklist items
+    - **📄 Document Handling**: Upload documents and manage versions
+    - **📊 Progress Tracking**: Monitor checklist completion status
+    - **🔄 Batch Operations**: Update multiple checklists efficiently
+    - **💾 File Downloads**: Retrieve document versions
 
 ---
 
 ## Quick Start
 
 ```python
-from rezen import RezenClient
+from rezen import ChecklistClient
 
-client = RezenClient()
+# Initialize client (uses REZEN_API_KEY from environment)
+client = ChecklistClient()
 
-# Get checklist details
-checklist = client.checklist.get_checklist("checklist-123")
+# Get a checklist
+checklist = client.get_checklist("3fa85f64-5717-4562-b3fc-2c963f66afa6")
 
-# Upload document to checklist item
-with open("document.pdf", "rb") as file:
-    result = client.checklist.post_document_to_checklist(
-        checklist_item_id="item-456",
-        data={"document_type": "contract", "name": "Purchase Agreement"},
-        file=file
-    )
+# Get checklist item details
+item = client.get_checklist_item("4fa85f64-5717-4562-b3fc-2c963f66afa7")
 
 # Mark item as complete
-client.checklist.mark_checklist_item_complete("checklist-123", "item-456")
+client.complete_checklist_item(item["id"], is_complete=True)
 ```
 
 ---
 
-## Core Methods
+## Endpoint Reference
 
-### Get Checklist
+### Checklist Operations
+
+#### Get Checklist
 
 ::: rezen.checklist.ChecklistClient.get_checklist
     options:
       show_source: false
       heading_level: 4
 
-### Get Checklist Item
+**Example:**
+```python
+checklist = client.get_checklist("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+
+# Response structure
+{
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "createdAt": 1640995200000,
+    "name": "Transaction Checklist",
+    "items": [...],
+    "approved": False,
+    "locked": False,
+    "checklistDefinitionId": "...",
+    "fileApiVersion": "V1"
+}
+```
+
+#### Create Checklist
+
+::: rezen.checklist.ChecklistClient.create_checklist
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+checklist_data = {
+    "parentId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "parentType": "TRANSACTION",
+    "assignees": {
+        "agent1": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "agent2": "4fa85f64-5717-4562-b3fc-2c963f66afa7"
+    },
+    "brokerAgentId": "broker-123",
+    "ownerAgentId": "owner-123"
+}
+
+result = client.create_checklist(
+    checklist_definition_id="def-123",
+    checklist_data=checklist_data
+)
+```
+
+#### Get Checklist Progress
+
+::: rezen.checklist.ChecklistClient.get_checklists_progress
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+checklist_ids = ["checklist-1", "checklist-2", "checklist-3"]
+progress = client.get_checklists_progress(checklist_ids)
+
+# Response structure (list of progress objects)
+[
+    {
+        "checklistId": "checklist-1",
+        "itemCount": 10,
+        "completedCount": 7,
+        "itemCountIncludingOptionals": 12,
+        "completedCountIncludingOptionals": 8
+    },
+    ...
+]
+```
+
+#### Batch Update Checklists
+
+::: rezen.checklist.ChecklistClient.batch_update_checklists
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+batch_items = [
+    {
+        "checklistId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "patch": {"locked": True}
+    },
+    {
+        "checklistId": "4fa85f64-5717-4562-b3fc-2c963f66afa7",
+        "patch": {"approved": True}
+    }
+]
+
+result = client.batch_update_checklists(batch_items)
+```
+
+---
+
+### Checklist Item Operations
+
+#### Get Checklist Item
 
 ::: rezen.checklist.ChecklistClient.get_checklist_item
     options:
       show_source: false
       heading_level: 4
 
-### Upload Document
+**Example:**
+```python
+item = client.get_checklist_item("3fa85f64-5717-4562-b3fc-2c963f66afa6")
 
-::: rezen.checklist.ChecklistClient.post_document_to_checklist
+# Response structure
+{
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "createdAt": 1640995200000,
+    "name": "Property Inspection",
+    "checklistId": "...",
+    "description": "Complete property inspection",
+    "position": 1,
+    "dueDate": "2025-06-09",
+    "required": True,
+    "urgent": False,
+    "complete": False,
+    "documents": [...],
+    "labels": [...]
+}
+```
+
+#### Create Checklist Item
+
+::: rezen.checklist.ChecklistClient.create_checklist_item
     options:
       show_source: false
       heading_level: 4
 
-!!! tip "Document Upload"
-    The `post_document_to_checklist` method supports both file uploads and metadata-only submissions.
+**Example:**
+```python
+item_data = {
+    "item": {
+        "name": "Final Walkthrough",
+        "description": "Conduct final property walkthrough with buyer",
+        "position": 10,
+        "dueDate": "2025-06-09",
+        "required": True,
+        "urgent": False,
+        "labels": [
+            {
+                "text": "Buyer Required"
+            }
+        ]
+    }
+}
 
-### Update Checklist Item
+result = client.create_checklist_item(
+    checklist_id="checklist-123",
+    item_data=item_data
+)
+```
+
+#### Update Checklist Item
 
 ::: rezen.checklist.ChecklistClient.update_checklist_item
     options:
       show_source: false
       heading_level: 4
 
-### Mark Item Complete
+**Example:**
+```python
+update_data = {
+    "item": {
+        "id": "item-123",
+        "name": "Updated Item Name",
+        "description": "Updated description",
+        "dueDate": "2025-07-01",
+        "urgent": True,
+        "complete": False
+    }
+}
 
-::: rezen.checklist.ChecklistClient.mark_checklist_item_complete
+result = client.update_checklist_item(
+    checklist_item_id="item-123",
+    item_data=update_data
+)
+```
+
+#### Delete Checklist Item
+
+::: rezen.checklist.ChecklistClient.delete_checklist_item
     options:
       show_source: false
       heading_level: 4
+
+**Example:**
+```python
+result = client.delete_checklist_item("item-123")
+
+# Response
+{
+    "status": True,
+    "message": "Checklist item deleted successfully"
+}
+```
+
+#### Complete Checklist Item
+
+::: rezen.checklist.ChecklistClient.complete_checklist_item
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+# Mark as complete
+client.complete_checklist_item("item-123", is_complete=True)
+
+# Mark as incomplete
+client.complete_checklist_item("item-123", is_complete=False)
+```
+
+---
+
+### Document Operations
+
+#### Get Checklist Document
+
+::: rezen.checklist.ChecklistClient.get_checklist_document
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+document = client.get_checklist_document("doc-123")
+
+# Response structure
+{
+    "id": "doc-123",
+    "createdAt": 1640995200000,
+    "name": "Purchase Agreement",
+    "description": "Signed purchase agreement",
+    "versions": [
+        {
+            "id": "version-1",
+            "name": "Version 1.0",
+            "number": 1,
+            "uploaderId": "user-123",
+            "path": "documents/purchase-agreement-v1.pdf"
+        }
+    ],
+    "currentVersion": {...},
+    "documentDefinitionId": "..."
+}
+```
+
+#### Update Checklist Document
+
+::: rezen.checklist.ChecklistClient.update_checklist_document
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+document_data = {
+    "id": "doc-123",
+    "name": "Updated Purchase Agreement",
+    "description": "Updated with amendments",
+    "currentVersion": {
+        "id": "version-2"
+    }
+}
+
+result = client.update_checklist_document(
+    document_id="doc-123",
+    document_data=document_data
+)
+```
+
+#### Delete Checklist Document
+
+::: rezen.checklist.ChecklistClient.delete_checklist_document
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+result = client.delete_checklist_document("doc-123")
+```
+
+#### Add Document to Checklist Item
+
+::: rezen.checklist.ChecklistClient.add_document_to_checklist_item
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+# With file upload
+with open("contract.pdf", "rb") as file:
+    result = client.add_document_to_checklist_item(
+        checklist_item_id="item-123",
+        name="Purchase Contract",
+        description="Signed purchase contract",
+        uploader_id="user-456",
+        transaction_id="txn-789",
+        file=file
+    )
+
+# Without file (metadata only)
+result = client.add_document_to_checklist_item(
+    checklist_item_id="item-123",
+    name="External Document",
+    description="Document stored externally",
+    uploader_id="user-456",
+    transaction_id="txn-789"
+)
+```
+
+#### Add Document Version
+
+::: rezen.checklist.ChecklistClient.add_document_version
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+with open("contract-v2.pdf", "rb") as file:
+    result = client.add_document_version(
+        checklist_document_id="doc-123",
+        name="Version 2.0",
+        description="Updated with amendments",
+        uploader_id="user-456",
+        transaction_id="txn-789",
+        file=file
+    )
+
+# Response includes new version details
+{
+    "id": "version-2",
+    "name": "Version 2.0",
+    "description": "Updated with amendments",
+    "number": 2,
+    "uploaderId": "user-456",
+    "path": "documents/contract-v2.pdf"
+}
+```
+
+#### Download Document Version
+
+::: rezen.checklist.ChecklistClient.download_document_version
+    options:
+      show_source: false
+      heading_level: 4
+
+**Example:**
+```python
+result = client.download_document_version("version-123")
+
+# Response contains download URL
+{
+    "downloadUrl": "https://example.com/secure/download/doc.pdf"
+}
+```
 
 ---
 
 ## Usage Examples
 
-!!! example "Checklist Management"
+### Complete Checklist Workflow
 
-    === "Get Checklist"
-
-        ```python
-        # Get full checklist with all items
-        checklist = client.checklist.get_checklist("checklist-123")
-        
-        print(f"Checklist: {checklist['name']}")
-        print(f"Total items: {len(checklist['items'])}")
-        
-        # Process checklist items
-        for item in checklist['items']:
-            print(f"- {item['name']}: {item['status']}")
-        ```
-
-    === "Upload Document"
-
-        ```python
-        # Upload document with metadata
-        with open("inspection_report.pdf", "rb") as file:
-            metadata = {
-                "document_type": "inspection_report",
-                "name": "Property Inspection Report",
-                "description": "Complete inspection findings"
-            }
-            
-            result = client.checklist.post_document_to_checklist(
-                checklist_item_id="item-456",
-                data=metadata,
-                file=file
-            )
-            
-            print(f"Document uploaded: {result['id']}")
-        ```
-
-    === "Complete Workflow"
-
-        ```python
-        # Complete checklist item workflow
-        checklist_id = "checklist-123"
-        item_id = "item-456"
-        
-        # 1. Get item details
-        item = client.checklist.get_checklist_item(checklist_id, item_id)
-        print(f"Item: {item['name']} - Status: {item['status']}")
-        
-        # 2. Upload required document
-        with open("document.pdf", "rb") as file:
-            client.checklist.post_document_to_checklist(
-                checklist_item_id=item_id,
-                data={"document_type": "contract"},
-                file=file
-            )
-        
-        # 3. Mark item as complete
-        client.checklist.mark_checklist_item_complete(checklist_id, item_id)
-        print("Item marked as complete")
-        ```
-
----
-
-## Document Management
-
-!!! info "Document Operations"
-
-    The checklist API supports various document operations:
-
-    - **Upload**: Attach documents to checklist items
-    - **Metadata**: Add document metadata without file upload
-    - **Delete**: Remove documents from checklist items
-
-!!! example "Document Operations"
-
-    === "Upload with File"
-
-        ```python
-        # Upload document with file
-        with open("contract.pdf", "rb") as file:
-            result = client.checklist.post_document_to_checklist(
-                checklist_item_id="item-789",
-                data={
-                    "document_type": "purchase_agreement",
-                    "name": "Purchase Agreement",
-                    "version": "1.0"
-                },
-                file=file
-            )
-        ```
-
-    === "Metadata Only"
-
-        ```python
-        # Add document reference without file upload
-        result = client.checklist.post_document_to_checklist(
-            checklist_item_id="item-789",
-            data={
-                "document_type": "external_link",
-                "name": "Property Listing",
-                "url": "https://example.com/listing/123"
-            }
-        )
-        ```
-
-    === "Delete Document"
-
-        ```python
-        # Remove document from checklist item
-        result = client.checklist.delete_checklist_item_document(
-            checklist_item_id="item-789",
-            document_id="doc-abc"
-        )
-        print("Document removed from checklist")
-        ```
-
----
-
-## Template Management
-
-### Get Templates
-
-::: rezen.checklist.ChecklistClient.get_checklist_templates
-    options:
-      show_source: false
-      heading_level: 4
-
-### Create from Template
-
-::: rezen.checklist.ChecklistClient.create_checklist_from_template
-    options:
-      show_source: false
-      heading_level: 4
-
-!!! example "Using Templates"
+!!! example "End-to-End Checklist Management"
 
     ```python
-    # Get available templates
-    templates = client.checklist.get_checklist_templates()
-    
-    for template in templates:
-        print(f"Template: {template['name']} - {template['description']}")
-    
-    # Create checklist from template
-    new_checklist = client.checklist.create_checklist_from_template(
-        template_id="template-001",
-        data={
-            "transaction_id": "tx-12345",
-            "name": "Purchase Transaction Checklist"
-        }
-    )
-    
-    print(f"Created checklist: {new_checklist['id']}")
-    ```
-
----
-
-## Complete Example
-
-!!! example "Full Checklist Workflow"
-
-    ```python
-    from rezen import RezenClient
-    from rezen.exceptions import RezenError
+    from rezen import ChecklistClient
+    from rezen.exceptions import NotFoundError, ValidationError
     
     def manage_transaction_checklist(transaction_id: str):
-        """Complete checklist management workflow."""
-        
-        client = RezenClient()
+        """Complete checklist workflow for a transaction."""
+        client = ChecklistClient()
         
         try:
-            # Create checklist from template
-            checklist = client.checklist.create_checklist_from_template(
-                template_id="purchase-template",
-                data={
-                    "transaction_id": transaction_id,
-                    "name": f"Checklist for Transaction {transaction_id}"
+            # 1. Create a new checklist
+            print("Creating checklist...")
+            checklist_data = {
+                "parentId": transaction_id,
+                "parentType": "TRANSACTION",
+                "assignees": {
+                    "listing_agent": "agent-123",
+                    "buyer_agent": "agent-456"
                 }
+            }
+            
+            checklist_result = client.create_checklist(
+                checklist_definition_id="standard-purchase",
+                checklist_data=checklist_data
             )
+            checklist_id = checklist_result["checklistId"]
             
-            checklist_id = checklist['id']
-            print(f"Created checklist: {checklist_id}")
+            # 2. Get the checklist details
+            checklist = client.get_checklist(checklist_id)
+            print(f"Created checklist: {checklist['name']}")
             
-            # Process each checklist item
-            items = client.checklist.get_checklist(checklist_id)['items']
+            # 3. Add custom items
+            custom_item = {
+                "item": {
+                    "name": "Home Warranty Decision",
+                    "description": "Buyer to decide on home warranty",
+                    "required": False,
+                    "position": 99,
+                    "dueDate": "2025-06-15"
+                }
+            }
             
-            for item in items:
-                print(f"\nProcessing: {item['name']}")
-                
-                # Upload required documents
-                if item['requires_document']:
-                    document_path = f"documents/{item['document_type']}.pdf"
+            item_result = client.create_checklist_item(
+                checklist_id=checklist_id,
+                item_data=custom_item
+            )
+            print(f"Added custom item: {item_result['id']}")
+            
+            # 4. Process existing items
+            checklist = client.get_checklist(checklist_id)
+            for item in checklist["items"]:
+                if item["required"] and not item["complete"]:
+                    print(f"\nProcessing: {item['name']}")
                     
-                    try:
-                        with open(document_path, "rb") as file:
-                            result = client.checklist.post_document_to_checklist(
-                                checklist_item_id=item['id'],
-                                data={
-                                    "document_type": item['document_type'],
-                                    "name": item['name']
-                                },
-                                file=file
-                            )
-                            print(f"  ✓ Uploaded document: {result['id']}")
-                    except FileNotFoundError:
-                        print(f"  ✗ Document not found: {document_path}")
-                        continue
-                
-                # Mark item as complete
-                client.checklist.mark_checklist_item_complete(
-                    checklist_id,
-                    item['id']
-                )
-                print(f"  ✓ Item completed")
+                    # Upload document if needed
+                    if "inspection" in item["name"].lower():
+                        upload_inspection_report(client, item["id"], transaction_id)
+                    
+                    # Mark as complete
+                    client.complete_checklist_item(item["id"])
+                    print(f"✓ Completed: {item['name']}")
             
-            # Get final status
-            final_checklist = client.checklist.get_checklist(checklist_id)
-            completed_count = sum(
-                1 for item in final_checklist['items'] 
-                if item['status'] == 'COMPLETED'
-            )
+            # 5. Check progress
+            progress = client.get_checklists_progress([checklist_id])
+            if progress:
+                prog = progress[0] if isinstance(progress, list) else progress
+                print(f"\nProgress: {prog['completedCount']}/{prog['itemCount']} items")
             
-            print(f"\nChecklist Summary:")
-            print(f"Total items: {len(final_checklist['items'])}")
-            print(f"Completed: {completed_count}")
-            print(f"Progress: {completed_count/len(final_checklist['items'])*100:.1f}%")
+            # 6. Lock checklist when done
+            client.batch_update_checklists([
+                {
+                    "checklistId": checklist_id,
+                    "patch": {"locked": True, "approved": True}
+                }
+            ])
+            print("Checklist locked and approved!")
             
             return checklist_id
             
-        except RezenError as e:
-            print(f"Error managing checklist: {e}")
+        except NotFoundError as e:
+            print(f"Resource not found: {e}")
+        except ValidationError as e:
+            print(f"Validation error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
             return None
     
-    # Run the example
-    transaction_id = "tx-12345"
-    checklist_id = manage_transaction_checklist(transaction_id)
+    def upload_inspection_report(client, item_id, transaction_id):
+        """Upload inspection report to checklist item."""
+        try:
+            with open("inspection_report.pdf", "rb") as file:
+                result = client.add_document_to_checklist_item(
+                    checklist_item_id=item_id,
+                    name="Property Inspection Report",
+                    description="Complete inspection findings",
+                    uploader_id="inspector-001",
+                    transaction_id=transaction_id,
+                    file=file
+                )
+                print(f"  Uploaded: {result['name']}")
+        except FileNotFoundError:
+            print("  ⚠️  Inspection report not found")
     ```
+
+### Document Version Management
+
+!!! example "Managing Document Versions"
+
+    ```python
+    def manage_document_versions(doc_id: str):
+        """Demonstrate document version management."""
+        client = ChecklistClient()
+        
+        # Get current document info
+        document = client.get_checklist_document(doc_id)
+        print(f"Document: {document['name']}")
+        print(f"Current version: {document['currentVersion']['number']}")
+        
+        # Upload new version
+        with open("contract-amended.pdf", "rb") as file:
+            new_version = client.add_document_version(
+                checklist_document_id=doc_id,
+                name=f"Version {len(document['versions']) + 1}",
+                description="Added inspection contingency",
+                uploader_id="agent-123",
+                transaction_id="txn-456",
+                file=file
+            )
+        
+        print(f"Uploaded version {new_version['number']}")
+        
+        # Update document to use new version
+        client.update_checklist_document(
+            document_id=doc_id,
+            document_data={
+                "currentVersion": {"id": new_version["id"]}
+            }
+        )
+        
+        # Get download URL for specific version
+        download_info = client.download_document_version(new_version["id"])
+        print(f"Download URL: {download_info['downloadUrl']}")
+    ```
+
+### Progress Monitoring
+
+!!! example "Monitor Multiple Checklists"
+
+    ```python
+    def monitor_checklist_progress(checklist_ids: list):
+        """Monitor progress across multiple checklists."""
+        client = ChecklistClient()
+        
+        # Get progress for all checklists
+        progress_list = client.get_checklists_progress(checklist_ids)
+        
+        total_items = 0
+        total_completed = 0
+        
+        print("Checklist Progress Report")
+        print("=" * 50)
+        
+        for progress in progress_list:
+            checklist_id = progress["checklistId"]
+            completed = progress["completedCount"]
+            total = progress["itemCount"]
+            percentage = (completed / total * 100) if total > 0 else 0
+            
+            print(f"\nChecklist: {checklist_id}")
+            print(f"Progress: {completed}/{total} ({percentage:.1f}%)")
+            print(f"Optional items: {progress['itemCountIncludingOptionals'] - total}")
+            
+            total_items += total
+            total_completed += completed
+        
+        # Overall summary
+        overall_percentage = (total_completed / total_items * 100) if total_items > 0 else 0
+        print(f"\n{'=' * 50}")
+        print(f"Overall: {total_completed}/{total_items} ({overall_percentage:.1f}%)")
+        
+        return overall_percentage >= 100
+    ```
+
+---
+
+## Error Handling
+
+!!! warning "Common Errors"
+
+    The ChecklistClient properly handles various error scenarios:
+
+    ```python
+    from rezen import ChecklistClient
+    from rezen.exceptions import (
+        NotFoundError,
+        ValidationError,
+        AuthenticationError,
+        ServerError
+    )
+    
+    client = ChecklistClient()
+    
+    try:
+        checklist = client.get_checklist("invalid-id")
+    except NotFoundError as e:
+        print(f"Checklist not found: {e}")
+    except ValidationError as e:
+        print(f"Invalid request: {e}")
+    except AuthenticationError as e:
+        print(f"Authentication failed: {e}")
+    except ServerError as e:
+        print(f"Server error: {e}")
+    ```
+
+---
+
+## Best Practices
+
+!!! tip "Recommended Patterns"
+
+    1. **Always handle exceptions** - Wrap API calls in try-except blocks
+    2. **Check item requirements** - Only mark required items as complete when truly done
+    3. **Use batch operations** - Update multiple checklists in one call when possible
+    4. **Version documents** - Use the version system for document updates
+    5. **Monitor progress** - Regularly check completion status
+    6. **Validate before locking** - Ensure all required items are complete before locking
+
+!!! info "File Upload Tips"
+
+    - Always use context managers (`with` statement) for file operations
+    - Provide meaningful names and descriptions for documents
+    - Include the transaction ID for proper association
+    - Handle `FileNotFoundError` gracefully
+
+---
+
+## API Reference
+
+### Base Configuration
+
+- **Base URL**: `https://sherlock.therealbrokerage.com/api/v1`
+- **Authentication**: Bearer token (API key)
+- **Content-Type**: `application/json` (except for file uploads)
+
+### Rate Limits
+
+!!! warning "API Rate Limits"
+    
+    - Standard rate limit: 100 requests per minute
+    - File upload limit: 10 MB per file
+    - Batch operations: Maximum 100 items per request
+
+---
+
+## Migration Guide
+
+!!! info "Migrating from Legacy Methods"
+
+    If you're using the old checklist methods, here's how to migrate:
+
+    | Old Method | New Method |
+    |------------|------------|
+    | `get_checklist_item(checklist_id, item_id)` | `get_checklist_item(item_id)` |
+    | `update_checklist_item(checklist_id, item_id, data)` | `update_checklist_item(item_id, data)` |
+    | `mark_checklist_item_complete(checklist_id, item_id)` | `complete_checklist_item(item_id, True)` |
+    | `post_document_to_checklist(item_id, data, file)` | `add_document_to_checklist_item(...)` |
+    | `delete_checklist_item_document(item_id, doc_id)` | `delete_checklist_document(doc_id)` |
 
 ---
 
@@ -328,14 +695,14 @@ client.checklist.mark_checklist_item_complete("checklist-123", "item-456")
 
 -   [:material-file-document: **Documents API**](documents.md)
 
-    Manage documents and digital signatures
+    Deep dive into document management
 
 -   [:material-swap-horizontal: **Transactions API**](transactions.md)
 
-    Work with transaction data
+    Learn about transaction operations
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [:material-api: **API Overview**](index.md)
 
-    Create new transactions with checklists
+    Explore other API endpoints
 
 </div> 

@@ -17,6 +17,26 @@ Create and manage transaction builders with full participant and property manage
     - **Convert** listings to transactions
     - **Backward Compatibility** with legacy method names
 
+!!! danger "🚨 CRITICAL API REQUIREMENTS"
+
+    **These requirements are MANDATORY for successful API calls:**
+
+    **Location Updates:**
+    - Basic address fields (street, city, state, zip) alone will **FAIL**
+    - Additional fields are **REQUIRED**: `county`, `yearBuilt`, `mlsNumber`
+
+    **Price/Date Updates:**
+    - Basic price fields alone will **FAIL**
+    - **BOTH** commission objects are **REQUIRED**: `listingCommission` AND `saleCommission`
+
+    **Co-Agent Roles:**
+    - ✅ Working: `"REAL"`, `"BUYERS_AGENT"`, `"SELLERS_AGENT"`
+    - ❌ Fails: `"LISTING_AGENT"`
+
+    **Owner Agents:**
+    - Require specific sequence: location → price/date → participants → owner agent
+    - Need valid `officeId` and `teamId`
+
 ---
 
 ## Quick Start
@@ -31,28 +51,59 @@ Create and manage transaction builders with full participant and property manage
     client: RezenClient = RezenClient()
 
     # Step 1: Create transaction builder
-    response: Dict[str, Any] = client.transaction_builder.create_transaction_builder()
-    transaction_id: str = response['id']
+    transaction_id: str = client.transaction_builder.create_transaction_builder()
 
-    # Step 2: Add participants
-    buyer_data: Dict[str, Any] = {
-        "type": "BUYER",
-        "first_name": "John",
-        "last_name": "Doe",
-        "email": "john.doe@email.com"
-    }
-    client.transaction_builder.add_buyer(transaction_id, buyer_data)
-
-    # Step 3: Add property information
+    # Step 2: Add property information - CRITICAL REQUIREMENTS
+    # ⚠️ Additional fields beyond basic address are REQUIRED
     location_data: Dict[str, Any] = {
-        "address": "123 Main Street",
-        "city": "Anytown",
-        "state": "CA",
-        "zipCode": "90210"
+        "street": "123 Main Street",  # Use 'street' not 'address'
+        "city": "Salt Lake City",
+        "state": "UTAH",  # MUST BE ALL CAPS
+        "zip": "84101",   # Use 'zip' not 'zipCode'
+        "county": "Salt Lake",      # REQUIRED - API fails without this
+        "yearBuilt": 2020,         # REQUIRED - API fails without this
+        "mlsNumber": "MLS123456"   # REQUIRED - API fails without this
     }
     client.transaction_builder.update_location_info(transaction_id, location_data)
 
-    # Step 4: Submit transaction
+    # Step 3: Add price/date information - CRITICAL REQUIREMENTS
+    # ⚠️ BOTH commission objects are REQUIRED together
+    price_data: Dict[str, Any] = {
+        "dealType": "COMPENSATING",
+        "propertyType": "RESIDENTIAL",
+        "salePrice": {"amount": 500000, "currency": "USD"},
+        "representationType": "BUYER",
+        "listingCommission": {     # REQUIRED - cannot omit
+            "commissionPercent": 3.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False
+        },
+        "saleCommission": {        # REQUIRED - cannot omit
+            "commissionPercent": 3.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False
+        }
+    }
+    client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+
+    # Step 4: Add participants (use camelCase)
+    buyer_data: Dict[str, Any] = {
+        "firstName": "John",  # Use camelCase
+        "lastName": "Doe",    # Use camelCase
+        "email": "john.doe@email.com",
+        "phoneNumber": "(555) 123-4567"  # Use camelCase
+    }
+    client.transaction_builder.add_buyer(transaction_id, buyer_data)
+
+    # Step 5: Add co-agent (working roles only)
+    co_agent_data: Dict[str, Any] = {
+        "agentId": "bd465129-b224-43e3-b92f-524ea5f53783",
+        "role": "REAL",  # ✅ Working role
+        "receivesInvoice": False
+    }
+    client.transaction_builder.add_co_agent(transaction_id, co_agent_data)
+
+    # Step 6: Submit transaction
     client.transaction_builder.submit_transaction(transaction_id)
     ```
 
@@ -66,15 +117,14 @@ Create and manage transaction builders with full participant and property manage
     client: RezenClient = RezenClient()
 
     # Create listing builder using dedicated method
-    response: Dict[str, Any] = client.transaction_builder.create_listing_builder()
-    listing_id: str = response['id']
+    listing_id: str = client.transaction_builder.create_listing_builder()
 
-    # Configure listing-specific details
+    # Configure listing-specific details (use camelCase)
     seller_data: Dict[str, Any] = {
-        "type": "SELLER",
-        "first_name": "Jane",
-        "last_name": "Smith",
-        "email": "jane.smith@email.com"
+        "firstName": "Jane",      # Use camelCase
+        "lastName": "Smith",      # Use camelCase
+        "email": "jane.smith@email.com",
+        "phoneNumber": "(555) 987-6543"  # Use camelCase
     }
     client.transaction_builder.add_seller(listing_id, seller_data)
     ```
@@ -365,10 +415,41 @@ Create and manage transaction builders with full participant and property manage
           show_source: false
           heading_level: 5
 
+### Multiple Teams Support
+
+!!! success "✅ New Feature: Multiple Teams Support"
+
+    Many ReZEN users belong to multiple teams. These convenience methods help handle team selection automatically:
+
+=== ":material-account-group: Get Teams & Offices"
+
+    ::: rezen.transaction_builder.TransactionBuilderClient.get_user_teams_and_offices
+        options:
+          show_source: false
+          heading_level: 5
+
+    **Smart Default Logic:**
+    - Prefers teams where you have **LEADER** role
+    - Falls back to **ADMIN** teams
+    - Uses first available team as last resort
+
+=== ":material-account-star: Set Owner Agent (Default Team)"
+
     ::: rezen.transaction_builder.TransactionBuilderClient.set_current_user_as_owner_agent
         options:
           show_source: false
           heading_level: 5
+
+    **Best for:** Users with single team or who want automatic team selection.
+
+=== ":material-account-check: Set Owner Agent (Specific Team)"
+
+    ::: rezen.transaction_builder.TransactionBuilderClient.set_current_user_as_owner_agent_with_team
+        options:
+          show_source: false
+          heading_level: 5
+
+    **Best for:** Users with multiple teams who need explicit control.
 
     !!! danger "Prerequisites Required"
 
@@ -390,6 +471,15 @@ Create and manage transaction builders with full participant and property manage
         "teamId": "team_uuid"
     }
     ```
+
+    !!! tip "Multiple Teams Support"
+
+        **New in ReZEN**: If you belong to multiple teams, use the enhanced methods:
+        
+        - `get_user_teams_and_offices()` - Discover available teams
+        - `set_current_user_as_owner_agent_with_team()` - Specify exact team
+        
+        See [Multiple Teams Guide](../guides/transactions.md#handling-multiple-teams-offices) for details.
 
     !!! example "Complete Working Example"
 

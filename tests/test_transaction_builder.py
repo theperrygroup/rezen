@@ -151,6 +151,16 @@ class TestTransactionBuilderClient:
             "salePrice": {"amount": 500000, "currency": "USD"},
             "representationType": "BUYER",
             "closingDate": "2024-01-15",
+            "listingCommission": {
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False,
+            },
+            "saleCommission": {
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False,
+            },
         }
         result = self.client.update_price_and_date_info(self.transaction_id, price_info)
 

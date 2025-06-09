@@ -129,6 +129,9 @@ class UsersClient(BaseClient):
     def get_keymaker_ids(self, yenta_ids: List[str]) -> Dict[str, Any]:
         """Get keymaker IDs for the given Yenta IDs.
 
+        Note: For owner agent setup in transactions, you typically don't need this method.
+        The user ID from get_current_user() can be used directly as the agent ID.
+
         Args:
             yenta_ids: List of Yenta user IDs (UUIDs)
 
@@ -148,6 +151,58 @@ class UsersClient(BaseClient):
         """
         params = {"yentaIds": yenta_ids}
         return self.get("users/keymaker-ids", params=params)
+
+    def get_agent_id_for_current_user(self) -> str:
+        """Get the agent ID for the current user.
+
+        ✅ WORKING METHOD - Key Discovery: User ID = Agent ID in ReZEN.
+
+        This is a convenience method that returns the user ID, which serves as the agent ID
+        in the ReZEN system. This discovery eliminates the need to call the keymaker endpoint
+        for owner agent setup in transactions.
+
+        🎯 KEY INSIGHT:
+        In ReZEN's system architecture, the user ID from get_current_user() can be used
+        directly as the agent ID in owner agent configurations. This simplifies the
+        transaction setup process significantly.
+
+        Returns:
+            String containing the agent ID (same as user ID)
+
+        Raises:
+            AuthenticationError: If not authenticated
+            RezenError: If the API request fails
+
+        Example:
+            ```python
+            # Get agent ID for current user (for owner agent setup)
+            agent_id = client.users.get_agent_id_for_current_user()
+            print(f"Agent ID: {agent_id}")
+
+            # Use directly in owner agent setup - NO KEYMAKER LOOKUP NEEDED
+            user = client.users.get_current_user()
+            owner_info = {
+                "ownerAgent": {
+                    "agentId": user["id"],  # Same as get_agent_id_for_current_user()
+                    "role": "BUYERS_AGENT"
+                },
+                "officeId": user["offices"][0]["id"],  # From user profile
+                "teamId": "your-team-uuid"              # From team selection
+            }
+
+            # This approach works and eliminates API complexity
+            client.transaction_builder.update_owner_agent_info(transaction_id, owner_info)
+            ```
+
+        Alternative Usage:
+            ```python
+            # Direct approach without this method
+            user = client.users.get_current_user()
+            agent_id = user["id"]  # User ID IS the agent ID
+            ```
+        """
+        user = self.get_current_user()
+        return str(user["id"])
 
     def get_principal_user(self) -> Dict[str, Any]:
         """Get principal user information.

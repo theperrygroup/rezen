@@ -3,6 +3,7 @@
 from .agents import AgentsClient, AgentSortField, AgentStatus
 from .api_keys import ApiKeysClient
 from .auth import AuthClient
+from .checklist import ChecklistClient
 from .client import RezenClient
 from .directory import (
     DirectoryClient,
@@ -28,12 +29,13 @@ from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .users import UsersClient
 
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 __all__ = [
     "RezenClient",
     "AuthClient",
     "MfaClient",
     "ApiKeysClient",
+    "ChecklistClient",
     "TransactionBuilderClient",
     "TransactionsClient",
     "TeamsClient",

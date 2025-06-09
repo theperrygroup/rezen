@@ -173,28 +173,37 @@ class TransactionBuilderClient(BaseClient):
     ) -> Dict[str, Any]:
         """Update price and date information.
 
-        CRITICAL: This endpoint requires specific field names and structures:
-        - salePrice MUST be an object with 'amount' and 'currency', NOT a simple number
-        - All dates use camelCase format: acceptanceDate, closingDate, etc.
-        - representationType determines valid agent roles (BUYER → BUYERS_AGENT, SELLER → SELLERS_AGENT)
+        ⚠️ CRITICAL REQUIREMENT ⚠️
+        Basic price/date fields alone will FAIL with "Bad request: Invalid request".
+        The API requires BOTH commission objects for successful price/date updates.
 
-        Required Fields:
+        REQUIRED COMMISSION FIELDS:
+            Both listingCommission AND saleCommission objects are REQUIRED together.
+            You cannot provide just one - the API needs both.
+
+        Field Structure Requirements:
+            - salePrice MUST be an object with 'amount' and 'currency', NOT a simple number
+            - All dates use camelCase format: acceptanceDate, closingDate, etc.
+            - representationType determines valid agent roles (BUYER → BUYERS_AGENT, SELLER → SELLERS_AGENT)
+
+        Required Fields for Success:
             - dealType (str): "COMPENSATING" or "NON_COMPENSATING"
             - propertyType (str): "RESIDENTIAL", "COMMERCIAL", etc.
             - salePrice (dict): {"amount": 500000, "currency": "USD"}
             - representationType (str): "BUYER" or "SELLER" - affects owner agent role
+            - listingCommission (dict): Commission object - REQUIRED
+            - saleCommission (dict): Commission object - REQUIRED
 
         Optional Fields:
-            - listingCommission (dict): {"commissionPercent": 3.0, "percentEnabled": true}
-            - saleCommission (dict): {"commissionPercent": 3.0, "percentEnabled": true}
             - acceptanceDate (str): Date in "YYYY-MM-DD" format
             - closingDate (str): Date in "YYYY-MM-DD" format
             - earnestMoney (float): Earnest money amount
             - downPayment (float): Down payment amount
             - loanAmount (float): Loan amount
 
-        Example:
+        Working Example:
             ```python
+            # ✅ This WORKS (includes both required commission objects)
             price_date_info = {
                 "dealType": "COMPENSATING",
                 "propertyType": "RESIDENTIAL",
@@ -202,28 +211,55 @@ class TransactionBuilderClient(BaseClient):
                     "amount": 565000,
                     "currency": "USD"
                 },
-                "listingCommission": {
+                "representationType": "BUYER",
+                "listingCommission": {       # REQUIRED
                     "commissionPercent": 3.0,
                     "percentEnabled": True,
                     "negativeOrEmpty": False
                 },
-                "saleCommission": {
+                "saleCommission": {          # REQUIRED
                     "commissionPercent": 3.0,
                     "percentEnabled": True,
                     "negativeOrEmpty": False
                 },
                 "acceptanceDate": "2024-01-15",
-                "closingDate": "2024-02-28",
-                "representationType": "BUYER"  # This must match owner agent role
+                "closingDate": "2024-02-28"
+            }
+
+            # ❌ This FAILS (missing commission objects)
+            price_date_info = {
+                "dealType": "COMPENSATING",
+                "propertyType": "RESIDENTIAL",
+                "salePrice": {"amount": 500000, "currency": "USD"},
+                "representationType": "BUYER"
+                # Missing both commission objects - API returns "Bad request: Invalid request"
+            }
+
+            # ❌ This ALSO FAILS (only one commission object)
+            price_date_info = {
+                "dealType": "COMPENSATING",
+                "propertyType": "RESIDENTIAL",
+                "salePrice": {"amount": 500000, "currency": "USD"},
+                "representationType": "BUYER",
+                "listingCommission": {       # Only one commission
+                    "commissionPercent": 3.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                }
+                # Missing saleCommission - API still returns "Bad request: Invalid request"
             }
             ```
 
         Args:
             transaction_id: Transaction builder ID
-            price_date_info: Price and date information data with proper structure
+            price_date_info: Price and date information data with BOTH commission objects
 
         Returns:
             Transaction builder response data
+
+        Raises:
+            ValidationError: If missing required fields or commission objects
+            InvalidFieldValueError: If salePrice format is incorrect or representationType invalid
         """
         # Validate required fields
         required_fields = [
@@ -231,6 +267,8 @@ class TransactionBuilderClient(BaseClient):
             "propertyType",
             "salePrice",
             "representationType",
+            "listingCommission",
+            "saleCommission",
         ]
         missing_fields = [
             field for field in required_fields if field not in price_date_info
@@ -238,6 +276,7 @@ class TransactionBuilderClient(BaseClient):
         if missing_fields:
             raise ValidationError(
                 f"Missing required fields: {', '.join(missing_fields)}. "
+                f"CRITICAL: Both listingCommission AND saleCommission objects are required for price/date updates. "
                 f"All of these are required: {', '.join(required_fields)}"
             )
 
@@ -376,32 +415,70 @@ class TransactionBuilderClient(BaseClient):
     ) -> Dict[str, Any]:
         """Update location information.
 
-        Important: The API requires specific field names and formats:
-        - Use 'street' not 'address'
-        - Use 'zip' not 'zipCode'
-        - State must be 'UTAH' (all caps)
-        - Use camelCase for: yearBuilt, mlsNumber, escrowNumber
+        ⚠️ CRITICAL REQUIREMENT ⚠️
+        Basic address fields alone (street, city, state, zip) will FAIL.
+        The API requires additional property details for successful location updates.
 
-        Example:
+        REQUIRED ADDITIONAL FIELDS (beyond basic address):
+            - county (str): County name (e.g., "Salt Lake")
+            - yearBuilt (int): Year the property was built (e.g., 2020)
+            - mlsNumber (str): MLS listing number (e.g., "MLS123456")
+
+        Field Name Requirements:
+            - Use 'street' not 'address'
+            - Use 'zip' not 'zipCode' or 'zip_code'
+            - State must be ALL CAPS (e.g., 'UTAH', 'CALIFORNIA')
+            - Use camelCase for: yearBuilt, mlsNumber, escrowNumber
+
+        Required Fields for Success:
+            - street (str): Property street address
+            - city (str): City name
+            - state (str): State name in ALL CAPS
+            - zip (str): ZIP code
+            - county (str): County name - REQUIRED
+            - yearBuilt (int): Year built - REQUIRED
+            - mlsNumber (str): MLS number - REQUIRED
+
+        Optional Fields:
+            - street2 (str): Secondary address line
+            - unit (str): Unit number
+            - escrowNumber (str): Escrow number
+
+        Working Example:
+            ```python
+            # ✅ This WORKS (includes required additional fields)
             location_info = {
                 "street": "123 Main Street",
-                "street2": "",
                 "city": "Salt Lake City",
                 "state": "UTAH",
                 "zip": "84101",
-                "county": "Salt Lake",
-                "unit": "",
-                "yearBuilt": 2020,
-                "mlsNumber": "MLS123456",
-                "escrowNumber": "ESC-2024-001"
+                "county": "Salt Lake",        # REQUIRED
+                "yearBuilt": 2020,           # REQUIRED
+                "mlsNumber": "MLS123456",    # REQUIRED
+                "escrowNumber": "ESC-2024-001"  # Optional
             }
+
+            # ❌ This FAILS (missing required additional fields)
+            location_info = {
+                "street": "123 Main Street",
+                "city": "Salt Lake City",
+                "state": "UTAH",
+                "zip": "84101"
+                # Missing county, yearBuilt, mlsNumber - API returns "Bad request: Invalid request"
+            }
+            ```
 
         Args:
             transaction_id: Transaction builder ID
-            location_info: Location information data with required fields
+            location_info: Location information data with ALL required fields
 
         Returns:
             Transaction builder response data
+
+        Raises:
+            InvalidFieldNameError: If using wrong field names (address, zipCode, etc.)
+            InvalidFieldValueError: If state is not in ALL CAPS
+            ValidationError: If missing required additional fields
         """
         # Check for common field name errors
         if "address" in location_info:
@@ -570,71 +647,108 @@ class TransactionBuilderClient(BaseClient):
     ) -> Dict[str, Any]:
         """Update owner agent information for the transaction.
 
-        ⚠️ CRITICAL SEQUENCE REQUIREMENT ⚠️
-        This endpoint REQUIRES the transaction to be set up in this EXACT order:
+        ✅ WORKING SOLUTION ✅
+        This method now works correctly when called in the proper sequence.
+
+        🔄 REQUIRED SEQUENCE:
         1. Create transaction (create_transaction_builder)
-        2. Add location info (update_location_info) - REQUIRED FIRST
-        3. Add price/date info (update_price_and_date_info) - REQUIRED SECOND
-        4. Add buyers/sellers (add_buyer/add_seller) - REQUIRED THIRD
-        5. THEN add owner agent (this method) - NOW IT WORKS!
+        2. Add location info with ALL required fields (update_location_info)
+        3. Add price/date info with commission objects (update_price_and_date_info)
+        4. Add buyers/sellers (add_buyer/add_seller)
+        5. THEN add owner agent (this method) - ✅ WORKS!
 
-        If you call this endpoint before completing steps 1-4, it will return
-        "Bad request: Invalid request" even with correct data.
+        📋 COMPLETE DATA REQUIREMENTS:
 
-        Data Structure:
+        Location Info Must Include:
+            - street, city, state, zip (basic)
+            - county: Required additional field
+            - yearBuilt: Required additional field
+            - mlsNumber: Required additional field
+
+        Price/Date Info Must Include:
+            - dealType, propertyType, salePrice, representationType (basic)
+            - listingCommission: Required commission object
+            - saleCommission: Required commission object
+
+        Owner Agent Data Structure:
             owner_agent_info = {
                 "ownerAgent": {
-                    "agentId": str,  # UUID of the agent
+                    "agentId": str,  # User ID (same as agent ID in ReZEN)
                     "role": str      # "BUYERS_AGENT" or "SELLERS_AGENT"
                 },
-                "officeId": str,     # UUID of the office (optional)
-                "teamId": str        # UUID of the team (optional)
+                "officeId": str,     # From user.offices[0].id
+                "teamId": str        # UUID of the team
             }
+
+        🎯 GETTING THE RIGHT IDS:
+            - agentId: Use current user's ID (user["id"] from get_current_user())
+            - officeId: Use user["offices"][0]["id"] from get_current_user()
+            - teamId: Use team ID from get_user_teams_and_offices()
 
         Role Matching:
             The role MUST match the representationType from price/date info:
             - representationType: "BUYER" → role: "BUYERS_AGENT"
             - representationType: "SELLER" → role: "SELLERS_AGENT"
 
+        💡 TIP: Use convenience methods instead of manual setup:
+            - set_current_user_as_owner_agent() for default team
+            - set_current_user_as_owner_agent_with_team() for specific team
+
         Example - Complete Working Sequence:
             ```python
             # 1. Create transaction
-            builder_id = client.create_transaction_builder()
+            builder_id = client.transaction_builder.create_transaction_builder()
 
-            # 2. Add location (REQUIRED FIRST)
-            client.update_location_info(builder_id, {
+            # 2. Add location with ALL required fields (REQUIRED FIRST)
+            client.transaction_builder.update_location_info(builder_id, {
                 "street": "123 Main St",
                 "city": "Salt Lake City",
                 "state": "UTAH",
-                "zip": "84101"
+                "zip": "84101",
+                "county": "Salt Lake",        # REQUIRED
+                "yearBuilt": 2020,           # REQUIRED
+                "mlsNumber": "MLS-123456"    # REQUIRED
             })
 
-            # 3. Add price/date (REQUIRED SECOND)
-            client.update_price_and_date_info(builder_id, {
+            # 3. Add price/date with commission objects (REQUIRED SECOND)
+            client.transaction_builder.update_price_and_date_info(builder_id, {
                 "dealType": "COMPENSATING",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {"amount": 500000, "currency": "USD"},
-                "representationType": "BUYER"  # Note: BUYER not BUYERS_AGENT
+                "representationType": "BUYER",
+                "listingCommission": {       # REQUIRED
+                    "commissionPercent": 3.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                },
+                "saleCommission": {          # REQUIRED
+                    "commissionPercent": 3.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                }
             })
 
             # 4. Add buyer (REQUIRED THIRD)
-            client.add_buyer(builder_id, {
+            client.transaction_builder.add_buyer(builder_id, {
                 "firstName": "John",
                 "lastName": "Doe",
                 "email": "john@example.com",
                 "phoneNumber": "(555) 123-4567"
             })
 
-            # 5. NOW add owner agent (WORKS!)
+            # 5. Get user and office info
+            user = client.users.get_current_user()
+
+            # 6. NOW add owner agent (WORKS!)
             owner_info = {
                 "ownerAgent": {
-                    "agentId": "your-agent-uuid",
-                    "role": "BUYERS_AGENT"  # Must match representationType
+                    "agentId": user["id"],          # User ID = Agent ID
+                    "role": "BUYERS_AGENT"          # Must match representationType
                 },
-                "officeId": "your-office-uuid",
-                "teamId": "your-team-uuid"
+                "officeId": user["offices"][0]["id"],  # From user's offices
+                "teamId": "your-team-uuid"              # Your team ID
             }
-            result = client.update_owner_agent_info(builder_id, owner_info)
+            result = client.transaction_builder.update_owner_agent_info(builder_id, owner_info)
             ```
 
         Args:
@@ -678,6 +792,16 @@ class TransactionBuilderClient(BaseClient):
                 f"One of: {', '.join(valid_roles)} (Must match representationType: BUYER→BUYERS_AGENT, SELLER→SELLERS_AGENT)",
             )
 
+        # Validate required fields for transaction creation
+        if "officeId" not in owner_agent_info:
+            raise ValidationError(
+                "Missing required field 'officeId' - required for transaction creation"
+            )
+        if "teamId" not in owner_agent_info:
+            raise ValidationError(
+                "Missing required field 'teamId' - required for transaction creation"
+            )
+
         endpoint = f"transaction-builder/{transaction_builder_id}/owner-info"
 
         try:
@@ -700,25 +824,64 @@ class TransactionBuilderClient(BaseClient):
     def add_co_agent(
         self, transaction_id: str, co_agent_info: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Add a new co-agent.
+        """Add a new co-agent to the transaction.
+
+        Co-agents can be added at any time after transaction creation, unlike owner agents
+        which require a specific sequence. The co-agent will appear in the transaction's
+        agentsInfo.coAgents array.
+
+        ⚠️ ROLE LIMITATIONS ⚠️
+        Based on testing, only certain roles work with co-agents:
+
+        ✅ WORKING ROLES:
+            - "REAL" - Always works (may display differently based on representationType)
+            - "BUYERS_AGENT" - Works on transactions with location data
+            - "SELLERS_AGENT" - Works on transactions with location data
+
+        ❌ NON-WORKING ROLES:
+            - "LISTING_AGENT" - Fails with "Bad request: Invalid request"
 
         Required Fields:
-            - agentId (str): UUID of the co-agent
-            - role (str): Agent role (e.g., "REAL", "BUYERS_AGENT", "SELLERS_AGENT")
+            - agentId (str): UUID of the co-agent (must be a valid agent ID)
+            - role (str): Agent role - use one of the working roles above
             - receivesInvoice (bool): Whether the co-agent receives invoice
 
         Optional Fields:
-            - opCityReferral (bool): Whether this is an OpCity referral
-            - optedInForEcp (bool): Whether opted in for ECP
+            - opCityReferral (bool): Whether this is an OpCity referral (default: False)
+            - optedInForEcp (bool): Whether opted in for ECP (default: False)
 
-        Example:
+        Note on Role Display:
+            The role field accepts "REAL" but may be displayed differently in the response
+            based on the transaction's representationType. For example, if representationType
+            is "BUYER", a co-agent with role "REAL" may appear as "BUYERS_AGENT" in the response.
+
+        Working Examples:
             ```python
+            # ✅ Co-agent with REAL role (always works)
             co_agent_info = {
-                "agentId": "agent-uuid-here",
+                "agentId": "bd465129-b224-43e3-b92f-524ea5f53783",
                 "role": "REAL",
+                "receivesInvoice": False,
+                "opCityReferral": False,
+                "optedInForEcp": False
+            }
+            result = client.add_co_agent(transaction_id, co_agent_info)
+
+            # ✅ Co-agent with BUYERS_AGENT role (works with location data)
+            co_agent_info = {
+                "agentId": "bd465129-b224-43e3-b92f-524ea5f53783",
+                "role": "BUYERS_AGENT",
                 "receivesInvoice": False
             }
-            client.add_co_agent(transaction_id, co_agent_info)
+            result = client.add_co_agent(transaction_id, co_agent_info)
+
+            # ❌ This FAILS (LISTING_AGENT role not supported)
+            co_agent_info = {
+                "agentId": "bd465129-b224-43e3-b92f-524ea5f53783",
+                "role": "LISTING_AGENT",  # This role fails
+                "receivesInvoice": False
+            }
+            # Will return "Bad request: Invalid request"
             ```
 
         Args:
@@ -726,7 +889,10 @@ class TransactionBuilderClient(BaseClient):
             co_agent_info: Co-agent information data
 
         Returns:
-            Transaction builder response data
+            Transaction builder response data with updated co-agents list
+
+        Raises:
+            ValidationError: If role is not supported or agent ID is invalid
         """
         endpoint = f"transaction-builder/{transaction_id}/co-agent"
         return self.put(endpoint, json_data=co_agent_info)
@@ -975,11 +1141,92 @@ class TransactionBuilderClient(BaseClient):
     def create_transaction_builder(self, builder_type: str = "TRANSACTION") -> str:
         """Create empty transaction builder.
 
+        This is the starting point for creating a new transaction. After creation,
+        you'll receive a transaction ID that you'll use for all subsequent operations.
+
+        ⚠️ CRITICAL: Follow the recommended workflow for successful transaction creation.
+        Many endpoints require specific data to be present before they will work.
+
+        Recommended Workflow:
+            1. Create transaction builder (this method)
+            2. Add location info (update_location_info) - REQUIRES additional fields
+            3. Add price/date info (update_price_and_date_info) - REQUIRES commission objects
+            4. Add buyers/sellers (add_buyer/add_seller) - Works after location data
+            5. Add co-agents (add_co_agent) - Works with specific roles
+            6. Add owner agent (update_owner_agent_info) - Requires complete setup + office/team IDs
+
+        Successful Working Example:
+            ```python
+            # Complete working sequence with co-agent
+            client = RezenClient()
+
+            # 1. Create transaction
+            transaction_id = client.transaction_builder.create_transaction_builder()
+
+            # 2. Add location (with required additional fields)
+            location_data = {
+                "street": "123 Main Street",
+                "city": "Salt Lake City",
+                "state": "UTAH",
+                "zip": "84101",
+                "county": "Salt Lake",      # REQUIRED
+                "yearBuilt": 2020,         # REQUIRED
+                "mlsNumber": "MLS123456"   # REQUIRED
+            }
+            client.transaction_builder.update_location_info(transaction_id, location_data)
+
+            # 3. Add price/date (with both commission objects)
+            price_data = {
+                "dealType": "COMPENSATING",
+                "propertyType": "RESIDENTIAL",
+                "salePrice": {"amount": 550000, "currency": "USD"},
+                "representationType": "BUYER",
+                "listingCommission": {     # REQUIRED
+                    "commissionPercent": 3.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                },
+                "saleCommission": {        # REQUIRED
+                    "commissionPercent": 3.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                }
+            }
+            client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+
+            # 4. Add participants
+            client.transaction_builder.add_buyer(transaction_id, {
+                "firstName": "John",
+                "lastName": "Buyer",
+                "email": "john@example.com",
+                "phoneNumber": "(801) 555-1234"
+            })
+
+            # 5. Add co-agent (this works immediately)
+            co_agent_info = {
+                "agentId": "bd465129-b224-43e3-b92f-524ea5f53783",
+                "role": "REAL",
+                "receivesInvoice": False
+            }
+            client.transaction_builder.add_co_agent(transaction_id, co_agent_info)
+
+            # Result: Complete working transaction with co-agent
+            print(f"✅ Successfully created transaction {transaction_id} with co-agent")
+            ```
+
+        Builder Types:
+            - "TRANSACTION": Standard real estate transaction
+            - "LISTING": Property listing
+
         Args:
-            builder_type: Type of builder ('TRANSACTION' or 'LISTING')
+            builder_type: Type of builder to create ("TRANSACTION" or "LISTING")
 
         Returns:
-            Transaction builder ID
+            Transaction builder ID as string
+
+        Raises:
+            ValidationError: If builder_type is invalid
+            RezenError: If transaction creation fails
         """
         endpoint = "transaction-builder"
         params = {"type": builder_type}
@@ -1437,10 +1684,23 @@ class TransactionBuilderClient(BaseClient):
     def set_current_user_as_owner_agent(
         self, transaction_builder_id: str, role: str, users_client: Optional[Any] = None
     ) -> Dict[str, Any]:
-        """Set the current authenticated user as the owner agent.
+        """Set the current authenticated user as the owner agent with default team.
 
-        This is a convenience method that automatically gets the current user's
-        information and sets them as the owner agent.
+        ✅ WORKING CONVENIENCE METHOD
+
+        ⚠️ **MULTIPLE TEAMS WARNING** ⚠️
+        If you belong to multiple teams, this method will use your DEFAULT team (prefers LEADER role).
+        To specify a particular team, use `set_current_user_as_owner_agent_with_team()` instead.
+
+        This is a convenience method that automatically:
+        1. Gets current user information (user ID and office ID)
+        2. Determines default team using smart logic
+        3. Sets up owner agent with all required fields
+
+        🎯 SMART DEFAULT TEAM LOGIC:
+        - Prefers teams where you have LEADER role
+        - Falls back to teams where you have ADMIN role
+        - Uses first available team as last resort
 
         Args:
             transaction_builder_id: UUID of the transaction builder
@@ -1451,23 +1711,301 @@ class TransactionBuilderClient(BaseClient):
             Updated transaction builder data
 
         Raises:
-            ValidationError: If owner agent info is invalid
+            ValidationError: If owner agent info is invalid or user has no teams
             NotFoundError: If transaction builder not found
             AuthenticationError: If not authenticated
+            ValueError: If user has no offices
 
         Example:
             ```python
-            # Set current user as buyer's agent
+            # Simple case - uses default team automatically
             result = client.transaction_builder.set_current_user_as_owner_agent(
                 builder_id,
                 "BUYERS_AGENT"
             )
 
-            # Set current user as seller's agent with explicit users client
-            result = client.transaction_builder.set_current_user_as_owner_agent(
+            # For multiple teams - check first, then choose approach
+            teams_info = client.transaction_builder.get_user_teams_and_offices()
+
+            if teams_info["has_multiple_teams"]:
+                print(f"You have {len(teams_info['teams'])} teams.")
+                print(f"Will use default: {teams_info['default_team']['name']}")
+
+                # Option 1: Use this method with default team
+                result = client.transaction_builder.set_current_user_as_owner_agent(
+                    builder_id, "BUYERS_AGENT"
+                )
+
+                # Option 2: Specify team explicitly
+                # result = client.transaction_builder.set_current_user_as_owner_agent_with_team(
+                #     builder_id, "BUYERS_AGENT", teams_info["teams"][1]["id"]
+                # )
+            else:
+                # Single team - use this convenience method
+                result = client.transaction_builder.set_current_user_as_owner_agent(
+                    builder_id, "BUYERS_AGENT"
+                )
+            ```
+        """
+        # Import here to avoid circular imports
+        if users_client is None:
+            from .users import UsersClient
+
+            users_client = UsersClient(api_key=self.api_key)
+
+        # Get current user information
+        user = users_client.get_current_user()
+
+        # Check for multiple teams and warn
+        user_teams = user.get("teams", [])
+        if len(user_teams) > 1:
+            team_names = [f"{t['teamName']} ({t['teamId']})" for t in user_teams]
+            print(
+                f"⚠️  WARNING: You belong to {len(user_teams)} teams: {', '.join(team_names)}"
+            )
+            print(
+                f"Using default team. To specify a team, use set_current_user_as_owner_agent_with_team()"
+            )
+
+        # Use user ID as agent ID (they are equivalent in this system)
+        agent_id = user["id"]
+
+        # Use default team selection logic
+        teams_info = self.get_user_teams_and_offices(users_client)
+        if not teams_info["default_team"]:
+            raise ValidationError(
+                "User must belong to at least one team to be set as owner agent"
+            )
+
+        # Build owner agent info with default team
+        owner_info = {
+            "ownerAgent": {"agentId": agent_id, "role": role},
+            "teamId": teams_info["default_team"]["id"],
+        }
+
+        # Get office ID from user's offices
+        offices = user.get("offices", [])
+        if offices:
+            office_id = offices[0]["id"]  # Use the first office
+            owner_info["officeId"] = office_id
+        else:
+            raise ValidationError(
+                "User has no offices available. Cannot determine office ID for transaction creation."
+            )
+
+        return self.update_owner_agent_info(transaction_builder_id, owner_info)
+
+    def get_user_teams_and_offices(
+        self, users_client: Optional[Any] = None
+    ) -> Dict[str, Any]:
+        """Get current user's teams and offices with smart default selection.
+
+        ✅ WORKING METHOD - Handles multiple team scenarios automatically.
+
+        This method helps handle users who belong to multiple teams by:
+        1. Fetching all teams the user belongs to
+        2. Determining a smart default team (prefers LEADER role over ADMIN)
+        3. Extracting office information from user profile
+        4. Providing clear guidance on team selection
+
+        🎯 SMART DEFAULT LOGIC:
+        - If user has LEADER role in any team → that team becomes default
+        - If user only has ADMIN roles → first ADMIN team becomes default
+        - If user has only one team → that team becomes default
+
+        💡 USE CASES:
+        - Check if user needs team selection before transaction creation
+        - Get default team for automatic owner agent setup
+        - Display available teams for user selection
+
+        Args:
+            users_client: Optional users client instance (uses parent client if None)
+
+        Returns:
+            Dictionary containing:
+            - user: Full user profile data with offices array
+            - teams: List of teams user belongs to with roles
+            - offices: List of offices user belongs to
+            - default_team: Recommended team (smart selection)
+            - has_multiple_teams: Boolean indicating if user has multiple teams
+            - team_selection_needed: Boolean indicating if explicit selection recommended
+            - agent_id: User's agent ID (same as user ID)
+            - office_id: Primary office ID from user.offices[0].id
+
+        Example:
+            ```python
+            info = client.transaction_builder.get_user_teams_and_offices()
+
+            print(f"Agent ID: {info['agent_id']}")
+            print(f"Office ID: {info['office_id']}")
+
+            if info["has_multiple_teams"]:
+                print("\\nAvailable teams:")
+                for team in info["teams"]:
+                    role = team["role"]
+                    name = team["name"]
+                    is_default = team["id"] == info["default_team"]["id"]
+                    marker = " (DEFAULT)" if is_default else ""
+                    print(f"  - {name} (Role: {role}){marker}")
+
+                # Use default team or let user choose
+                selected_team = info["default_team"]
+                print(f"\\nUsing default team: {selected_team['name']}")
+            else:
+                print(f"Single team: {info['default_team']['name']}")
+
+            # Ready-to-use IDs for transaction setup
+            team_id = info["default_team"]["id"]
+            office_id = info["office_id"]
+            agent_id = info["agent_id"]
+            ```
+
+        Team Data Structure:
+            Each team in the teams list contains:
+            - id: Team UUID
+            - name: Team name
+            - role: User's role in the team ("LEADER", "ADMIN", etc.)
+
+        Raises:
+            APIError: If user data cannot be retrieved
+            ValueError: If user has no offices (required for transactions)
+        """
+        # Import here to avoid circular imports
+        if users_client is None:
+            from .users import UsersClient
+
+            users_client = UsersClient(api_key=self.api_key)
+
+        # Get current user information
+        user = users_client.get_current_user()
+
+        # Get teams from user data (they're included in the user profile)
+        raw_teams = user.get("teams", [])
+
+        # Transform teams to our standard format
+        teams = []
+        for team in raw_teams:
+            # Determine the user's primary role in this team
+            team_roles = team.get("teamRoles", [])
+            primary_role = team_roles[0] if team_roles else "MEMBER"
+
+            teams.append(
+                {
+                    "id": team["teamId"],
+                    "name": team["teamName"],
+                    "role": primary_role,
+                    "type": team.get("teamType", "NORMAL"),
+                    "raw_data": team,  # Keep original data for reference
+                }
+            )
+
+        # Extract office information
+        offices = user.get("offices", [])
+        if not offices:
+            raise ValueError(
+                "User has no offices. Office information is required for transactions."
+            )
+
+        # Determine default team with smart logic
+        default_team = None
+        leader_teams = []
+        admin_teams = []
+
+        # Categorize teams by role
+        for team in teams:
+            if team.get("role") == "LEADER":
+                leader_teams.append(team)
+            elif team.get("role") == "ADMIN":
+                admin_teams.append(team)
+
+        # Smart default selection
+        if leader_teams:
+            default_team = leader_teams[0]  # Prefer first LEADER team
+        elif admin_teams:
+            default_team = admin_teams[0]  # Fallback to first ADMIN team
+        elif teams:
+            default_team = teams[0]  # Last resort: first team
+
+        return {
+            "user": user,
+            "teams": teams,
+            "offices": offices,
+            "default_team": default_team,
+            "has_multiple_teams": len(teams) > 1,
+            "team_selection_needed": len(teams) > 1,
+            "agent_id": user["id"],  # User ID = Agent ID in ReZEN
+            "office_id": offices[0]["id"],  # Primary office
+        }
+
+    def set_current_user_as_owner_agent_with_team(
+        self,
+        transaction_builder_id: str,
+        role: str,
+        team_id: str,
+        users_client: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Set current user as owner agent with explicit team selection.
+
+        ✅ WORKING CONVENIENCE METHOD
+
+        This method allows users to specify which team to use when they belong
+        to multiple teams. This gives full control over team selection and is
+        recommended when you need to be explicit about which team to use.
+
+        🎯 PERFECT FOR:
+        - Users who belong to multiple teams
+        - When you need specific team for business reasons
+        - Programmatic team selection based on criteria
+
+        This method automatically:
+        1. Gets current user information (user ID and office ID)
+        2. Validates the user belongs to the specified team
+        3. Sets up owner agent with all required fields
+
+        Args:
+            transaction_builder_id: UUID of the transaction builder
+            role: Agent role ("BUYERS_AGENT" or "SELLERS_AGENT")
+            team_id: Specific team ID to use for the transaction
+            users_client: Optional UsersClient instance. If None, will create one.
+
+        Returns:
+            Updated transaction builder data
+
+        Raises:
+            ValidationError: If user is not a member of the specified team
+            ValidationError: If team_id is invalid
+            NotFoundError: If transaction builder not found
+            AuthenticationError: If not authenticated
+            ValueError: If user has no offices
+
+        Example:
+            ```python
+            # Option 1: Get available teams and choose
+            teams_info = client.transaction_builder.get_user_teams_and_offices()
+
+            if teams_info["has_multiple_teams"]:
+                print("Available teams:")
+                for team in teams_info["teams"]:
+                    print(f"  {team['name']} (ID: {team['id']}, Role: {team['role']})")
+
+                # Choose a specific team (e.g., select LEADER team)
+                leader_teams = [t for t in teams_info["teams"] if t["role"] == "LEADER"]
+                selected_team_id = leader_teams[0]["id"] if leader_teams else teams_info["teams"][0]["id"]
+            else:
+                selected_team_id = teams_info["default_team"]["id"]
+
+            # Set owner agent with specific team
+            result = client.transaction_builder.set_current_user_as_owner_agent_with_team(
                 builder_id,
-                "SELLERS_AGENT",
-                users_client=client.users
+                role="BUYERS_AGENT",
+                team_id=selected_team_id
+            )
+
+            # Option 2: Direct usage if you know the team ID
+            result = client.transaction_builder.set_current_user_as_owner_agent_with_team(
+                builder_id,
+                role="SELLERS_AGENT",
+                team_id="12345678-1234-1234-1234-123456789012"
             )
             ```
         """
@@ -1480,13 +2018,38 @@ class TransactionBuilderClient(BaseClient):
         # Get current user information
         user = users_client.get_current_user()
 
-        # Build owner agent info
-        owner_info = {"ownerAgent": {"agentId": user["id"], "role": role}}
+        # Validate that user is member of specified team
+        user_teams = user.get("teams", [])
+        selected_team = None
+        for team in user_teams:
+            if team["teamId"] == team_id:
+                selected_team = team
+                break
 
-        # Add office and team if available
-        if user.get("officeId"):
-            owner_info["officeId"] = user["officeId"]
-        if user.get("teamId"):
-            owner_info["teamId"] = user["teamId"]
+        if not selected_team:
+            available_team_ids = [t["teamId"] for t in user_teams]
+            raise ValidationError(
+                f"User is not a member of team '{team_id}'. "
+                f"Available teams: {available_team_ids}"
+            )
+
+        # Use user ID as agent ID (they are equivalent in this system)
+        agent_id = user["id"]
+
+        # Build owner agent info with specified team
+        owner_info = {
+            "ownerAgent": {"agentId": agent_id, "role": role},
+            "teamId": team_id,
+        }
+
+        # Get office ID from user's offices
+        offices = user.get("offices", [])
+        if offices:
+            office_id = offices[0]["id"]  # Use the first office
+            owner_info["officeId"] = office_id
+        else:
+            raise ValidationError(
+                "User has no offices available. Cannot determine office ID for transaction creation."
+            )
 
         return self.update_owner_agent_info(transaction_builder_id, owner_info)
