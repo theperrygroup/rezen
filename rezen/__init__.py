@@ -26,6 +26,7 @@ from .mfa import MfaClient
 from .teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
+from .users import UsersClient
 
 __version__ = "1.7.1"
 __all__ = [
@@ -58,4 +59,5 @@ __all__ = [
     "RateLimitError",
     "ServerError",
     "NetworkError",
+    "UsersClient",
 ]

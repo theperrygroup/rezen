@@ -259,7 +259,7 @@ client.transactions.create_participant(transaction_id, participant)
 
     Manage transaction checklists and documents
 
--   [:material-alert-circle: **Exceptions**](exceptions.md)
+-   [:material-alert-circle: **Exceptions**](../reference/exceptions.md)
 
     Handle transaction-related errors
 

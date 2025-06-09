@@ -231,16 +231,15 @@ Create and manage transaction builders with full participant and property manage
 
     | Field | Type | Description |
     |-------|------|-------------|
-    | `type` | `str` | Must be "BUYER" |
-    | `first_name` | `str` | Buyer's first name |
-    | `last_name` | `str` | Buyer's last name |
+    | `firstName` | `str` | Buyer's first name (camelCase) |
+    | `lastName` | `str` | Buyer's last name (camelCase) |
     | `email` | `str` | Valid email address |
 
     **Optional Buyer Fields:**
 
     | Field | Type | Description |
     |-------|------|-------------|
-    | `phone` | `str` | Phone number |
+    | `phoneNumber` | `str` | Phone number (camelCase) |
     | `company` | `str` | Company name |
     | `address` | `str` | Mailing address |
 
@@ -255,11 +254,10 @@ Create and manage transaction builders with full participant and property manage
         transaction_id: str = "your-transaction-id-here"
 
         buyer_data: Dict[str, Any] = {
-            "type": "BUYER",
-            "first_name": "John",
-            "last_name": "Doe",
+            "firstName": "John",  # Use camelCase
+            "lastName": "Doe",  # Use camelCase
             "email": "john.doe@email.com",
-            "phone": "+1-555-123-4567",
+            "phoneNumber": "+1-555-123-4567",  # Use camelCase
             "company": "Doe Enterprises",
             "address": "456 Business Ave, Business City, BC 12345"
         }
@@ -291,11 +289,10 @@ Create and manage transaction builders with full participant and property manage
         transaction_id: str = "your-transaction-id-here"
 
         seller_data: Dict[str, Any] = {
-            "type": "SELLER",
-            "first_name": "Jane",
-            "last_name": "Smith",
+            "firstName": "Jane",  # Use camelCase
+            "lastName": "Smith",  # Use camelCase
             "email": "jane.smith@email.com",
-            "phone": "+1-555-987-6543"
+            "phoneNumber": "+1-555-987-6543"  # Use camelCase
         }
 
         # Using new method name
@@ -359,6 +356,120 @@ Create and manage transaction builders with full participant and property manage
             client.transaction_builder.add_co_agent(transaction_id, co_agent_data)
             ```
 
+### Owner Agents
+
+=== ":material-account-star: Update Owner Agent"
+
+    ::: rezen.transaction_builder.TransactionBuilderClient.update_owner_agent_info
+        options:
+          show_source: false
+          heading_level: 5
+
+    ::: rezen.transaction_builder.TransactionBuilderClient.set_current_user_as_owner_agent
+        options:
+          show_source: false
+          heading_level: 5
+
+    !!! danger "Prerequisites Required"
+
+        **CRITICAL**: The owner agent endpoint requires the transaction to be properly set up BEFORE adding agents:
+
+        1. **Location info** must be added first (`update_location_info`)
+        2. **Price and date info** must be added second (`update_price_and_date_info`) 
+        3. **Buyers/Sellers** must be added third (`add_buyer`/`add_seller`)
+        4. **THEN** owner agent can be added successfully
+
+    **Owner Data Structure:**
+    ```python
+    {
+        "ownerAgent": {
+            "agentId": "agent_uuid",
+            "role": "BUYERS_AGENT"  # or "SELLERS_AGENT"
+        },
+        "officeId": "office_uuid", 
+        "teamId": "team_uuid"
+    }
+    ```
+
+    !!! example "Complete Working Example"
+
+        === "Manual Owner Agent"
+
+            ```python
+            from typing import Dict, Any
+
+            from rezen import RezenClient
+
+            client: RezenClient = RezenClient()
+
+            # Step 1: Create transaction
+            builder_id = client.transaction_builder.create_transaction_builder()
+
+            # Step 2: Add location (REQUIRED FIRST)
+            location_data: Dict[str, Any] = {
+                "street": "123 Main St",
+                "city": "Salt Lake City", 
+                "state": "UTAH",
+                "zip": "84101"
+            }
+            client.transaction_builder.update_location_info(builder_id, location_data)
+
+            # Step 3: Add price/date info (REQUIRED SECOND)
+            price_data: Dict[str, Any] = {
+                "dealType": "COMPENSATING",
+                "propertyType": "RESIDENTIAL", 
+                "salePrice": {"amount": 500000, "currency": "USD"},
+                "representationType": "BUYER"  # Must match agent role
+            }
+            client.transaction_builder.update_price_and_date_info(builder_id, price_data)
+
+            # Step 4: Add clients (REQUIRED THIRD)
+            client.transaction_builder.add_buyer(builder_id, {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "john@example.com",
+                "phoneNumber": "(801) 555-1234"
+            })
+
+            # Step 5: NOW add owner agent (will work!)
+            owner_data: Dict[str, Any] = {
+                "ownerAgent": {
+                    "agentId": "your_agent_id",
+                    "role": "BUYERS_AGENT"  # Must match representationType
+                },
+                "officeId": "your_office_id",
+                "teamId": "your_team_id"
+            }
+            client.transaction_builder.update_owner_agent_info(builder_id, owner_data)
+            ```
+
+        === "Current User as Owner"
+
+            ```python
+            from typing import Dict, Any
+
+            from rezen import RezenClient
+
+            client: RezenClient = RezenClient()
+
+            # Set up transaction (same steps 1-4 as above)
+            builder_id = client.transaction_builder.create_transaction_builder()
+            # ... add location, price, and clients ...
+
+            # Use convenience method for current user
+            client.transaction_builder.set_current_user_as_owner_agent(
+                builder_id, 
+                role="BUYERS_AGENT"
+            )
+            ```
+
+    !!! warning "Role Matching"
+        
+        The `role` in `ownerAgent` must match the `representationType` in the price/date info:
+        
+        - `representationType: "BUYER"` → `role: "BUYERS_AGENT"`
+        - `representationType: "SELLER"` → `role: "SELLERS_AGENT"`
+
 ### Other Participants
 
 === ":material-account-multiple: Add Participant"
@@ -393,10 +504,10 @@ Create and manage transaction builders with full participant and property manage
 
             inspector_data: Dict[str, Any] = {
                 "type": "INSPECTOR",
-                "first_name": "Mike",
-                "last_name": "Inspector",
+                "firstName": "Mike",  # Use camelCase
+                "lastName": "Inspector",  # Use camelCase
                 "company": "Quality Inspections Inc",
-                "phone": "+1-555-INSPECT",
+                "phoneNumber": "+1-555-INSPECT",  # Use camelCase
                 "email": "mike@qualityinspections.com"
             }
             client.transaction_builder.add_participant(transaction_id, inspector_data)
@@ -414,10 +525,10 @@ Create and manage transaction builders with full participant and property manage
 
             lender_data: Dict[str, Any] = {
                 "type": "LENDER",
-                "first_name": "Sarah",
-                "last_name": "Banker",
+                "firstName": "Sarah",  # Use camelCase
+                "lastName": "Banker",  # Use camelCase
                 "company": "First National Bank",
-                "phone": "+1-555-LOANS",
+                "phoneNumber": "+1-555-LOANS",  # Use camelCase
                 "email": "sarah.banker@firstnational.com"
             }
             client.transaction_builder.add_participant(transaction_id, lender_data)
@@ -450,13 +561,17 @@ Create and manage transaction builders with full participant and property manage
         transaction_id: str = "your-transaction-id-here"
 
         location_data: Dict[str, Any] = {
-            "address": "123 Maple Street",
+            "street": "123 Maple Street",  # Use 'street' not 'address'
+            "street2": "",
             "city": "Springfield",
-            "state": "CA",
-            "zipCode": "90210",
-            "county": "Los Angeles",
+            "state": "UTAH",  # Must be UTAH (all caps)
+            "zip": "84101",  # Use 'zip' not 'zipCode'
+            "county": "Salt Lake",
             "unit": "Unit 2A",  # For condos/apartments
-            "subdivision": "Maple Grove"
+            "subdivision": "Maple Grove",
+            "yearBuilt": 2020,  # Use camelCase
+            "mlsNumber": "MLS123",  # Use camelCase
+            "escrowNumber": ""
         }
         
         # Using new method name
@@ -477,11 +592,15 @@ Create and manage transaction builders with full participant and property manage
         transaction_id: str = "your-transaction-id-here"
 
         location_data: Dict[str, Any] = {
-            "address": "456 Business Blvd",
+            "street": "456 Business Blvd",  # Use 'street' not 'address'
+            "street2": "",
             "city": "Commerce City",
-            "state": "TX",
-            "zipCode": "75201",
-            "county": "Dallas",
+            "state": "UTAH",  # Must be UTAH (all caps)
+            "zip": "84111",  # Use 'zip' not 'zipCode'
+            "county": "Salt Lake",
+            "yearBuilt": 2018,
+            "mlsNumber": "COM456",
+            "escrowNumber": "",
             "building_name": "Commerce Center",
             "floor": "15th Floor"
         }
@@ -502,10 +621,11 @@ Create and manage transaction builders with full participant and property manage
 
 | Field | Format | Description |
 |-------|--------|-------------|
-| `contract_date` | `YYYY-MM-DD` | Date contract was signed |
-| `closing_date` | `YYYY-MM-DD` | Expected closing date |
-| `inspection_date` | `YYYY-MM-DD` | Property inspection date |
-| `appraisal_date` | `YYYY-MM-DD` | Appraisal completion date |
+| `contractDate` | `YYYY-MM-DD` | Date contract was signed (camelCase) |
+| `closingDate` | `YYYY-MM-DD` | Expected closing date (camelCase) |
+| `inspectionDate` | `YYYY-MM-DD` | Property inspection date (camelCase) |
+| `appraisalDate` | `YYYY-MM-DD` | Appraisal completion date (camelCase) |
+| `acceptanceDate` | `YYYY-MM-DD` | Offer acceptance date (camelCase) |
 
 !!! example "Pricing Information"
 
@@ -518,14 +638,17 @@ Create and manage transaction builders with full participant and property manage
     transaction_id: str = "your-transaction-id-here"
 
     price_date_data: Dict[str, Any] = {
-        "purchase_price": 750000,
-        "earnest_money": 15000,
-        "down_payment": 150000,
-        "loan_amount": 600000,
-        "contract_date": "2024-02-01",
-        "closing_date": "2024-03-15",
-        "inspection_date": "2024-02-10",
-        "appraisal_date": "2024-02-20"
+        "salePrice": {  # Use camelCase and object structure
+            "amount": 750000,
+            "currency": "USD"
+        },
+        "earnestMoney": 15000,  # Use camelCase
+        "downPayment": 150000,  # Use camelCase
+        "loanAmount": 600000,  # Use camelCase
+        "contractDate": "2024-02-01",  # Use camelCase
+        "closingDate": "2024-03-15",  # Use camelCase
+        "inspectionDate": "2024-02-10",  # Use camelCase
+        "appraisalDate": "2024-02-20"  # Use camelCase
     }
 
     client.transaction_builder.update_price_and_date_info(
@@ -562,12 +685,13 @@ Create and manage transaction builders with full participant and property manage
     transaction_id: str = "your-transaction-id-here"
 
     title_data: Dict[str, Any] = {
-        "title_company": "Premier Title Co",
-        "title_contact": "Sarah Johnson",
-        "title_phone": "+1-555-789-0123",
-        "title_email": "sarah@premiertitle.com",
-        "title_address": "789 Title Lane, Title City, TC 54321",
-        "policy_number": "PT-2024-001234"
+        "company": "Premier Title Co",  # Use 'company' not 'title_company'
+        "firstName": "Sarah",  # Use camelCase
+        "lastName": "Johnson",  # Use camelCase
+        "phoneNumber": "+1-555-789-0123",  # Use camelCase
+        "email": "sarah@premiertitle.com",
+        "address": "789 Title Lane, Title City, TC 54321",
+        "policyNumber": "PT-2024-001234"  # Use camelCase
     }
 
     # Using either method works the same
@@ -618,14 +742,14 @@ Create and manage transaction builders with full participant and property manage
 
         commission_data: List[Dict[str, Any]] = [
             {
-                "agent_id": "buyer-agent-uuid",
-                "split_percentage": 50.0,
-                "commission_amount": 15000
+                "agentId": "buyer-agent-uuid",  # Use camelCase
+                "splitPercentage": 50.0,  # Use camelCase
+                "commissionAmount": 15000  # Use camelCase
             },
             {
-                "agent_id": "seller-agent-uuid",
-                "split_percentage": 50.0,
-                "commission_amount": 15000
+                "agentId": "seller-agent-uuid",  # Use camelCase
+                "splitPercentage": 50.0,  # Use camelCase
+                "commissionAmount": 15000  # Use camelCase
             }
         ]
 
@@ -647,14 +771,14 @@ Create and manage transaction builders with full participant and property manage
 
         commission_data: List[Dict[str, Any]] = [
             {
-                "agent_id": "listing-agent-uuid",
-                "split_percentage": 60.0,
-                "commission_amount": 18000
+                "agentId": "listing-agent-uuid",  # Use camelCase
+                "splitPercentage": 60.0,  # Use camelCase
+                "commissionAmount": 18000  # Use camelCase
             },
             {
-                "agent_id": "buyer-agent-uuid",
-                "split_percentage": 40.0,
-                "commission_amount": 12000
+                "agentId": "buyer-agent-uuid",  # Use camelCase
+                "splitPercentage": 40.0,  # Use camelCase
+                "commissionAmount": 12000  # Use camelCase
             }
         ]
 
@@ -700,9 +824,9 @@ Create and manage transaction builders with full participant and property manage
     transaction_id: str = "your-transaction-id-here"
 
     payer_data: Dict[str, Any] = {
-        "payer_type": "SELLER",
-        "commission_rate": 6.0,  # 6% commission
-        "flat_fee": False  # Percentage-based, not flat fee
+        "payerType": "SELLER",  # Use camelCase
+        "commissionRate": 6.0,  # 6% commission, use camelCase
+        "flatFee": False  # Percentage-based, not flat fee, use camelCase
     }
 
     # Using either method works the same
@@ -710,6 +834,36 @@ Create and manage transaction builders with full participant and property manage
     # or
     client.transaction_builder.update_commission_payer(transaction_id, payer_data)
     ```
+
+---
+
+## Field Name Requirements
+
+!!! danger "Critical Field Name Requirements"
+
+    The ReZEN API has specific field name requirements that must be followed exactly:
+
+    **Location Fields:**
+    - ✅ Use `street` NOT `address`
+    - ✅ Use `zip` NOT `zipCode`
+    - ✅ State must be `UTAH` (all caps)
+    - ✅ Use camelCase: `yearBuilt`, `mlsNumber`, `escrowNumber`
+
+    **Contact Fields:**
+    - ✅ Use `firstName` NOT `first_name`
+    - ✅ Use `lastName` NOT `last_name`
+    - ✅ Use `phoneNumber` NOT `phone`
+
+    **Price Fields:**
+    - ✅ `salePrice` must be an object with `amount` and `currency`
+    - ✅ Use camelCase: `earnestMoney`, `downPayment`, `loanAmount`
+
+    **Date Fields:**
+    - ✅ Use camelCase: `contractDate`, `closingDate`, `acceptanceDate`
+    - ✅ Format: `YYYY-MM-DD`
+
+    **Commission Fields:**
+    - ✅ Use camelCase: `agentId`, `splitPercentage`, `commissionAmount`
 
 ---
 
@@ -809,31 +963,114 @@ Create and manage transaction builders with full participant and property manage
 
 ## Error Handling
 
-!!! warning "Common Validation Errors"
+### Enhanced Error Messages
 
-    **Missing Required Fields:**
+The Transaction Builder now includes enhanced error handling that catches common mistakes before they reach the API.
+
+!!! success "New Error Types"
+
+    - **`InvalidFieldNameError`**: Catches incorrect field names (e.g., `address` instead of `street`)
+    - **`InvalidFieldValueError`**: Validates field formats (e.g., state must be uppercase)
+    - **`TransactionSequenceError`**: Identifies when operations are called in wrong order
+    - **`ValidationError`**: General validation failures with detailed messages
+
+### Common Field Name Errors
+
+!!! example "Field Name Validation"
+
     ```python
-    from rezen.exceptions import ValidationError
+    from rezen.exceptions import InvalidFieldNameError
 
     try:
-        # Missing required email field
-        buyer_data = {
-            "type": "BUYER",
-            "first_name": "John",
-            "last_name": "Doe"
-            # email field missing!
+        # Using wrong field name
+        location_data = {
+            "address": "123 Main St",  # ❌ Wrong! Should be 'street'
+            "city": "Salt Lake City",
+            "state": "UTAH",
+            "zipCode": "84101"  # ❌ Wrong! Should be 'zip'
         }
-        client.transaction_builder.add_buyer(transaction_id, buyer_data)
-    except ValidationError as e:
-        print(f"Validation failed: {e.invalid_fields}")
+        client.transaction_builder.update_location_info(transaction_id, location_data)
+    except InvalidFieldNameError as e:
+        print(f"Field name error: {e}")
+        print(f"Use '{e.correct_name}' instead of '{e.field_name}'")
     ```
 
-!!! info "Best Practices"
+### Field Value Validation
 
-    - **Validate Data**: Check required fields before API calls
-    - **Handle Duplicates**: Check for existing participants before adding
-    - **Save Progress**: Regularly save transaction state
-    - **Error Recovery**: Implement retry logic for network issues
+!!! example "Field Value Validation"
+
+    ```python
+    from rezen.exceptions import InvalidFieldValueError
+
+    try:
+        # Wrong state format
+        location_data = {
+            "street": "123 Main St",
+            "city": "Salt Lake City",
+            "state": "utah",  # ❌ Wrong! Must be uppercase
+            "zip": "84101"
+        }
+        client.transaction_builder.update_location_info(transaction_id, location_data)
+    except InvalidFieldValueError as e:
+        print(f"Invalid value for '{e.field_name}': {e.value}")
+        print(f"Expected: {e.expected_format}")
+    ```
+
+### Transaction Sequence Errors
+
+!!! danger "Sequence Requirements"
+
+    The owner agent endpoint requires specific setup steps in order:
+
+    ```python
+    from rezen.exceptions import TransactionSequenceError
+
+    try:
+        # Trying to add owner agent without proper setup
+        client.transaction_builder.update_owner_agent_info(builder_id, owner_data)
+    except TransactionSequenceError as e:
+        print(f"Sequence error: {e}")
+        # Error message includes required steps:
+        # 1. Create transaction (create_transaction_builder)
+        # 2. Add location info (update_location_info) - REQUIRED FIRST
+        # 3. Add price/date info (update_price_and_date_info) - REQUIRED SECOND
+        # 4. Add buyers/sellers (add_buyer/add_seller) - REQUIRED THIRD
+        # 5. THEN add owner agent (update_owner_agent_info)
+    ```
+
+### Price Structure Validation
+
+!!! example "Price Field Validation"
+
+    ```python
+    from rezen.exceptions import InvalidFieldValueError, ValidationError
+
+    try:
+        price_data = {
+            "dealType": "COMPENSATING",
+            "propertyType": "RESIDENTIAL",
+            "salePrice": 500000,  # ❌ Wrong! Must be object
+            "representationType": "BUYERS_AGENT"  # ❌ Wrong! Should be 'BUYER'
+        }
+        client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+    except InvalidFieldValueError as e:
+        # Catches: "Invalid value for 'salePrice': 500000. 
+        # Expected: Object with 'amount' and 'currency' fields"
+        print(f"Error: {e}")
+    except ValidationError as e:
+        # Catches missing required fields
+        print(f"Validation error: {e}")
+    ```
+
+### Best Practices
+
+!!! info "Error Handling Best Practices"
+
+    - **Catch Specific Exceptions**: Use specific exception types for better error handling
+    - **Check Field Names**: The enhanced validation catches common camelCase vs snake_case errors
+    - **Validate Before Submission**: Required fields are now validated before API calls
+    - **Follow Sequence Requirements**: Especially important for owner agent endpoints
+    - **Use Error Details**: Exception objects contain helpful properties like `field_name` and `correct_name`
 
 ---
 
@@ -861,11 +1098,10 @@ Create and manage transaction builders with full participant and property manage
             # Step 2: Add buyer
             print("Adding buyer...")
             buyer_data = {
-                "type": "BUYER",
-                "first_name": "John",
-                "last_name": "Doe",
+                "firstName": "John",  # Use camelCase
+                "lastName": "Doe",  # Use camelCase
                 "email": "john.doe@email.com",
-                "phone": "+1-555-123-4567"
+                "phoneNumber": "+1-555-123-4567"  # Use camelCase
             }
             client.transaction_builder.add_buyer(transaction_id, buyer_data)
             print("✅ Added buyer")
@@ -873,11 +1109,10 @@ Create and manage transaction builders with full participant and property manage
             # Step 3: Add seller
             print("Adding seller...")
             seller_data = {
-                "type": "SELLER",
-                "first_name": "Jane",
-                "last_name": "Smith",
+                "firstName": "Jane",  # Use camelCase
+                "lastName": "Smith",  # Use camelCase
                 "email": "jane.smith@email.com",
-                "phone": "+1-555-987-6543"
+                "phoneNumber": "+1-555-987-6543"  # Use camelCase
             }
             client.transaction_builder.add_seller(transaction_id, seller_data)
             print("✅ Added seller")
@@ -885,11 +1120,16 @@ Create and manage transaction builders with full participant and property manage
             # Step 4: Add property location
             print("Setting property location...")
             location_data = {
-                "address": "123 Dream House Lane",
-                "city": "Paradise",
-                "state": "CA",
-                "zipCode": "90210",
-                "county": "Los Angeles"
+                "street": "123 Dream House Lane",  # Use 'street' not 'address'
+                "street2": "",
+                "city": "Salt Lake City",
+                "state": "UTAH",  # Must be UTAH (all caps)
+                "zip": "84101",  # Use 'zip' not 'zipCode'
+                "county": "Salt Lake",
+                "unit": "",
+                "yearBuilt": 2020,  # Use camelCase
+                "mlsNumber": "MLS123456",  # Use camelCase
+                "escrowNumber": ""
             }
             client.transaction_builder.update_location_info(transaction_id, location_data)
             print("✅ Set property location")
@@ -897,10 +1137,13 @@ Create and manage transaction builders with full participant and property manage
             # Step 5: Set pricing and dates
             print("Setting pricing and dates...")
             price_data = {
-                "purchase_price": 850000,
-                "earnest_money": 17000,
-                "contract_date": "2024-02-01",
-                "closing_date": "2024-03-15"
+                "salePrice": {  # Use camelCase and object structure
+                    "amount": 850000,
+                    "currency": "USD"
+                },
+                "earnestMoney": 17000,  # Use camelCase
+                "acceptanceDate": "2024-02-01",  # Use camelCase
+                "closingDate": "2024-03-15"  # Use camelCase
             }
             client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
             print("✅ Set pricing and dates")
@@ -909,10 +1152,11 @@ Create and manage transaction builders with full participant and property manage
             print("Adding service providers...")
             inspector_data = {
                 "type": "INSPECTOR",
-                "first_name": "Mike",
-                "last_name": "Inspector",
+                "firstName": "Mike",  # Use camelCase
+                "lastName": "Inspector",  # Use camelCase
                 "company": "Quality Inspections Inc",
-                "phone": "+1-555-INSPECT"
+                "phoneNumber": "+1-555-INSPECT",  # Use camelCase
+                "email": "mike@qualityinspections.com"
             }
             client.transaction_builder.add_participant(transaction_id, inspector_data)
             print("✅ Added inspector")

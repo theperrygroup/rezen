@@ -8,13 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Future improvements and features
+- **Users API**: Complete implementation for user profile access, team membership, and office details
+- **Owner Agent Support**: Enhanced Transaction Builder with owner agent functionality requiring proper transaction sequence
+- **Keymaker Integration**: Access agent IDs through user keymaker endpoint for transaction operations
+- **Convenience Methods**: `set_current_user_as_owner_agent()` for simplified owner agent setup
+- **Enhanced Error Handling**: New exception types for better developer experience:
+  - `InvalidFieldNameError`: Catches incorrect field names (e.g., `address` vs `street`)
+  - `InvalidFieldValueError`: Validates field formats (e.g., uppercase state codes)
+  - `TransactionSequenceError`: Identifies when operations are called in wrong order
+- **Field Validation**: Pre-API validation for common field name and format errors
 
 ### Changed
-- Future changes
+- **Transaction Builder**: Owner agent endpoint now requires specific setup sequence (location → price/date → clients → owner agent)
+- **API Coverage**: Total endpoints increased from 155 to 158 with the addition of Users API
+- **Error Messages**: More descriptive error messages with specific field correction suggestions
+- **Validation**: Methods now validate field names and values before making API calls
 
 ### Fixed
-- Future fixes
+- **Owner Agent**: Discovered and documented the required transaction setup sequence for successful owner agent addition
+- **Field Name Validation**: Methods now prevent common field name mistakes before API calls
+- **Commission Endpoints**: Multipart/form-data handling for commission payer endpoint
 
 ## [1.5.0] - 2025-06-01
 
@@ -294,7 +307,7 @@ If upgrading from versions prior to 1.0.5, review the API changes in each releas
 
 ## Contributing
 
-Found a bug or want to contribute? See our [Contributing Guide](contributing.md) for details on:
+Found a bug or want to contribute? See our [Contributing Guide](../development/contributing.md) for details on:
 
 - Setting up the development environment
 - Running tests and ensuring quality

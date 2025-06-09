@@ -232,7 +232,7 @@ teams = client.teams.search_teams(
 
     Create transactions with team members
 
--   [:material-code-braces: **Data Types**](data-types.md)
+-   [:material-code-braces: **Data Types**](../reference/data-types.md)
 
     Learn about team-related enums and types
 

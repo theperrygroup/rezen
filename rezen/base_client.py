@@ -74,8 +74,15 @@ class BaseClient:
         elif response.status_code == 204:
             return {}
         elif response.status_code == 400:
+            error_message = response_data.get("message", "Invalid request")
+            # Add more context for common errors
+            if "Invalid request" in error_message and "/owner-info" in response.url:
+                error_message += (
+                    " (Note: Owner agent endpoint requires proper transaction setup. "
+                    "See TransactionSequenceError for required steps.)"
+                )
             raise ValidationError(
-                f"Bad request: {response_data.get('message', 'Invalid request')}",
+                f"Bad request: {error_message}",
                 status_code=400,
                 response_data=response_data,
             )
@@ -151,15 +158,33 @@ class BaseClient:
                     if k.lower() != "content-type"
                 }
 
-            response = self.session.request(
-                method=method,
-                url=url,
-                json=json_data,
-                data=data,
-                files=files,
-                params=params,
-                headers=headers if files else None,
-            )
+            # Don't send json parameter if files are present
+            if files:
+                # Create a new request without using session to avoid header conflicts
+                import requests as req
+
+                final_headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Accept": "application/json",
+                    # NO Content-Type - let requests set it for multipart
+                }
+                response = req.request(
+                    method=method,
+                    url=url,
+                    data=data,
+                    files=files,
+                    params=params,
+                    headers=final_headers,
+                )
+            else:
+                response = self.session.request(
+                    method=method,
+                    url=url,
+                    json=json_data,
+                    data=data,
+                    params=params,
+                )
+
             return self._handle_response(response)
 
         except requests.exceptions.RequestException as e:

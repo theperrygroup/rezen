@@ -36,6 +36,16 @@ class TeamType(Enum):
     PRO = "PRO"
 
 
+class InvitationStatus(Enum):
+    """Team invitation status options."""
+
+    EMAILED = "EMAILED"
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    DECLINED = "DECLINED"
+    EXPIRED = "EXPIRED"
+
+
 class TeamsClient(BaseClient):
     """Client for teams API endpoints.
 
@@ -239,3 +249,207 @@ class TeamsClient(BaseClient):
             ```
         """
         return self.get(f"teams/{team_id}")
+
+    def invite_agent_to_team(
+        self,
+        team_id: str,
+        first_name: str,
+        last_name: str,
+        email_address: str,
+        cap_level: int,
+        waive_fees: bool = False,
+    ) -> Dict[str, Any]:
+        """Invite an agent to join a team.
+
+        Args:
+            team_id: UUID of the team to invite agent to
+            first_name: Agent's first name
+            last_name: Agent's last name
+            email_address: Agent's email address
+            cap_level: Commission cap level for the agent
+            waive_fees: Whether to waive fees for the agent (default: False)
+
+        Returns:
+            Dictionary containing invitation details
+
+        Raises:
+            RezenError: If the API request fails
+            ValidationError: If the request data is invalid
+
+        Example:
+            ```python
+            invitation = client.teams.invite_agent_to_team(
+                team_id="550e8400-e29b-41d4-a716-446655440000",
+                first_name="John",
+                last_name="Doe",
+                email_address="john.doe@example.com",
+                cap_level=50000,
+                waive_fees=True
+            )
+            print(f"Invitation ID: {invitation['invitationId']}")
+            print(f"Status: {invitation['status']}")
+            ```
+        """
+        data = {
+            "firstName": first_name,
+            "lastName": last_name,
+            "emailAddress": email_address,
+            "capLevel": cap_level,
+            "waiveFees": waive_fees,
+        }
+
+        return self.post(f"teams/{team_id}/invitation", json_data=data)
+
+    def generate_generic_invitation_link(
+        self,
+        team_id: str,
+        cap_level: int,
+        waive_fees: bool = False,
+    ) -> Dict[str, Any]:
+        """Generate a generic invitation link for a team.
+
+        Args:
+            team_id: UUID of the team to generate invitation link for
+            cap_level: Commission cap level for agents who use this link
+            waive_fees: Whether to waive fees for agents (default: False)
+
+        Returns:
+            Dictionary containing generic invitation link details
+
+        Raises:
+            RezenError: If the API request fails
+            ValidationError: If the request data is invalid
+
+        Example:
+            ```python
+            link = client.teams.generate_generic_invitation_link(
+                team_id="550e8400-e29b-41d4-a716-446655440000",
+                cap_level=50000,
+                waive_fees=True
+            )
+            print(f"Invitation ID: {link['invitationId']}")
+            print(f"Coupon Code: {link['couponCode']}")
+            print(f"Expiration: {link['expirationTime']}")
+            ```
+        """
+        data = {
+            "teamId": team_id,
+            "capLevel": cap_level,
+            "waiveFees": waive_fees,
+        }
+
+        return self.post(f"teams/{team_id}/generic-link/generate", json_data=data)
+
+    def redeem_team_invitation(
+        self,
+        invitation_id: str,
+        application_id: str,
+    ) -> Dict[str, Any]:
+        """Redeem a team invitation for an approved agent.
+
+        Args:
+            invitation_id: UUID of the invitation to redeem
+            application_id: UUID of the agent application
+
+        Returns:
+            Dictionary containing redemption result
+
+        Raises:
+            RezenError: If the API request fails
+            ValidationError: If the request data is invalid
+
+        Example:
+            ```python
+            result = client.teams.redeem_team_invitation(
+                invitation_id="550e8400-e29b-41d4-a716-446655440000",
+                application_id="660e8400-e29b-41d4-a716-446655440001"
+            )
+            print("Invitation redeemed successfully")
+            ```
+        """
+        data = {
+            "invitationId": invitation_id,
+            "applicationId": application_id,
+        }
+
+        return self.post("teams/invitations/redeem", json_data=data)
+
+    def redeem_generic_invitation_link(
+        self,
+        invitation_id: str,
+        application_id: str,
+    ) -> Dict[str, Any]:
+        """Redeem a generic invitation link.
+
+        Args:
+            invitation_id: UUID of the generic invitation to redeem
+            application_id: UUID of the agent application
+
+        Returns:
+            Dictionary containing redemption result
+
+        Raises:
+            RezenError: If the API request fails
+            ValidationError: If the request data is invalid
+
+        Example:
+            ```python
+            result = client.teams.redeem_generic_invitation_link(
+                invitation_id="550e8400-e29b-41d4-a716-446655440000",
+                application_id="660e8400-e29b-41d4-a716-446655440001"
+            )
+            print("Generic invitation redeemed successfully")
+            ```
+        """
+        data = {
+            "invitationId": invitation_id,
+            "applicationId": application_id,
+        }
+
+        return self.post("teams/generic-link/redeem", json_data=data)
+
+    def update_invitation(
+        self,
+        invitation_id: str,
+        status: Optional[Union[InvitationStatus, str]] = None,
+        team_invitation_email_status: Optional[Union[InvitationStatus, str]] = None,
+    ) -> Dict[str, Any]:
+        """Update an invitation.
+
+        Args:
+            invitation_id: UUID of the invitation to update
+            status: New invitation status
+            team_invitation_email_status: New email status for the invitation
+
+        Returns:
+            Dictionary containing updated invitation details
+
+        Raises:
+            RezenError: If the API request fails
+            ValidationError: If the request data is invalid
+
+        Example:
+            ```python
+            updated_invitation = client.teams.update_invitation(
+                invitation_id="550e8400-e29b-41d4-a716-446655440000",
+                status=InvitationStatus.ACCEPTED,
+                team_invitation_email_status=InvitationStatus.EMAILED
+            )
+            print(f"Updated status: {updated_invitation['status']}")
+            ```
+        """
+        data: Dict[str, Any] = {"invitationId": invitation_id}
+
+        if status is not None:
+            if isinstance(status, InvitationStatus):
+                data["status"] = status.value
+            else:
+                data["status"] = status
+
+        if team_invitation_email_status is not None:
+            if isinstance(team_invitation_email_status, InvitationStatus):
+                data["teamInvitationEmailStatus"] = team_invitation_email_status.value
+            else:
+                data["teamInvitationEmailStatus"] = team_invitation_email_status
+
+        return self.patch(f"teams/invitation/{invitation_id}", json_data=data)

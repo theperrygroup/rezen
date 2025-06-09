@@ -43,6 +43,14 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Agents API](agents.md)
 
+-   :material-account:{ .lg .middle } **Users**
+
+    ---
+
+    Access user profiles, team membership, and office details
+
+    [:octicons-arrow-right-24: Users API](users.md)
+
 -   :material-book-open:{ .lg .middle } **Directory**
 
     ---
@@ -79,6 +87,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 | Transactions | ✅ **Available** | 49+ endpoints | Complete |
 | Agents | ✅ **Available** | 36+ endpoints | Complete |
 | Teams | ✅ **Available** | 4 endpoints | Complete |
+| Users | ✅ **Available** | 3 endpoints | Complete |
 | Directory | ✅ **Available** | 16 endpoints | Complete |
 | Checklist | ✅ **Available** | 9 endpoints | Complete |
 | Documents | ✅ **Available** | 13 endpoints | Complete |
@@ -99,6 +108,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
     - **Transactions**: Manage live transactions and participants
     - **Teams**: Search and filter team information
     - **Agents**: Comprehensive agent search and network management
+    - **Users**: Access user profiles and team/office membership
     - **Directory**: Standalone directory services
     - **Checklist**: Transaction checklists and item management
     - **Documents**: Document uploads and digital signatures
@@ -186,6 +196,7 @@ Work with agents, teams, and contacts:
 
 - **[Teams](teams.md)** - Search and manage team information
 - **[Agents](agents.md)** - Agent search and network management
+- **[Users](users.md)** - User profiles and team/office membership
 - **[Directory](directory.md)** - Contact and agent directory services
 
 ### **📄 Documents & Compliance**

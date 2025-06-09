@@ -73,20 +73,20 @@ Perfect for developers new to the ReZEN API:
 
 - **[Basic Examples](examples.md#basic-examples)** - Simple API calls to get you started
 - **[Authentication Setup](../getting-started/authentication.md)** - Configure your API key
-- **[First Transaction](examples.md#first-transaction)** - Create your first transaction
+- **[Transaction Workflows](examples.md#transaction-workflows)** - Create your first transaction
 
 ### **💼 Business Workflows**
 Real-world business scenarios:
 
 - **[Complete Transaction Flow](transactions.md)** - End-to-end transaction management
 - **[Agent Onboarding](agents-and-teams.md)** - Adding new agents to your system
-- **[Commission Processing](transactions.md#commission-management)** - Handle commission splits
+- **[Financial Configuration](transactions.md#phase-3-financial-configuration)** - Handle commission splits
 
 ### **🔧 Advanced Techniques**
 For experienced developers:
 
-- **[Error Handling](troubleshooting.md#error-handling)** - Robust error management
-- **[Performance Optimization](troubleshooting.md#performance)** - Handle large datasets
+- **[API Errors](troubleshooting.md#api-errors)** - Robust error management
+- **[Performance Optimization](troubleshooting.md#performance-problems)** - Handle large datasets
 - **[Integration Patterns](examples.md#integration-patterns)** - Common integration scenarios
 
 ---

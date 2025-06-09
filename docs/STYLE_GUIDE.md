@@ -180,7 +180,7 @@ print(f"Retrieved {len(data)} resources")
 
 ## Next Steps
 
-- [Authentication Guide](auth.md) - Detailed authentication setup
+- [Authentication Guide](getting-started/authentication.md) - Detailed authentication setup
 - [API Reference](api/index.md) - Complete method documentation
 ```
 
@@ -1132,7 +1132,7 @@ See the documentation [here](link.md) for details.
 
 **✅ Do: Descriptive Link Patterns**
 ```markdown
-Learn more in the [Authentication Setup Guide](auth.md).
+Learn more in the [Authentication Setup Guide](getting-started/authentication.md).
 
 Download the [latest Python client](downloads.md).
 

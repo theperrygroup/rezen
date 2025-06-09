@@ -279,7 +279,7 @@ After successful installation:
 1. **[Quick Start Guide](quickstart.md)** - Your first API calls
 2. **[API Reference](../api/index.md)** - Complete endpoint documentation
 3. **[Examples](../guides/examples.md)** - Real-world usage patterns
-4. **[Error Handling](troubleshooting.md)** - Handle edge cases
+4. **[Error Handling](../guides/troubleshooting.md)** - Handle edge cases
 
 ## 💡 Tips
 

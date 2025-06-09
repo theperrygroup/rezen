@@ -424,7 +424,7 @@ Now that you've completed the quick start:
 ### 📚 Learn More
 - **[API Reference](../api/index.md)** - Complete endpoint documentation
 - **[Examples](../guides/examples.md)** - Real-world usage patterns
-- **[Error Handling](troubleshooting.md)** - Robust error handling
+- **[Error Handling](../guides/troubleshooting.md)** - Robust error handling
 
 ### 🔧 Common Tasks
 - **Transaction Management** - Work with existing transactions
@@ -477,7 +477,7 @@ teams: List[Dict[str, Any]] = client.teams.search_teams()
 
 - **📖 Documentation**: [Full API Reference](../api/index.md)
 - **💡 Examples**: [Common Patterns](../guides/examples.md)
-- **🐛 Issues**: [Troubleshooting Guide](troubleshooting.md)
+- **🐛 Issues**: [Troubleshooting Guide](../guides/troubleshooting.md)
 - **💬 Support**: [Contact Support](mailto:support@rezen.com)
 
 ---

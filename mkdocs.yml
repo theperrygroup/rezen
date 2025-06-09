@@ -115,6 +115,9 @@ markdown_extensions:
   - pymdownx.smartsymbols
   - pymdownx.snippets:
       check_paths: true
+      base_path: docs
+      auto_append:
+        - includes/abbreviations.md
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
@@ -165,7 +168,10 @@ nav:
     - Transactions: api/transactions.md
     - Teams: api/teams.md
     - Agents: api/agents.md
+    - Users: api/users.md
     - Directory: api/directory.md
+    - Checklist: api/checklist.md
+    - Documents: api/documents.md
 
   - Reference:
     - reference/index.md

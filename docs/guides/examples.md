@@ -255,6 +255,161 @@ agent_data: Dict[str, str] = {
 setup_commission_splits("transaction-id", agent_data)
 ```
 
+### Owner Agent Setup
+
+```python
+from typing import Dict, Any
+
+from rezen import RezenClient
+from rezen.exceptions import RezenError
+
+def add_owner_agent_to_transaction(transaction_id: str) -> bool:
+    """Add owner agent to a transaction using the proper sequence.
+    
+    ⚠️ CRITICAL: Owner agent endpoint requires the transaction to be set up in this exact order:
+    1. Location info (update_location_info)
+    2. Price/date info (update_price_and_date_info)
+    3. Buyers/Sellers (add_buyer/add_seller)
+    4. THEN owner agent can be added
+    
+    Args:
+        transaction_id: ID of an already setup transaction
+        
+    Returns:
+        True if owner agent was added successfully
+        
+    Raises:
+        RezenError: If API request fails
+    """
+    client: RezenClient = RezenClient()
+    
+    try:
+        # Method 1: Manual owner agent setup
+        # Get current user info
+        user: Dict[str, Any] = client.users.get_current_user()
+        team_id: str = user['team']['id']
+        office_id: str = user['office']['id']
+        
+        # Get agent ID from keymaker
+        keymaker: Dict[str, Any] = client.users.get_keymaker_ids(user['id'])
+        agent_id: str = keymaker['id']
+        
+        # Create owner data structure
+        owner_data: Dict[str, Any] = {
+            "ownerAgent": {
+                "agentId": agent_id,
+                "role": "BUYERS_AGENT"  # Must match representationType in price/date info
+            },
+            "officeId": office_id,
+            "teamId": team_id
+        }
+        
+        # Add owner agent
+        response: Dict[str, Any] = client.transaction_builder.update_owner_agent_info(
+            transaction_id, 
+            owner_data
+        )
+        
+        print(f"✅ Owner agent added: {user['firstName']} {user['lastName']}")
+        print(f"   Agent ID: {agent_id}")
+        print(f"   Team: {user['team']['name']}")
+        print(f"   Office: {user['office']['name']}")
+        
+        return True
+        
+    except RezenError as e:
+        print(f"❌ Failed to add owner agent: {e}")
+        return False
+
+def create_transaction_with_owner_agent() -> str:
+    """Create a complete transaction with owner agent following the proper sequence.
+    
+    Returns:
+        Transaction ID if successful
+        
+    Raises:
+        RezenError: If any step fails
+    """
+    client: RezenClient = RezenClient()
+    
+    # Step 1: Create transaction
+    response: Dict[str, Any] = client.transaction_builder.create_transaction_builder()
+    transaction_id: str = response['id']
+    print(f"1️⃣ Created transaction: {transaction_id}")
+    
+    try:
+        # Step 2: Add location (REQUIRED FIRST)
+        location_data: Dict[str, Any] = {
+            "street": "2158 E Wilson Ave",
+            "city": "Salt Lake City",
+            "state": "UTAH",  # Must be all caps
+            "zip": "84108",  # Use 'zip' not 'zipCode'
+            "yearBuilt": 2020,
+            "mlsNumber": "MLS123456"
+        }
+        client.transaction_builder.update_location_info(transaction_id, location_data)
+        print("2️⃣ Added location info")
+        
+        # Step 3: Add price/date (REQUIRED SECOND)
+        price_data: Dict[str, Any] = {
+            "dealType": "COMPENSATING",
+            "propertyType": "RESIDENTIAL",
+            "salePrice": {
+                "amount": 565000,
+                "currency": "USD"
+            },
+            "acceptanceDate": "2024-01-15",
+            "closingDate": "2024-02-28",
+            "representationType": "BUYER"  # This determines owner agent role
+        }
+        client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+        print("3️⃣ Added price and dates")
+        
+        # Step 4: Add buyer (REQUIRED THIRD)
+        buyer_data: Dict[str, Any] = {
+            "firstName": "John",  # Use camelCase
+            "lastName": "Doe",
+            "email": "john.doe@example.com",
+            "phoneNumber": "(801) 555-1234"  # Use camelCase
+        }
+        client.transaction_builder.add_buyer(transaction_id, buyer_data)
+        print("4️⃣ Added buyer")
+        
+        # Step 5: NOW add owner agent using convenience method
+        client.transaction_builder.set_current_user_as_owner_agent(
+            transaction_id,
+            role="BUYERS_AGENT"  # Must match representationType
+        )
+        print("5️⃣ Added owner agent - SUCCESS! 🎉")
+        
+        # Verify owner agent was added
+        transaction: Dict[str, Any] = client.transaction_builder.get_transaction_builder(transaction_id)
+        owner_agents: List[Dict[str, Any]] = transaction.get('agentsInfo', {}).get('ownerAgent', [])
+        
+        if owner_agents:
+            agent: Dict[str, Any] = owner_agents[0]
+            print(f"\n✅ Owner Agent Verified:")
+            print(f"   Agent ID: {agent.get('agentId')}")
+            print(f"   Role: {agent.get('role')}")
+            print(f"   Office ID: {transaction['agentsInfo'].get('officeId')}")
+            print(f"   Team ID: {transaction['agentsInfo'].get('teamId')}")
+        
+        return transaction_id
+        
+    except RezenError as e:
+        print(f"❌ Transaction creation failed: {e}")
+        # Clean up
+        client.transaction_builder.delete_transaction_builder(transaction_id)
+        raise
+
+# Usage examples
+# Example 1: Add owner to existing transaction
+add_owner_agent_to_transaction("existing-transaction-id")
+
+# Example 2: Create new transaction with owner
+transaction_id: str = create_transaction_with_owner_agent()
+```
+
 ---
 
 ## Agent Management

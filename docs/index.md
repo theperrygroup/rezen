@@ -133,8 +133,9 @@ Integrate ReZEN with your existing systems:
 | Transactions | 49 endpoints | ✅ Complete |
 | Agents | 36 endpoints | ✅ Complete |
 | Teams | 2 endpoints | ✅ Complete |
+| Users | 3 endpoints | ✅ Complete |
 | Directory | 16 endpoints | ✅ Complete |
-| **Total** | **155 endpoints** | **✅ Complete** |
+| **Total** | **158 endpoints** | **✅ Complete** |
 
 ---
 
@@ -148,23 +149,25 @@ graph TB
     A --> C[TransactionsClient]
     A --> D[TeamsClient]
     A --> E[AgentsClient]
-    A --> F[DirectoryClient]
+    A --> F[UsersClient]
+    A --> G[DirectoryClient]
 
-    B --> G[BaseClient]
-    C --> G
-    D --> G
-    E --> G
-    F --> G
+    B --> H[BaseClient]
+    C --> H
+    D --> H
+    E --> H
+    F --> H
+    G --> H
 
-    G --> H[HTTP Session]
-    G --> I[Error Handling]
-    G --> J[Authentication]
+    H --> I[HTTP Session]
+    H --> J[Error Handling]
+    H --> K[Authentication]
 
     style A fill:#e1f5fe
-    style G fill:#f3e5f5
-    style H fill:#e8f5e8
-    style I fill:#fff3e0
-    style J fill:#fce4ec
+    style H fill:#f3e5f5
+    style I fill:#e8f5e8
+    style J fill:#fff3e0
+    style K fill:#fce4ec
 ```
 
 ### Key Design Principles

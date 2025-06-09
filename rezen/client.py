@@ -10,6 +10,7 @@ from .mfa import MfaClient
 from .teams import TeamsClient
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
+from .users import UsersClient
 
 
 class RezenClient:
@@ -84,6 +85,7 @@ class RezenClient:
         self._teams: Optional[TeamsClient] = None
         self._agents: Optional[AgentsClient] = None
         self._directory: Optional[DirectoryClient] = None
+        self._users: Optional[UsersClient] = None
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:
@@ -182,3 +184,15 @@ class RezenClient:
             # API keys uses keymaker API, so don't pass custom base_url
             self._api_keys = ApiKeysClient(api_key=self._api_key)
         return self._api_keys
+
+    @property
+    def users(self) -> UsersClient:
+        """Access to users endpoints.
+
+        Returns:
+            UsersClient instance
+        """
+        if self._users is None:
+            # Users uses yenta API, so don't pass custom base_url
+            self._users = UsersClient(api_key=self._api_key)
+        return self._users

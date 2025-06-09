@@ -9,7 +9,13 @@ import responses
 
 from rezen.enums import SortDirection
 from rezen.exceptions import AuthenticationError, NotFoundError, ValidationError
-from rezen.teams import TeamsClient, TeamSortField, TeamStatus, TeamType
+from rezen.teams import (
+    InvitationStatus,
+    TeamsClient,
+    TeamSortField,
+    TeamStatus,
+    TeamType,
+)
 
 
 class TestTeamsClient:
@@ -388,6 +394,13 @@ class TestTeamsClient:
         assert TeamType.DOMESTIC.value == "DOMESTIC"
         assert TeamType.PRO.value == "PRO"
 
+        # Test InvitationStatus
+        assert InvitationStatus.EMAILED.value == "EMAILED"
+        assert InvitationStatus.PENDING.value == "PENDING"
+        assert InvitationStatus.ACCEPTED.value == "ACCEPTED"
+        assert InvitationStatus.DECLINED.value == "DECLINED"
+        assert InvitationStatus.EXPIRED.value == "EXPIRED"
+
     @responses.activate
     def test_search_teams_with_string_sort_by_list(self) -> None:
         """Test search teams with list of string sort fields to hit line 145."""
@@ -412,3 +425,475 @@ class TestTeamsClient:
         assert request.url is not None
         assert "sortBy=NAME" in request.url
         assert "sortBy=TEAM_TYPE" in request.url
+
+    @responses.activate
+    def test_invite_agent_to_team_success(self) -> None:
+        """Test invite agent to team success."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        mock_response: Dict[str, Any] = {
+            "invitationId": "660e8400-e29b-41d4-a716-446655440001",
+            "teamId": team_id,
+            "firstName": "John",
+            "lastName": "Doe",
+            "emailAddress": "john.doe@example.com",
+            "capLevel": 50000,
+            "waiveFees": True,
+            "status": "EMAILED",
+            "pending": True,
+        }
+
+        responses.add(
+            responses.POST,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/invitation",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.invite_agent_to_team(
+            team_id=team_id,
+            first_name="John",
+            last_name="Doe",
+            email_address="john.doe@example.com",
+            cap_level=50000,
+            waive_fees=True,
+        )
+
+        assert result == mock_response
+        assert len(responses.calls) == 1
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "firstName": "John",
+            "lastName": "Doe",
+            "emailAddress": "john.doe@example.com",
+            "capLevel": 50000,
+            "waiveFees": True,
+        }
+
+    @responses.activate
+    def test_invite_agent_to_team_with_defaults(self) -> None:
+        """Test invite agent to team with default waive_fees."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        mock_response: Dict[str, Any] = {
+            "invitationId": "660e8400-e29b-41d4-a716-446655440001",
+            "teamId": team_id,
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "emailAddress": "jane.smith@example.com",
+            "capLevel": 75000,
+            "waiveFees": False,
+            "status": "EMAILED",
+        }
+
+        responses.add(
+            responses.POST,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/invitation",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.invite_agent_to_team(
+            team_id=team_id,
+            first_name="Jane",
+            last_name="Smith",
+            email_address="jane.smith@example.com",
+            cap_level=75000,
+            # waive_fees defaults to False
+        )
+
+        assert result == mock_response
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body["waiveFees"] is False
+
+    @responses.activate
+    def test_invite_agent_to_team_validation_error(self) -> None:
+        """Test invite agent to team with validation error."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        error_response: Dict[str, Any] = {
+            "message": "Invalid email address format",
+            "details": "Email must be a valid email address",
+        }
+
+        responses.add(
+            responses.POST,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/invitation",
+            json=error_response,
+            status=400,
+        )
+
+        with pytest.raises(
+            ValidationError, match="Bad request: Invalid email address format"
+        ):
+            self.client.invite_agent_to_team(
+                team_id=team_id,
+                first_name="John",
+                last_name="Doe",
+                email_address="invalid-email",
+                cap_level=50000,
+            )
+
+    @responses.activate
+    def test_generate_generic_invitation_link_success(self) -> None:
+        """Test generate generic invitation link success."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        mock_response: Dict[str, Any] = {
+            "invitationId": "770e8400-e29b-41d4-a716-446655440002",
+            "invitationCreatedByAgentId": "880e8400-e29b-41d4-a716-446655440003",
+            "teamId": team_id,
+            "capLevel": 60000,
+            "waiveFees": True,
+            "expirationTime": 1640995200000,
+            "couponCode": "TEAM123",
+        }
+
+        responses.add(
+            responses.POST,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/generic-link/generate",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.generate_generic_invitation_link(
+            team_id=team_id,
+            cap_level=60000,
+            waive_fees=True,
+        )
+
+        assert result == mock_response
+        assert len(responses.calls) == 1
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "teamId": team_id,
+            "capLevel": 60000,
+            "waiveFees": True,
+        }
+
+    @responses.activate
+    def test_generate_generic_invitation_link_with_defaults(self) -> None:
+        """Test generate generic invitation link with default waive_fees."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        mock_response: Dict[str, Any] = {
+            "invitationId": "770e8400-e29b-41d4-a716-446655440002",
+            "teamId": team_id,
+            "capLevel": 80000,
+            "waiveFees": False,
+            "couponCode": "TEAM456",
+        }
+
+        responses.add(
+            responses.POST,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/generic-link/generate",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.generate_generic_invitation_link(
+            team_id=team_id,
+            cap_level=80000,
+            # waive_fees defaults to False
+        )
+
+        assert result == mock_response
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body["waiveFees"] is False
+
+    @responses.activate
+    def test_redeem_team_invitation_success(self) -> None:
+        """Test redeem team invitation success."""
+        mock_response: Dict[str, Any] = {"success": True}
+
+        responses.add(
+            responses.POST,
+            "https://yenta.therealbrokerage.com/api/v1/teams/invitations/redeem",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.redeem_team_invitation(
+            invitation_id="660e8400-e29b-41d4-a716-446655440001",
+            application_id="990e8400-e29b-41d4-a716-446655440004",
+        )
+
+        assert result == mock_response
+        assert len(responses.calls) == 1
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "invitationId": "660e8400-e29b-41d4-a716-446655440001",
+            "applicationId": "990e8400-e29b-41d4-a716-446655440004",
+        }
+
+    @responses.activate
+    def test_redeem_team_invitation_not_found(self) -> None:
+        """Test redeem team invitation not found."""
+        error_response: Dict[str, Any] = {"message": "Invitation not found"}
+
+        responses.add(
+            responses.POST,
+            "https://yenta.therealbrokerage.com/api/v1/teams/invitations/redeem",
+            json=error_response,
+            status=404,
+        )
+
+        with pytest.raises(
+            NotFoundError, match="Resource not found: Invitation not found"
+        ):
+            self.client.redeem_team_invitation(
+                invitation_id="nonexistent-invitation-id",
+                application_id="990e8400-e29b-41d4-a716-446655440004",
+            )
+
+    @responses.activate
+    def test_redeem_generic_invitation_link_success(self) -> None:
+        """Test redeem generic invitation link success."""
+        mock_response: Dict[str, Any] = {"success": True}
+
+        responses.add(
+            responses.POST,
+            "https://yenta.therealbrokerage.com/api/v1/teams/generic-link/redeem",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.redeem_generic_invitation_link(
+            invitation_id="770e8400-e29b-41d4-a716-446655440002",
+            application_id="990e8400-e29b-41d4-a716-446655440004",
+        )
+
+        assert result == mock_response
+        assert len(responses.calls) == 1
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "invitationId": "770e8400-e29b-41d4-a716-446655440002",
+            "applicationId": "990e8400-e29b-41d4-a716-446655440004",
+        }
+
+    @responses.activate
+    def test_redeem_generic_invitation_link_validation_error(self) -> None:
+        """Test redeem generic invitation link validation error."""
+        error_response: Dict[str, Any] = {
+            "message": "Invalid application ID",
+            "details": "Application must be approved",
+        }
+
+        responses.add(
+            responses.POST,
+            "https://yenta.therealbrokerage.com/api/v1/teams/generic-link/redeem",
+            json=error_response,
+            status=400,
+        )
+
+        with pytest.raises(
+            ValidationError, match="Bad request: Invalid application ID"
+        ):
+            self.client.redeem_generic_invitation_link(
+                invitation_id="770e8400-e29b-41d4-a716-446655440002",
+                application_id="invalid-app-id",
+            )
+
+    @responses.activate
+    def test_update_invitation_with_status_enum(self) -> None:
+        """Test update invitation with status enum."""
+        invitation_id = "660e8400-e29b-41d4-a716-446655440001"
+        mock_response: Dict[str, Any] = {
+            "invitationId": invitation_id,
+            "status": "ACCEPTED",
+            "teamInvitationEmailStatus": "EMAILED",
+            "pending": False,
+        }
+
+        responses.add(
+            responses.PATCH,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/invitation/{invitation_id}",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.update_invitation(
+            invitation_id=invitation_id,
+            status=InvitationStatus.ACCEPTED,
+            team_invitation_email_status=InvitationStatus.EMAILED,
+        )
+
+        assert result == mock_response
+        assert len(responses.calls) == 1
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "invitationId": invitation_id,
+            "status": "ACCEPTED",
+            "teamInvitationEmailStatus": "EMAILED",
+        }
+
+    @responses.activate
+    def test_update_invitation_with_status_string(self) -> None:
+        """Test update invitation with status string."""
+        invitation_id = "660e8400-e29b-41d4-a716-446655440001"
+        mock_response: Dict[str, Any] = {
+            "invitationId": invitation_id,
+            "status": "DECLINED",
+            "pending": False,
+        }
+
+        responses.add(
+            responses.PATCH,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/invitation/{invitation_id}",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.update_invitation(
+            invitation_id=invitation_id,
+            status="DECLINED",
+        )
+
+        assert result == mock_response
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "invitationId": invitation_id,
+            "status": "DECLINED",
+        }
+
+    @responses.activate
+    def test_update_invitation_minimal(self) -> None:
+        """Test update invitation with minimal parameters."""
+        invitation_id = "660e8400-e29b-41d4-a716-446655440001"
+        mock_response: Dict[str, Any] = {
+            "invitationId": invitation_id,
+            "status": "PENDING",
+        }
+
+        responses.add(
+            responses.PATCH,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/invitation/{invitation_id}",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.update_invitation(invitation_id=invitation_id)
+
+        assert result == mock_response
+
+        # Verify request body contains only invitation ID
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {"invitationId": invitation_id}
+
+    @responses.activate
+    def test_update_invitation_with_email_status_only(self) -> None:
+        """Test update invitation with only email status."""
+        invitation_id = "660e8400-e29b-41d4-a716-446655440001"
+        mock_response: Dict[str, Any] = {
+            "invitationId": invitation_id,
+            "teamInvitationEmailStatus": "PENDING",
+        }
+
+        responses.add(
+            responses.PATCH,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/invitation/{invitation_id}",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.update_invitation(
+            invitation_id=invitation_id,
+            team_invitation_email_status="PENDING",
+        )
+
+        assert result == mock_response
+
+        # Verify request body
+        import json
+
+        request_body = json.loads(responses.calls[0].request.body)
+        assert request_body == {
+            "invitationId": invitation_id,
+            "teamInvitationEmailStatus": "PENDING",
+        }
+
+    @responses.activate
+    def test_get_team_success(self) -> None:
+        """Test get team with full information success."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        mock_response: Dict[str, Any] = {
+            "id": team_id,
+            "name": "Test Team",
+            "status": "ACTIVE",
+            "teamType": "NORMAL",
+            "agents": [
+                {
+                    "id": "agent-1",
+                    "agent": {
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "emailAddress": "john.doe@example.com",
+                    },
+                    "roles": ["MEMBER"],
+                }
+            ],
+        }
+
+        responses.add(
+            responses.GET,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.get_team(team_id)
+        assert result == mock_response
+
+    @responses.activate
+    def test_get_team_members_success(self) -> None:
+        """Test get team members success."""
+        team_id = "550e8400-e29b-41d4-a716-446655440000"
+        mock_response: Dict[str, Any] = {
+            "members": [
+                {
+                    "id": "member-1",
+                    "name": "John Doe",
+                    "role": "MEMBER",
+                    "email": "john.doe@example.com",
+                }
+            ]
+        }
+
+        responses.add(
+            responses.GET,
+            f"https://yenta.therealbrokerage.com/api/v1/teams/{team_id}/members",
+            json=mock_response,
+            status=200,
+        )
+
+        result = self.client.get_team_members(team_id)
+        assert result == mock_response
