@@ -145,7 +145,13 @@ class TestTransactionBuilderClient:
             status=200,
         )
 
-        price_info = {"price": 500000, "closing_date": "2024-01-15"}
+        price_info = {
+            "dealType": "COMPENSATING",
+            "propertyType": "RESIDENTIAL",
+            "salePrice": {"amount": 500000, "currency": "USD"},
+            "representationType": "BUYER",
+            "closingDate": "2024-01-15"
+        }
         result = self.client.update_price_and_date_info(self.transaction_id, price_info)
 
         assert result == expected_response
@@ -242,7 +248,7 @@ class TestTransactionBuilderClient:
             status=200,
         )
 
-        location_info = {"address": "123 Main St", "city": "Anytown", "state": "CA"}
+        location_info = {"street": "123 Main St", "city": "Anytown", "state": "CALIFORNIA"}
         result = self.client.update_location_info(self.transaction_id, location_info)
 
         assert result == expected_response
