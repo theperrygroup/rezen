@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-06-08
+
 ### Added
 - **Users API**: Complete implementation for user profile access, team membership, and office details
 - **Owner Agent Support**: Enhanced Transaction Builder with owner agent functionality requiring proper transaction sequence
