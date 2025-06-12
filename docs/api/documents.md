@@ -463,15 +463,15 @@ result = client.documents.send_document_for_signature(
 
 <div class="grid cards" markdown>
 
--   [:material-checkbox-marked: **Checklist API**](checklist.md)
+-   [☑️ **Checklist API**](checklist.md)
 
     Manage transaction checklists
 
--   [:material-swap-horizontal: **Transactions API**](transactions.md)
+-   [🔄 **Transactions API**](transactions.md)
 
     Work with transaction documents
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [🔧 **Transaction Builder**](transaction-builder.md)
 
     Create transactions with documents
 

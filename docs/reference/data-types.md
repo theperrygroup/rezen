@@ -19,7 +19,7 @@ The ReZEN API client provides comprehensive type definitions and enums for type-
 
 ### Teams & Organization
 
-=== ":material-account-group: Team Management"
+=== "👥 Team Management"
 
     #### TeamStatus
 
@@ -53,7 +53,7 @@ The ReZEN API client provides comprehensive type definitions and enums for type-
     SortDirection.DESC     # Descending order
     ```
 
-=== ":material-sort: Team Sorting"
+=== "🔀 Team Sorting"
 
     #### SortField
 
@@ -83,7 +83,7 @@ The ReZEN API client provides comprehensive type definitions and enums for type-
 
 ### Agents & People
 
-=== ":material-account-tie: Agent Management"
+=== "👔 Agent Management"
 
     #### AgentSortDirection
 
@@ -107,7 +107,7 @@ The ReZEN API client provides comprehensive type definitions and enums for type-
     AgentSortField.CREATED_AT     # Sort by creation date
     ```
 
-=== ":material-earth: Geography"
+=== "🌍 Geography"
 
     #### Country
 
@@ -141,7 +141,7 @@ The ReZEN API client provides comprehensive type definitions and enums for type-
 
 ### Transactions & Business
 
-=== ":material-handshake: Transaction Types"
+=== "🤝 Transaction Types"
 
     #### ParticipantType
 
@@ -191,7 +191,7 @@ The following sections provide auto-generated documentation from the source code
 
 ### Type-Safe Development
 
-=== ":material-shield-check: Type Safety"
+=== "🛡️ Type Safety"
 
     ```python
     from typing import List, Optional
@@ -210,7 +210,7 @@ The following sections provide auto-generated documentation from the source code
         )
     ```
 
-=== ":material-auto-fix: IDE Integration"
+=== "🔧 IDE Integration"
 
     ```python
     from rezen.enums import StateOrProvince, Country
@@ -225,7 +225,7 @@ The following sections provide auto-generated documentation from the source code
 
 ### Validation Examples
 
-=== ":material-check-circle: Input Validation"
+=== "✅ Input Validation"
 
     ```python
     from rezen.enums import TeamStatus
@@ -243,7 +243,7 @@ The following sections provide auto-generated documentation from the source code
         print("Valid status")
     ```
 
-=== ":material-filter: Filtering with Enums"
+=== "🔽 Filtering with Enums"
 
     ```python
     from rezen.enums import (
@@ -274,7 +274,7 @@ The following sections provide auto-generated documentation from the source code
 
 ## Best Practices
 
-### :material-code-tags: Type Hints
+### 🏷️ Type Hints
 
 !!! tip "Always Use Type Hints"
 
@@ -291,7 +291,7 @@ The following sections provide auto-generated documentation from the source code
         pass
     ```
 
-### :material-import: Import Patterns
+### 📥 Import Patterns
 
 !!! example "Recommended Import Style"
 
@@ -308,7 +308,7 @@ The following sections provide auto-generated documentation from the source code
     # from rezen import enums  # Less preferred
     ```
 
-### :material-bug: Error Handling
+### 🐛 Error Handling
 
 !!! warning "Enum Validation"
 
@@ -379,19 +379,19 @@ The following sections provide auto-generated documentation from the source code
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](../api/transaction-builder.md)
+-   [🔧 **Transaction Builder**](../api/transaction-builder.md)
 
     Learn about transaction creation and management
 
--   [:material-alert-circle: **Exceptions**](exceptions.md)
+-   [⚠️ **Exceptions**](exceptions.md)
 
     Understand error handling and exception types
 
--   [:material-file-document: **Examples**](../guides/examples.md)
+-   [📄 **Examples**](../guides/examples.md)
 
     See practical usage examples
 
--   [:material-book-open: **API Reference**](../api/index.md)
+-   [📖 **API Reference**](../api/index.md)
 
     Return to the main API reference
 

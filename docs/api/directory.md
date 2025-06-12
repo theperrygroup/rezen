@@ -150,15 +150,15 @@ directory = DirectoryClient(
 
 <div class="grid cards" markdown>
 
--   [:material-account-tie: **Agents API**](agents.md)
+-   [👔 **Agents API**](agents.md)
 
     Use agent data from directory in main API
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [🔧 **Transaction Builder**](transaction-builder.md)
 
     Add directory contacts to transactions
 
--   [:material-rocket-launch: **Getting Started**](../getting-started/quickstart.md)
+-   [🚀 **Getting Started**](../getting-started/quickstart.md)
 
     Complete setup guide for ReZEN clients
 

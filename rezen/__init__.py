@@ -29,7 +29,7 @@ from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .users import UsersClient
 
-__version__ = "2.2.2"
+__version__ = "2.2.3"
 __all__ = [
     "RezenClient",
     "AuthClient",

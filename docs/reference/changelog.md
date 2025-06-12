@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.3] - 2025-01-27
+
 ### Fixed
 - **Transaction Builder**: Fixed `add_participant` method to correctly send multipart/form-data instead of JSON. The method now properly converts participant data to the files format to ensure compatibility with the API's multipart/form-data requirement.
 

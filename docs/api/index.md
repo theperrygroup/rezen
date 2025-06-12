@@ -11,7 +11,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
 <div class="grid cards" markdown>
 
--   :material-hammer-wrench:{ .lg .middle } **Transaction Builder**
+-   🔧 **Transaction Builder**
 
     ---
 
@@ -19,7 +19,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Transaction Builder API](transaction-builder.md)
 
--   :material-handshake:{ .lg .middle } **Transactions**
+-   🤝 **Transactions**
 
     ---
 
@@ -27,7 +27,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Transactions API](transactions.md)
 
--   :material-account-group:{ .lg .middle } **Teams**
+-   👥 **Teams**
 
     ---
 
@@ -35,7 +35,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Teams API](teams.md)
 
--   :material-account-tie:{ .lg .middle } **Agents**
+-   👔 **Agents**
 
     ---
 
@@ -43,7 +43,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Agents API](agents.md)
 
--   :material-account:{ .lg .middle } **Users**
+-   👤 **Users**
 
     ---
 
@@ -51,7 +51,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Users API](users.md)
 
--   :material-book-open:{ .lg .middle } **Directory**
+-   📖 **Directory**
 
     ---
 
@@ -59,7 +59,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Directory API](directory.md)
 
--   :material-checkbox-marked:{ .lg .middle } **Checklist**
+-   ☑️ **Checklist**
 
     ---
 
@@ -67,7 +67,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Checklist API](checklist.md)
 
--   :material-file-document:{ .lg .middle } **Documents**
+-   📄 **Documents**
 
     ---
 

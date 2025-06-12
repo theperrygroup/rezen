@@ -24,7 +24,7 @@ Welcome to the ReZEN Python API client! This section will help you get up and ru
 
     [:octicons-arrow-right-24: Setup Authentication](authentication.md)
 
--   :material-rocket-launch:{ .lg .middle } **Quick Start**
+-   🚀 **Quick Start**
 
     ---
 

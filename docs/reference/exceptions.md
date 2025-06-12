@@ -39,7 +39,7 @@ graph TD
 
 ### Base Exception
 
-=== ":material-alert-circle: RezenError"
+=== "⚠️ RezenError"
 
     **Base exception for all ReZEN API errors**
 
@@ -67,7 +67,7 @@ graph TD
 
 ### Authentication Errors
 
-=== ":material-key-off: AuthenticationError"
+=== "🔐 AuthenticationError"
 
     **API key or authentication issues**
 
@@ -100,7 +100,7 @@ graph TD
 
 ### Validation Errors
 
-=== ":material-alert-decagram: ValidationError"
+=== "🚨 ValidationError"
 
     **Invalid input data or parameters**
 
@@ -130,7 +130,7 @@ graph TD
 
 ### Resource Errors
 
-=== ":material-file-question: NotFoundError"
+=== "❓📄 NotFoundError"
 
     **Requested resource does not exist**
 
@@ -159,7 +159,7 @@ graph TD
 
 ### Rate Limiting
 
-=== ":material-speedometer: RateLimitError"
+=== "⏱️ RateLimitError"
 
     **API rate limit exceeded**
 
@@ -202,7 +202,7 @@ graph TD
 
 ### Network Errors
 
-=== ":material-wifi-off: NetworkError"
+=== "📡 NetworkError"
 
     **Connection and network-related issues**
 
@@ -240,7 +240,7 @@ graph TD
 
 ### Server Errors
 
-=== ":material-server-network-off: ServerError"
+=== "🖥️ ServerError"
 
     **API server-side errors (5xx status codes)**
 
@@ -294,7 +294,7 @@ graph TD
 
 ### Comprehensive Error Handler
 
-=== ":material-shield-check: Production Ready"
+=== "🛡️ Production Ready"
 
     ```python
     import logging
@@ -419,7 +419,7 @@ graph TD
             }
     ```
 
-=== ":material-code-braces: Usage Example"
+=== "📝 Usage Example"
 
     ```python
     from typing import List, Dict, Any
@@ -445,7 +445,7 @@ graph TD
 
 ### Context Managers for Error Handling
 
-=== ":material-code-brackets: Context Manager"
+=== "📋 Context Manager"
 
     ```python
     import logging
@@ -521,7 +521,7 @@ graph TD
 
 ### Error Analysis Tools
 
-=== ":material-bug: Debug Information"
+=== "🐛 Debug Information"
 
     ```python
     from rezen.exceptions import RezenError
@@ -558,7 +558,7 @@ graph TD
         analyze_error(e)
     ```
 
-=== ":material-chart-line: Error Monitoring"
+=== "📈 Error Monitoring"
 
     ```python
     import time
@@ -620,7 +620,7 @@ graph TD
 
 ## Best Practices
 
-### :material-shield-check: Error Prevention
+### 🛡️ Error Prevention
 
 !!! tip "Proactive Error Prevention"
 
@@ -629,7 +629,7 @@ graph TD
     - **Use Timeouts**: Set appropriate timeouts for API calls
     - **Monitor Errors**: Track error patterns for proactive fixes
 
-### :material-autorenew: Retry Strategies
+### 🔄 Retry Strategies
 
 !!! example "Exponential Backoff Implementation"
 
@@ -657,7 +657,7 @@ graph TD
                 time.sleep(total_delay)
     ```
 
-### :material-security: Security Considerations
+### 🔒 Security Considerations
 
 !!! warning "Security Best Practices"
 
@@ -701,19 +701,19 @@ graph TD
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](../api/transaction-builder.md)
+-   [🔧 **Transaction Builder**](../api/transaction-builder.md)
 
     Learn about transaction creation with proper error handling
 
--   [:material-code-braces: **Data Types**](data-types.md)
+-   [📝 **Data Types**](data-types.md)
 
     Understand data validation and type safety
 
--   [:material-file-document: **Examples**](../guides/examples.md)
+-   [📄 **Examples**](../guides/examples.md)
 
     See error handling in practical examples
 
--   [:material-book-open: **API Reference**](../api/index.md)
+-   [📖 **API Reference**](../api/index.md)
 
     Return to the main API reference
 

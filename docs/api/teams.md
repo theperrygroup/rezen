@@ -224,15 +224,15 @@ teams = client.teams.search_teams(
 
 <div class="grid cards" markdown>
 
--   [:material-account-tie: **Agents API**](agents.md)
+-   [👔 **Agents API**](agents.md)
 
     Search and manage agent information
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [🔧 **Transaction Builder**](transaction-builder.md)
 
     Create transactions with team members
 
--   [:material-code-braces: **Data Types**](../reference/data-types.md)
+-   [📝 **Data Types**](../reference/data-types.md)
 
     Learn about team-related enums and types
 

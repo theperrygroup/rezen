@@ -30,7 +30,7 @@ The ReZEN Python API client provides multiple ways to authenticate and configure
 
 ### API Key Configuration
 
-=== ":material-auto-fix: Automatic (Recommended)"
+=== "🔧 Automatic (Recommended)"
 
     The client automatically reads from the `REZEN_API_KEY` environment variable:
 
@@ -78,7 +78,7 @@ The ReZEN Python API client provides multiple ways to authenticate and configure
 
         Never hardcode API keys in your source code. Use environment variables or secure configuration management.
 
-=== ":material-cog: Custom Configuration"
+=== "⚙️ Custom Configuration"
 
     Configure both API key and base URL:
 
@@ -185,7 +185,7 @@ The Directory API uses a separate client with its own endpoint:
     )
     ```
 
-=== ":material-security: SSL & Headers"
+=== "🔒 SSL & Headers"
 
     ```python
     from typing import Dict, str
@@ -237,7 +237,7 @@ The Directory API uses a separate client with its own endpoint:
 
 ## Best Practices
 
-### :material-shield-check: Security
+### 🛡️ Security
 
 !!! warning "API Key Security"
 
@@ -246,7 +246,7 @@ The Directory API uses a separate client with its own endpoint:
     - Never commit API keys to version control
     - Rotate API keys regularly
 
-### :material-speedometer: Performance
+### ⏱️ Performance
 
 !!! tip "Optimization Tips"
 
@@ -255,7 +255,7 @@ The Directory API uses a separate client with its own endpoint:
     - Use appropriate timeouts for your use case
     - Handle rate limiting with exponential backoff
 
-### :material-bug: Debugging
+### 🐛 Debugging
 
 !!! example "Logging Configuration"
 
@@ -277,7 +277,7 @@ The Directory API uses a separate client with its own endpoint:
 
 Test your client setup with a simple API call:
 
-=== ":material-check-circle: Test Connection"
+=== "✅ Test Connection"
 
     ```python
     from typing import List, Dict, Any
@@ -350,19 +350,19 @@ Test your client setup with a simple API call:
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](../api/transaction-builder.md)
+-   [🔧 **Transaction Builder**](../api/transaction-builder.md)
 
     Start creating transactions with the Transaction Builder API
 
--   [:material-account-group: **Teams API**](../api/teams.md)
+-   [👥 **Teams API**](../api/teams.md)
 
     Search and manage team information
 
--   [:material-account-tie: **Agents API**](../api/agents.md)
+-   [👔 **Agents API**](../api/agents.md)
 
     Access comprehensive agent search and management
 
--   [:material-file-document: **Examples**](../guides/examples.md)
+-   [📄 **Examples**](../guides/examples.md)
 
     See practical examples and use cases
 

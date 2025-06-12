@@ -185,7 +185,6 @@ nav:
 # Extra CSS and JavaScript
 extra_css:
   - stylesheets/extra.css
-  - https://fonts.googleapis.com/icon?family=Material+Icons
 
 extra_javascript:
   - javascripts/extra.js

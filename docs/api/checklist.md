@@ -693,15 +693,15 @@ result = client.download_document_version("version-123")
 
 <div class="grid cards" markdown>
 
--   [:material-file-document: **Documents API**](documents.md)
+-   [📄 **Documents API**](documents.md)
 
     Deep dive into document management
 
--   [:material-swap-horizontal: **Transactions API**](transactions.md)
+-   [🔄 **Transactions API**](transactions.md)
 
     Learn about transaction operations
 
--   [:material-api: **API Overview**](index.md)
+-   [🔌 **API Overview**](index.md)
 
     Explore other API endpoints
 

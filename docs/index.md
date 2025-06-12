@@ -58,7 +58,7 @@ vendors: List[Dict[str, Any]] = client.directory.search_vendors(
 
 <div class="grid cards" markdown>
 
--   :material-home: **Transaction Management**
+-   🏠 **Transaction Management**
 
     ---
 
@@ -66,7 +66,7 @@ vendors: List[Dict[str, Any]] = client.directory.search_vendors(
 
     [:octicons-arrow-right-24: Learn more](api/transaction-builder.md)
 
--   :material-account-group: **Agent & Team Operations**
+-   👥 **Agent & Team Operations**
 
     ---
 
@@ -74,7 +74,7 @@ vendors: List[Dict[str, Any]] = client.directory.search_vendors(
 
     [:octicons-arrow-right-24: Learn more](api/agents.md)
 
--   :material-cog: **Type-Safe & Robust**
+-   ⚙️ **Type-Safe & Robust**
 
     ---
 
@@ -82,7 +82,7 @@ vendors: List[Dict[str, Any]] = client.directory.search_vendors(
 
     [:octicons-arrow-right-24: Learn more](development/contributing.md)
 
--   :material-book-open: **Well Documented**
+-   📖 **Well Documented**
 
     ---
 

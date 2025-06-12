@@ -41,7 +41,7 @@ Create and manage transaction builders with full participant and property manage
 
 ## Quick Start
 
-=== ":material-rocket-launch: Basic Transaction"
+=== "🚀 Basic Transaction"
 
     ```python
     from typing import Dict, Any
@@ -107,7 +107,7 @@ Create and manage transaction builders with full participant and property manage
     client.transaction_builder.submit_transaction(transaction_id)
     ```
 
-=== ":material-home: Listing Builder"
+=== "🏠 Listing Builder"
 
     ```python
     from typing import Dict, Any
@@ -129,7 +129,7 @@ Create and manage transaction builders with full participant and property manage
     client.transaction_builder.add_seller(listing_id, seller_data)
     ```
 
-=== ":material-swap-horizontal: Convert Listing"
+=== "🔄 Convert Listing"
 
     ```python
     from typing import Dict, Any
@@ -270,7 +270,7 @@ Create and manage transaction builders with full participant and property manage
 
 ### Buyers
 
-=== ":material-account-plus: Add Buyer"
+=== "➕👤 Add Buyer"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.add_buyer
         options:
@@ -321,7 +321,7 @@ Create and manage transaction builders with full participant and property manage
 
 ### Sellers
 
-=== ":material-account-minus: Add Seller"
+=== "➖👤 Add Seller"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.add_seller
         options:
@@ -354,7 +354,7 @@ Create and manage transaction builders with full participant and property manage
 
 ### Agents & Co-Agents
 
-=== ":material-account-tie: Add Co-Agent"
+=== "👔 Add Co-Agent"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.add_co_agent
         options:
@@ -408,7 +408,7 @@ Create and manage transaction builders with full participant and property manage
 
 ### Owner Agents
 
-=== ":material-account-star: Update Owner Agent"
+=== "⭐👤 Update Owner Agent"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.update_owner_agent_info
         options:
@@ -421,7 +421,7 @@ Create and manage transaction builders with full participant and property manage
 
     Many ReZEN users belong to multiple teams. These convenience methods help handle team selection automatically:
 
-=== ":material-account-group: Get Teams & Offices"
+=== "👥 Get Teams & Offices"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.get_user_teams_and_offices
         options:
@@ -433,7 +433,7 @@ Create and manage transaction builders with full participant and property manage
     - Falls back to **ADMIN** teams
     - Uses first available team as last resort
 
-=== ":material-account-star: Set Owner Agent (Default Team)"
+=== "⭐👤 Set Owner Agent (Default Team)"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.set_current_user_as_owner_agent
         options:
@@ -442,7 +442,7 @@ Create and manage transaction builders with full participant and property manage
 
     **Best for:** Users with single team or who want automatic team selection.
 
-=== ":material-account-check: Set Owner Agent (Specific Team)"
+=== "✅👤 Set Owner Agent (Specific Team)"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.set_current_user_as_owner_agent_with_team
         options:
@@ -562,7 +562,7 @@ Create and manage transaction builders with full participant and property manage
 
 ### Other Participants
 
-=== ":material-account-multiple: Add Participant"
+=== "👥 Add Participant"
 
     ::: rezen.transaction_builder.TransactionBuilderClient.add_participant
         options:
@@ -1290,19 +1290,19 @@ The Transaction Builder now includes enhanced error handling that catches common
 
 <div class="grid cards" markdown>
 
--   [:material-handshake: **Transactions API**](transactions.md)
+-   [🤝 **Transactions API**](transactions.md)
 
     Work with live transactions and manage ongoing deals
 
--   [:material-account-group: **Teams API**](teams.md)
+-   [👥 **Teams API**](teams.md)
 
     Search and manage team information
 
--   [:material-account-tie: **Agents API**](agents.md)
+-   [👔 **Agents API**](agents.md)
 
     Find and manage agent information
 
--   [:material-file-document: **Examples**](../guides/examples.md)
+-   [📄 **Examples**](../guides/examples.md)
 
     See more practical usage examples
 

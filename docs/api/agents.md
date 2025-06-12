@@ -18,7 +18,7 @@ Comprehensive agent search, network management, and detailed information retriev
 
 ## Quick Start
 
-=== ":material-rocket-launch: Basic Usage"
+=== "🚀 Basic Usage"
 
     ```python
     from rezen import RezenClient
@@ -34,7 +34,7 @@ Comprehensive agent search, network management, and detailed information retriev
     print(f"Found {len(agents)} agents named John")
     ```
 
-=== ":material-magnify: Search Options"
+=== "🔍 Search Options"
 
     ```python
     from rezen import RezenClient
@@ -52,7 +52,7 @@ Comprehensive agent search, network management, and detailed information retriev
     agents = client.agents.agent_search(phone="+1234567890")
     ```
 
-=== ":material-cog: Advanced Filtering"
+=== "⚙️ Advanced Filtering"
 
     ```python
     from rezen import RezenClient
@@ -69,7 +69,7 @@ Comprehensive agent search, network management, and detailed information retriev
     )
     ```
 
-=== ":material-shield-check: Error Handling"
+=== "🛡️ Error Handling"
 
     ```python
     from rezen import RezenClient
@@ -250,15 +250,15 @@ Comprehensive agent search, network management, and detailed information retriev
 
 <div class="grid cards" markdown>
 
--   [:material-account-group: **Teams API**](teams.md)
+-   [👥 **Teams API**](teams.md)
 
     Manage team information and memberships
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [🔧 **Transaction Builder**](transaction-builder.md)
 
     Add agents to transactions
 
--   [:material-book-open: **Directory API**](directory.md)
+-   [📖 **Directory API**](directory.md)
 
     Access additional agent directory services
 

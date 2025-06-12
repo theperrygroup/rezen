@@ -8,7 +8,7 @@ Technical reference materials for the ReZEN Python API client, including data ty
 
 <div class="grid cards" markdown>
 
--   :material-code-braces:{ .lg .middle } **Data Types & Enums**
+-   📝 **Data Types & Enums**
 
     ---
 
@@ -16,7 +16,7 @@ Technical reference materials for the ReZEN Python API client, including data ty
 
     [:octicons-arrow-right-24: Data Types Reference](data-types.md)
 
--   :material-alert-circle:{ .lg .middle } **Exception Reference**
+-   ⚠️ **Exception Reference**
 
     ---
 
@@ -24,7 +24,7 @@ Technical reference materials for the ReZEN Python API client, including data ty
 
     [:octicons-arrow-right-24: Exception Guide](exceptions.md)
 
--   :material-tag:{ .lg .middle } **Version History**
+-   🏷️ **Version History**
 
     ---
 

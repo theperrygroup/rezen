@@ -247,19 +247,19 @@ client.transactions.create_participant(transaction_id, participant)
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [🔧 **Transaction Builder**](transaction-builder.md)
 
     Create new transactions from scratch
 
--   [:material-account-tie: **Agents API**](agents.md)
+-   [👔 **Agents API**](agents.md)
 
     Find agents to add to transactions
 
--   [:material-file-document-check: **Checklist API**](checklist.md)
+-   [✅📄 **Checklist API**](checklist.md)
 
     Manage transaction checklists and documents
 
--   [:material-alert-circle: **Exceptions**](../reference/exceptions.md)
+-   [⚠️ **Exceptions**](../reference/exceptions.md)
 
     Handle transaction-related errors
 

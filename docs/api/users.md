@@ -284,15 +284,15 @@ client.transaction_builder.set_current_user_as_owner_agent(
 
 <div class="grid cards" markdown>
 
--   [:material-hammer-wrench: **Transaction Builder**](transaction-builder.md)
+-   [🔧 **Transaction Builder**](transaction-builder.md)
 
     Use user data to set up owner agents in transactions
 
--   [:material-account-group: **Teams API**](teams.md)
+-   [👥 **Teams API**](teams.md)
 
     Access more detailed team information
 
--   [:material-account-tie: **Agents API**](agents.md)
+-   [👔 **Agents API**](agents.md)
 
     Search for agents beyond current user
 

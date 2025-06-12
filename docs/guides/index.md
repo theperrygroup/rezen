@@ -8,7 +8,7 @@ Practical guides, tutorials, and real-world examples to help you master the ReZE
 
 <div class="grid cards" markdown>
 
--   :material-code-braces:{ .lg .middle } **Examples & Tutorials**
+-   📝 **Examples & Tutorials**
 
     ---
 
@@ -16,7 +16,7 @@ Practical guides, tutorials, and real-world examples to help you master the ReZE
 
     [:octicons-arrow-right-24: View Examples](examples.md)
 
--   :material-handshake:{ .lg .middle } **Transaction Workflows**
+-   🤝 **Transaction Workflows**
 
     ---
 
@@ -24,7 +24,7 @@ Practical guides, tutorials, and real-world examples to help you master the ReZE
 
     [:octicons-arrow-right-24: Transaction Guide](transactions.md)
 
--   :material-account-group:{ .lg .middle } **Working with People**
+-   👥 **Working with People**
 
     ---
 
@@ -32,7 +32,7 @@ Practical guides, tutorials, and real-world examples to help you master the ReZE
 
     [:octicons-arrow-right-24: People Guide](agents-and-teams.md)
 
--   :material-help-circle:{ .lg .middle } **Troubleshooting**
+-   ❓ **Troubleshooting**
 
     ---
 
