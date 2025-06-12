@@ -379,7 +379,9 @@ class TransactionBuilderClient(BaseClient):
         """
         endpoint = f"transaction-builder/{transaction_id}/other-participants"
         # This endpoint uses multipart/form-data according to the schema
-        return self._request("PUT", endpoint, data=participant_info)
+        # Convert form data to files format to force multipart
+        files = {key: (None, str(value)) for key, value in participant_info.items()}
+        return self._request("PUT", endpoint, files=files)
 
     def add_opcity(self, transaction_id: str, opcity: bool) -> Dict[str, Any]:
         """Add opcity to transaction builder.

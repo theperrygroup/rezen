@@ -200,7 +200,7 @@ class TestTransactionBuilderClient:
 
     @responses.activate
     def test_add_participant(self) -> None:
-        """Test add_participant endpoint."""
+        """Test add_participant endpoint sends multipart/form-data."""
         expected_response = {"success": True, "participant_added": True}
         responses.add(
             responses.PUT,
@@ -213,6 +213,14 @@ class TestTransactionBuilderClient:
         result = self.client.add_participant(self.transaction_id, participant_info)
 
         assert result == expected_response
+        
+        # Verify that the request was sent as multipart/form-data
+        request = responses.calls[0].request
+        content_type = request.headers.get('Content-Type', '')
+        # The actual Content-Type will be multipart/form-data with a boundary
+        assert content_type and 'multipart/form-data' in content_type
+        # Verify no JSON content-type
+        assert content_type and 'application/json' not in content_type
 
     @responses.activate
     def test_add_opcity(self) -> None:
