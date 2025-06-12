@@ -187,7 +187,10 @@ class TransactionBuilderClient(BaseClient):
             - representationType determines valid agent roles (BUYER → BUYERS_AGENT, SELLER → SELLERS_AGENT)
 
         Required Fields for Success:
-            - dealType (str): "COMPENSATING" or "NON_COMPENSATING"
+            - dealType (str): Deal type - use "SALE" for standard transactions
+                - "SALE": Standard sale transaction (recommended)
+                - "COMPENSATING": May cause 500 errors on submission (deprecated)
+                - "NON_COMPENSATING": May cause 500 errors on submission (deprecated)
             - propertyType (str): "RESIDENTIAL", "COMMERCIAL", etc.
             - salePrice (dict): {"amount": 500000, "currency": "USD"}
             - representationType (str): "BUYER" or "SELLER" - affects owner agent role
@@ -205,7 +208,7 @@ class TransactionBuilderClient(BaseClient):
             ```python
             # ✅ This WORKS (includes both required commission objects)
             price_date_info = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {
                     "amount": 565000,
@@ -228,7 +231,7 @@ class TransactionBuilderClient(BaseClient):
 
             # ❌ This FAILS (missing commission objects)
             price_date_info = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {"amount": 500000, "currency": "USD"},
                 "representationType": "BUYER"
@@ -237,7 +240,7 @@ class TransactionBuilderClient(BaseClient):
 
             # ❌ This ALSO FAILS (only one commission object)
             price_date_info = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {"amount": 500000, "currency": "USD"},
                 "representationType": "BUYER",
@@ -741,7 +744,7 @@ class TransactionBuilderClient(BaseClient):
 
             # 3. Add price/date with commission objects (REQUIRED SECOND)
             client.transaction_builder.update_price_and_date_info(builder_id, {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {"amount": 500000, "currency": "USD"},
                 "representationType": "BUYER",
@@ -1206,7 +1209,7 @@ class TransactionBuilderClient(BaseClient):
 
             # 3. Add price/date (with both commission objects)
             price_data = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {"amount": 550000, "currency": "USD"},
                 "representationType": "BUYER",

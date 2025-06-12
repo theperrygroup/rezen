@@ -56,7 +56,7 @@ price_data = {
 ```python
 # BOTH commission objects are REQUIRED
 price_data = {
-    "dealType": "COMPENSATING",
+    "dealType": "SALE",
     "propertyType": "RESIDENTIAL", 
     "salePrice": {"amount": 500000, "currency": "USD"},
     "representationType": "BUYER",
@@ -315,7 +315,7 @@ def create_transaction_with_owner_agent():
         
         # Step 3: Add price/date with commission objects
         price_data = {
-            "dealType": "COMPENSATING",
+            "dealType": "SALE",
             "propertyType": "RESIDENTIAL",
             "salePrice": {"amount": 750000, "currency": "USD"},
             "representationType": "BUYER",
@@ -414,7 +414,7 @@ if transaction_id:
             # ⚠️ CRITICAL: Both commission objects are REQUIRED!
             # Basic price fields alone will FAIL with "Bad request: Invalid request"
             price_date_data = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {  # Must be object with amount/currency
                     "amount": 500000,
@@ -475,7 +475,7 @@ if transaction_id:
             # Add price/date info
             closing_date = (datetime.now() + timedelta(days=45)).strftime("%Y-%m-%d")
             price_data = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {  # Must be object with amount/currency
                     "amount": 565000,
@@ -591,7 +591,7 @@ if transaction_id:
 
             # Set pricing and dates
             price_data = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {  # Must be object
                     "amount": 750000,
@@ -1320,7 +1320,7 @@ client.transaction_builder.update_location_info(transaction_id, location_data)
 
 # 3. Add price/date (with both commission objects)
 price_data = {
-    "dealType": "COMPENSATING",
+    "dealType": "SALE",
     "propertyType": "RESIDENTIAL",
     "salePrice": {"amount": 550000, "currency": "USD"},
     "representationType": "BUYER",

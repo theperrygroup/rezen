@@ -146,7 +146,7 @@ class TestTransactionBuilderClient:
         )
 
         price_info = {
-            "dealType": "COMPENSATING",
+            "dealType": "SALE",
             "propertyType": "RESIDENTIAL",
             "salePrice": {"amount": 500000, "currency": "USD"},
             "representationType": "BUYER",

@@ -69,7 +69,7 @@ Create and manage transaction builders with full participant and property manage
     # Step 3: Add price/date information - CRITICAL REQUIREMENTS
     # ⚠️ BOTH commission objects are REQUIRED together
     price_data: Dict[str, Any] = {
-        "dealType": "COMPENSATING",
+        "dealType": "SALE",
         "propertyType": "RESIDENTIAL",
         "salePrice": {"amount": 500000, "currency": "USD"},
         "representationType": "BUYER",
@@ -506,7 +506,7 @@ Create and manage transaction builders with full participant and property manage
 
             # Step 3: Add price/date info (REQUIRED SECOND)
             price_data: Dict[str, Any] = {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL", 
                 "salePrice": {"amount": 500000, "currency": "USD"},
                 "representationType": "BUYER"  # Must match agent role
@@ -1137,7 +1137,7 @@ The Transaction Builder now includes enhanced error handling that catches common
 
     try:
         price_data = {
-            "dealType": "COMPENSATING",
+            "dealType": "SALE",
             "propertyType": "RESIDENTIAL",
             "salePrice": 500000,  # ❌ Wrong! Must be object
             "representationType": "BUYERS_AGENT"  # ❌ Wrong! Should be 'BUYER'

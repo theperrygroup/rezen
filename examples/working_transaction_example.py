@@ -36,7 +36,7 @@ def test_complete_working_sequence() -> str:
 
         # Step 3: Add price/date info - with BOTH commission fields
         price_date_data = {
-            "dealType": "COMPENSATING",
+            "dealType": "SALE",
             "propertyType": "RESIDENTIAL",
             "salePrice": {"amount": 550000, "currency": "USD"},
             "representationType": "BUYER",

@@ -52,7 +52,7 @@ def create_complete_transaction_with_owner_agent() -> dict:
         # Step 3: Add price and dates (REQUIRED SECOND)
         print("\n3️⃣  Adding price and date info...")
         price_date_data = {
-            "dealType": "COMPENSATING",
+            "dealType": "SALE",
             "propertyType": "RESIDENTIAL",
             "salePrice": {"amount": 565000, "currency": "USD"},
             "listingCommission": {
@@ -215,7 +215,7 @@ def demonstrate_convenience_method() -> None:
         client.transaction_builder.update_price_and_date_info(
             builder_id,
             {
-                "dealType": "COMPENSATING",
+                "dealType": "SALE",
                 "propertyType": "RESIDENTIAL",
                 "salePrice": {"amount": 400000, "currency": "USD"},
                 "representationType": "BUYER",

@@ -352,7 +352,7 @@ def create_transaction_with_owner_agent() -> str:
         
         # Step 3: Add price/date (REQUIRED SECOND)
         price_data: Dict[str, Any] = {
-            "dealType": "COMPENSATING",
+            "dealType": "SALE",
             "propertyType": "RESIDENTIAL",
             "salePrice": {
                 "amount": 565000,

@@ -182,3 +182,50 @@ class Agent(BaseModel):
 - Write descriptive commit messages
 - Use present tense ("Add feature" not "Added feature")
 - Reference issue numbers in commit messages
+
+## Known API Field Values and Issues
+
+This section documents specific field values that have caused issues with the ReZEN API, ensuring we use the correct values throughout the codebase.
+
+### Transaction Builder Fields
+
+#### dealType
+- **CORRECT**: Use `"SALE"` for standard sale transactions
+- **INCORRECT**: `"COMPENSATING"` and `"NON_COMPENSATING"` cause 500 errors on submission
+- **Reason**: The API expects `"SALE"` for standard transactions despite older documentation suggesting otherwise
+
+Example:
+```python
+# ✅ CORRECT
+price_data = {
+    "dealType": "SALE",
+    "propertyType": "RESIDENTIAL",
+    # ... other fields
+}
+
+# ❌ INCORRECT - Causes 500 error on submission
+price_data = {
+    "dealType": "COMPENSATING",  # This will fail!
+    "propertyType": "RESIDENTIAL",
+    # ... other fields
+}
+```
+
+### Common Field Naming Issues
+
+1. **State Names**: Always use ALL CAPS (e.g., `"UTAH"`, not `"Utah"`)
+2. **Field Names**: Use camelCase consistently:
+   - `firstName` (not `first_name`)
+   - `lastName` (not `last_name`)
+   - `phoneNumber` (not `phone_number`)
+   - `zip` (not `zipCode` or `zip_code`)
+   - `street` (not `address`)
+
+### Required Field Combinations
+
+Some endpoints require multiple fields together:
+- **Location Updates**: Require `county`, `yearBuilt`, and `mlsNumber` in addition to basic address fields
+- **Price/Date Updates**: Require both `listingCommission` and `saleCommission` objects
+- **Commission Payer**: Requires all of: `role`, `firstName`, `lastName`, `email`, `phoneNumber`, `companyName`
+
+Always refer to the latest API documentation and test thoroughly when working with field values that affect transaction submission.

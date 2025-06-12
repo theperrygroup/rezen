@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.5] - 2025-01-27
+
+### Fixed
+- **Transaction Builder**: Updated `dealType` field value from "COMPENSATING" to "SALE" in all documentation, examples, and tests. The API returns 500 errors when using "COMPENSATING" or "NON_COMPENSATING" values on transaction submission, but accepts "SALE" successfully. This fix prevents submission failures caused by incorrect dealType values.
+- **Documentation**: Updated all code examples and guides to use the correct dealType value
+- **Examples**: Fixed working examples to use dealType: "SALE" instead of deprecated values
+- **Style Guide**: Added section documenting known API field value issues to prevent future problems
+
 ## [2.2.4] - 2025-01-27
 
 ### Fixed
