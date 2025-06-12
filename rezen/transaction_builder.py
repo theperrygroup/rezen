@@ -560,29 +560,56 @@ class TransactionBuilderClient(BaseClient):
         The method automatically handles the conversion for you.
 
         Required Fields:
-            - role (str): Commission payer role (e.g., "REAL", "NA", "LISTING_AGENT", "BUYERS_AGENT")
+            - role (str): Commission payer role. Valid values from get_commission_payer_roles():
+                - "TITLE" - Title company
+                - "SELLER" - Seller pays commission
+                - "LANDLORD" - Landlord (for rental transactions)
+                - "OTHER_AGENT" - Another agent pays
+                - "REAL" - Real (company) pays
+            - firstName (str): First name of the commission payer
+            - lastName (str): Last name of the commission payer
+            - email (str): Email address of the commission payer
+            - phoneNumber (str): Phone number (e.g., "(555) 123-4567")
+            - companyName (str): Company name of the commission payer
 
         Optional Fields:
-            - receivesInvoice (bool): Whether the payer receives invoice
-            - opCityReferral (bool): Whether this is an OpCity referral
-            - optedInForEcp (bool): Whether opted in for ECP
+            - receivesInvoice (bool): Whether the payer receives invoice (default: False)
+            - opCityReferral (bool): Whether this is an OpCity referral (default: False)
+            - optedInForEcp (bool): Whether opted in for ECP (default: False)
+            - participantId (str): If provided, validation for other fields is bypassed
+            - address (str): Address of the commission payer
+            - ein (str): Employer Identification Number
 
-        Special Note:
-            Based on testing, the "role" field accepts specific values that may differ
-            from what's shown in API documentation. Common working values include:
-            - "REAL" - For standard commission payers
-            - "NA" - Not applicable/none
-            - Role values matching agent roles (LISTING_AGENT, BUYERS_AGENT, etc.)
+        Special Notes:
+            1. If you provide a participantId, the validation for other required fields is ignored.
+               This is useful when referencing an existing participant.
+            2. The role "REAL" is commonly used for standard commission payers.
+            3. Some role values like "NA", "LISTING_AGENT", "BUYERS_AGENT" may not work as
+               they are not valid enum values for commission payer roles.
 
         Example:
             ```python
+            # Standard commission payer with all required fields
             commission_info = {
                 "role": "REAL",
+                "firstName": "Commission",
+                "lastName": "Payer",
+                "email": "commission@example.com",
+                "phoneNumber": "(555) 111-2222",
+                "companyName": "Commission Company LLC",
                 "receivesInvoice": True,
                 "opCityReferral": False,
                 "optedInForEcp": False
             }
-            client.add_commission_payer(transaction_id, commission_info)
+            result = client.add_commission_payer(transaction_id, commission_info)
+
+            # Using existing participant ID (bypasses validation)
+            commission_info = {
+                "role": "REAL",
+                "participantId": "existing-participant-uuid",
+                "receivesInvoice": True
+            }
+            result = client.add_commission_payer(transaction_id, commission_info)
             ```
 
         Args:
@@ -590,7 +617,7 @@ class TransactionBuilderClient(BaseClient):
             commission_info: Commission payer information data
 
         Returns:
-            Transaction builder response data
+            Transaction builder response data with commissionPayerInfo populated
         """
         endpoint = f"transaction-builder/{transaction_id}/commission-payer"
         # This endpoint requires multipart/form-data

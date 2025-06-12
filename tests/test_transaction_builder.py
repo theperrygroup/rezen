@@ -310,7 +310,19 @@ class TestTransactionBuilderClient:
     @responses.activate
     def test_add_commission_payer(self) -> None:
         """Test add_commission_payer endpoint."""
-        expected_response = {"success": True, "commission_payer_added": True}
+        expected_response = {
+            "id": self.transaction_id,
+            "commissionPayerInfo": {
+                "id": "commission-payer-id",
+                "role": "REAL",
+                "firstName": "Commission",
+                "lastName": "Payer",
+                "companyName": "Commission Company LLC",
+                "email": "commission@example.com",
+                "phoneNumber": "(555) 111-2222",
+                "receivesInvoice": True,
+            },
+        }
         responses.add(
             responses.PUT,
             f"{self.base_url}/transaction-builder/{self.transaction_id}/commission-payer",
@@ -318,7 +330,17 @@ class TestTransactionBuilderClient:
             status=200,
         )
 
-        commission_info = {"payer": "seller", "amount": 5000}
+        commission_info = {
+            "role": "REAL",
+            "firstName": "Commission",
+            "lastName": "Payer",
+            "email": "commission@example.com",
+            "phoneNumber": "(555) 111-2222",
+            "companyName": "Commission Company LLC",
+            "receivesInvoice": True,
+            "opCityReferral": False,
+            "optedInForEcp": False,
+        }
         result = self.client.add_commission_payer(self.transaction_id, commission_info)
 
         assert result == expected_response

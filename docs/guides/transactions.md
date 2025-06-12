@@ -719,10 +719,17 @@ if transaction_id:
 
         try:
             # Set commission payer
+            # NOTE: All fields below are REQUIRED
             payer_data = {
-                "payer_type": "SELLER",
-                "commission_rate": 6.0,
-                "flat_fee": False
+                "role": "REAL",  # Valid roles: TITLE, SELLER, LANDLORD, OTHER_AGENT, REAL
+                "firstName": "Commission",
+                "lastName": "Payer",
+                "email": "commission@example.com", 
+                "phoneNumber": "(555) 111-2222",
+                "companyName": "Commission Company LLC",
+                "receivesInvoice": True,
+                "opCityReferral": False,
+                "optedInForEcp": False
             }
             client.transaction_builder.add_commission_payer(
                 transaction_id, payer_data
