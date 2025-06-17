@@ -266,6 +266,136 @@ client.complete_checklist_item("item-123", is_complete=False)
 
 ---
 
+### Document Upload Approaches
+
+!!! important "Two Ways to Upload Documents"
+
+    The ReZEN API supports two different approaches for uploading documents to checklist items:
+
+#### 1. Direct Upload (Traditional Method)
+
+Use `add_document_to_checklist_item` when:
+- The transaction doesn't have Dropbox integration
+- The transaction's `dropboxId` field is null or missing
+- You want a simple one-step upload
+
+```python
+# Check if transaction has Dropbox
+transaction = client.transactions.get_transaction(transaction_id)
+if not transaction.get("dropboxId"):
+    # Use direct upload
+    with open("document.pdf", "rb") as file:
+        result = client.checklist.add_document_to_checklist_item(
+            checklist_item_id="item-123",
+            name="MLS Sheet",
+            description="Property listing details",
+            uploader_id="user-456",
+            transaction_id=transaction_id,
+            file=file
+        )
+```
+
+#### 2. Dropbox Upload (Two-Step Process)
+
+Use this approach when:
+- The transaction has a `dropboxId` field
+- Direct upload fails with 403 Forbidden
+- You need to integrate with the transaction's Dropbox storage
+
+**Step 1: Upload to Dropbox**
+```python
+import requests
+
+# Get transaction details
+transaction = client.transactions.get_transaction(transaction_id)
+dropbox_id = transaction["dropboxId"]
+
+# Upload to Dropbox
+api_key = client.transactions.api_key  # Get API key from sub-client
+headers = {"Authorization": f"Bearer {api_key}"}
+files = {"file": ("document.pdf", open("document.pdf", "rb"), "application/pdf")}
+data = {"uploadedBy": user_id}
+
+response = requests.post(
+    f"https://dropbox.therealbrokerage.com/api/v1/dropboxes/{dropbox_id}/files",
+    headers=headers,
+    files=files,
+    data=data
+)
+
+file_info = response.json()
+file_id = file_info["id"]
+```
+
+**Step 2: Link to Checklist Item**
+```python
+# Link the uploaded file to the checklist item
+result = client.checklist.link_file_to_checklist_item(
+    checklist_item_id="item-123",
+    file_references=[{
+        "fileId": file_id,
+        "filename": file_info["filename"]
+    }]
+)
+```
+
+#### Link File to Checklist Item
+
+::: rezen.checklist.ChecklistClient.link_file_to_checklist_item
+    options:
+      show_source: false
+      heading_level: 4
+
+**Complete Dropbox Upload Example:**
+```python
+# See examples/upload_to_checklist_via_dropbox.py for a full working example
+def upload_via_dropbox(transaction_id: str, checklist_item_id: str, file_path: str):
+    """Upload document using Dropbox approach."""
+    client = RezenClient()
+    
+    # Get transaction and user info
+    transaction = client.transactions.get_transaction(transaction_id)
+    dropbox_id = transaction.get("dropboxId")
+    if not dropbox_id:
+        raise ValueError("Transaction doesn't have Dropbox integration")
+    
+    user = client.users.get_current_user()
+    user_id = user["id"]
+    
+    # Step 1: Upload to Dropbox
+    api_key = client.transactions.api_key
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    with open(file_path, "rb") as file:
+        files = {"file": (os.path.basename(file_path), file, "application/pdf")}
+        data = {"uploadedBy": user_id}
+        
+        response = requests.post(
+            f"https://dropbox.therealbrokerage.com/api/v1/dropboxes/{dropbox_id}/files",
+            headers=headers,
+            files=files,
+            data=data
+        )
+        
+        if response.status_code not in [200, 201]:
+            raise Exception(f"Dropbox upload failed: {response.status_code}")
+        
+        file_info = response.json()
+    
+    # Step 2: Link to checklist item
+    result = client.checklist.link_file_to_checklist_item(
+        checklist_item_id=checklist_item_id,
+        file_references=[{
+            "fileId": file_info["id"],
+            "filename": file_info["filename"]
+        }]
+    )
+    
+    return result
+```
+
+---
+
 ### Document Operations
 
 #### Get Checklist Document
@@ -342,9 +472,18 @@ result = client.delete_checklist_document("doc-123")
       show_source: false
       heading_level: 4
 
+!!! warning "Document Upload Approaches"
+
+    There are two ways to upload documents to checklist items:
+    
+    1. **Direct Upload** (this method) - Use when the transaction doesn't have Dropbox integration
+    2. **Dropbox Upload** (two-step process) - Use when transaction has a `dropboxId`
+    
+    See the [Document Upload Approaches](#document-upload-approaches) section for details.
+
 **Example:**
 ```python
-# With file upload
+# Direct upload approach
 with open("contract.pdf", "rb") as file:
     result = client.add_document_to_checklist_item(
         checklist_item_id="item-123",
@@ -355,14 +494,9 @@ with open("contract.pdf", "rb") as file:
         file=file
     )
 
-# Without file (metadata only)
-result = client.add_document_to_checklist_item(
-    checklist_item_id="item-123",
-    name="External Document",
-    description="Document stored externally",
-    uploader_id="user-456",
-    transaction_id="txn-789"
-)
+# Note: This may fail with 403 if:
+# - User is not a participant on the transaction
+# - Transaction uses Dropbox storage instead
 ```
 
 #### Add Document Version

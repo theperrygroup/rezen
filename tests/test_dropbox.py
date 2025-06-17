@@ -10,8 +10,8 @@ from rezen.exceptions import (
     AuthenticationError,
     NetworkError,
     NotFoundError,
-    ValidationError,
     ServerError,
+    ValidationError,
 )
 
 
@@ -349,7 +349,7 @@ class TestDropboxClient:
 
         agent_id = "550e8400-e29b-41d4-a716-446655440000"
         special_path = "/Transactions/John & Jane's Deal #123 (2024)"
-        
+
         result = dropbox_client.create_folder(
             agent_id=agent_id,
             path=special_path,
@@ -382,14 +382,16 @@ class TestDropboxClient:
         )
         assert len(result) == 2
 
-    def test_save_token_with_whitespace_code(self, dropbox_client: DropboxClient) -> None:
+    def test_save_token_with_whitespace_code(
+        self, dropbox_client: DropboxClient
+    ) -> None:
         """Test save_token with whitespace-only code."""
         with pytest.raises(ValidationError) as exc_info:
             dropbox_client.save_token("   ")
 
         assert "Authorization code is required" in str(exc_info.value)
 
-    @patch("rezen.dropbox.DropboxClient.post") 
+    @patch("rezen.dropbox.DropboxClient.post")
     def test_upload_file_server_error(
         self, mock_post: Mock, dropbox_client: DropboxClient
     ) -> None:
@@ -405,4 +407,3 @@ class TestDropboxClient:
                 file=mock_file,
                 path="/test.pdf",
             )
- 

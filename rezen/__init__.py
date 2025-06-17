@@ -27,59 +27,66 @@ from .exceptions import (
 )
 from .mfa import MfaClient
 from .models import (
-    # Core data models
     Address,
     Agent,
     AgentParticipantInfo,
-    AgentStatus as ModelAgentStatus,
+)
+from .models import (
+    AgentStatus as ModelAgentStatus,  # Core data models; Request/Response models; Enums
+)
+from .models import (
     ApiKeyResponse,
     ApiResponse,
     ChecklistItem,
+    ChecklistItemStatus,
     ChecklistLabel,
     Commission,
-    Country as ModelCountry,
+)
+from .models import Country as ModelCountry
+from .models import (
+    DayOfWeek,
+    DealType,
     DirectoryEntry,
+    EnableMfaRequest,
     ErrorResponse,
+    FeeType,
+    GenerateApiKeyRequest,
+    InvitationStatus,
+    JwtAuthenticationResponse,
+    LoginRequest,
+    MfaVerificationRequest,
     Money,
     PagedResponse,
+    ParticipantRole,
+    PasswordUpdateRequest,
     Person,
-    StateOrProvince as ModelStateOrProvince,
+    PropertyType,
+    RepresentationType,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+    RevokeApiKeyRequest,
+)
+from .models import StateOrProvince as ModelStateOrProvince
+from .models import (
     Team,
     TeamAgent,
     TeamConfig,
     TeamInvitation,
+)
+from .models import TeamStatus as ModelTeamStatus
+from .models import TeamType as ModelTeamType
+from .models import (
     Transaction,
-    Vendor,
-    # Request/Response models
-    EnableMfaRequest,
-    GenerateApiKeyRequest,
-    JwtAuthenticationResponse,
-    LoginRequest,
-    MfaVerificationRequest,
-    PasswordUpdateRequest,
-    ResetPasswordRequest,
-    ResetPasswordResponse,
-    RevokeApiKeyRequest,
     UpdateEmailRequest,
     UpdateExistingPasswordRequest,
-    # Enums
-    ChecklistItemStatus,
-    DayOfWeek,
-    DealType,
-    FeeType,
-    InvitationStatus,
-    ParticipantRole,
-    PropertyType,
-    RepresentationType,
-    TeamStatus as ModelTeamStatus,
-    TeamType as ModelTeamType,
+    Vendor,
 )
 from .teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .users import UsersClient
 
-__version__ = "2.2.5"
+__version__ = "2.2.6"
 __all__ = [
     # Client classes
     "RezenClient",

@@ -178,4 +178,3 @@ class DropboxClient(BaseClient):
         endpoint = f"dropbox/{agent_id}/folders"
         data = {"path": path}
         return self.post(endpoint, json_data=data)
- 

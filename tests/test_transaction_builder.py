@@ -148,44 +148,43 @@ class TestTransactionBuilderClient:
             closing_date="2024-07-16",
             earnest_money=10000,
             down_payment=100000,
-            loan_amount=400000
+            loan_amount=400000,
         )
-        
+
         # Verify required fields
         assert result["dealType"] == "SALE"
         assert result["propertyType"] == "RESIDENTIAL"
         assert result["representationType"] == "BUYER"
         assert result["salePrice"]["amount"] == 500000
         assert result["salePrice"]["currency"] == "USD"
-        
+
         # Verify commission objects have negativeOrEmpty field
         assert result["listingCommission"]["commissionPercent"] == 2.5
         assert result["listingCommission"]["percentEnabled"] is True
         assert result["listingCommission"]["negativeOrEmpty"] is False
-        
+
         assert result["saleCommission"]["commissionPercent"] == 2.5
         assert result["saleCommission"]["percentEnabled"] is True
         assert result["saleCommission"]["negativeOrEmpty"] is False
-        
+
         # Verify optional fields
         assert result["acceptanceDate"] == "2024-06-16"
         assert result["closingDate"] == "2024-07-16"
         assert result["earnestMoney"] == 10000
         assert result["downPayment"] == 100000
         assert result["loanAmount"] == 400000
-        
+
         # Test with minimal parameters (defaults)
         result_minimal = self.client.prepare_price_and_date_data(
-            sale_price=300000,
-            representation_type="SELLER"
+            sale_price=300000, representation_type="SELLER"
         )
-        
+
         # Verify defaults
         assert result_minimal["dealType"] == "SALE"
         assert result_minimal["propertyType"] == "RESIDENTIAL"
         assert result_minimal["listingCommission"]["commissionPercent"] == 3.0
         assert result_minimal["saleCommission"]["commissionPercent"] == 3.0
-        
+
         # Verify optional fields are not included when not provided
         assert "acceptanceDate" not in result_minimal
         assert "closingDate" not in result_minimal

@@ -11,7 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from rezen import RezenClient
-from rezen.exceptions import ValidationError, NotFoundError
+from rezen.exceptions import NotFoundError, ValidationError
 
 # Load environment variables
 load_dotenv()

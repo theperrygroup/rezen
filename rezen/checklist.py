@@ -33,6 +33,26 @@ class ChecklistClient(BaseClient):
     - Document upload and management
     - Checklist progress tracking
     - Batch operations
+
+    Document Upload Approaches:
+        There are two ways to upload documents to checklist items:
+
+        1. Direct Upload (using add_document_to_checklist_item):
+           - Use when the transaction doesn't have Dropbox integration
+           - Uploads directly to the checklist item
+           - Requires: name, description, uploader_id, transaction_id, file
+           - May fail with 403 if user is not a participant on the transaction
+
+        2. Dropbox Upload (two-step process):
+           - Use when transaction has a dropboxId
+           - Step 1: Upload to transaction's Dropbox storage
+             POST https://dropbox.therealbrokerage.com/api/v1/dropboxes/{dropboxId}/files
+           - Step 2: Link the uploaded file to the checklist item
+             POST /checklists/checklist-items/{checklistItemId}/file-references
+           - See examples/upload_to_checklist_via_dropbox.py for implementation
+
+        Note: The upload approach depends on the transaction configuration.
+        Check if transaction has 'dropboxId' field to determine which method to use.
     """
 
     def __init__(
@@ -220,6 +240,10 @@ class ChecklistClient(BaseClient):
         """
         Add a new document to the given checklist item ID.
 
+        Note: This method uploads directly to the checklist item. If the transaction
+        uses Dropbox storage (has a dropboxId), you may need to use the two-step
+        Dropbox upload approach instead. See examples/upload_to_checklist_via_dropbox.py
+
         Args:
             checklist_item_id: The checklist item ID (must be valid UUID)
             name: Document name (required)
@@ -233,7 +257,7 @@ class ChecklistClient(BaseClient):
 
         Raises:
             ValidationError: If required parameters are missing or invalid format
-            RezenError: If the API request fails
+            RezenError: If the API request fails (403 if user not a participant)
 
         Example:
             >>> with open('document.pdf', 'rb') as f:
@@ -469,6 +493,43 @@ class ChecklistClient(BaseClient):
         """
         endpoint = f"checklists/checklist-documents/versions/{version_id}/download"
         return self.get(endpoint)
+
+    def link_file_to_checklist_item(
+        self, checklist_item_id: str, file_references: List[Dict[str, str]]
+    ) -> Dict[str, Any]:
+        """
+        Link files uploaded to Dropbox to a checklist item.
+
+        This is the second step of the Dropbox upload approach. After uploading
+        files to the transaction's Dropbox, use this method to link them to
+        the checklist item.
+
+        Args:
+            checklist_item_id: The checklist item ID to link files to
+            file_references: List of file references, each containing:
+                - fileId: The ID returned from Dropbox upload
+                - filename: The filename for display
+
+        Returns:
+            Dict containing the API response
+
+        Raises:
+            RezenError: If the API request fails
+
+        Example:
+            >>> # After uploading to Dropbox and getting file_id
+            >>> references = [{
+            ...     "fileId": "4bd8d903-fda2-42ee-ba3e-8aa953b7c796",
+            ...     "filename": "MLS_Sheet.pdf"
+            >>> }]
+            >>> result = client.checklist.link_file_to_checklist_item(
+            ...     checklist_item_id="b0bce9b2-dfe9-4668-a1ae-7841a8929f3a",
+            ...     file_references=references
+            ... )
+        """
+        endpoint = f"checklists/checklist-items/{checklist_item_id}/file-references"
+        data = {"references": file_references}
+        return self.post(endpoint, json_data=data)
 
     # Legacy methods for backward compatibility
     def post_document_to_checklist(

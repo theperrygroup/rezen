@@ -9,6 +9,7 @@ Common issues, solutions, and debugging techniques for the ReZEN Python API clie
 - [API Errors](#api-errors)
 - [Data Validation Issues](#data-validation-issues)
 - [Performance Problems](#performance-problems)
+- [Checklist Document Upload Issues](#checklist-document-upload-issues)
 - [Common Error Messages](#common-error-messages)
 - [Debugging Techniques](#debugging-techniques)
 - [Environment Issues](#environment-issues)
@@ -497,6 +498,229 @@ for team in process_teams_in_batches(client):
 
     if processed_count % 100 == 0:
         print(f"Processed {processed_count} teams")
+```
+
+---
+
+## Checklist Document Upload Issues
+
+### ERR_CHECKLIST_001: 403 Forbidden on Document Upload
+
+**Message**: `Document upload failed: Bad request: Invalid request` or `403 Forbidden`
+
+**Symptoms:**
+- Direct checklist upload fails with 403 error
+- User is not a participant on the transaction
+- Transaction uses Dropbox storage instead of direct upload
+
+**Diagnosis:**
+
+```python
+from rezen import RezenClient
+
+def diagnose_upload_issue(transaction_id: str):
+    """Diagnose why document upload is failing."""
+    client = RezenClient()
+    
+    # 1. Check if transaction has Dropbox
+    transaction = client.transactions.get_transaction(transaction_id)
+    dropbox_id = transaction.get("dropboxId")
+    
+    if dropbox_id:
+        print(f"✅ Transaction has Dropbox ID: {dropbox_id}")
+        print("   → Use Dropbox upload approach (two-step process)")
+    else:
+        print("❌ No Dropbox ID found")
+        print("   → Use direct checklist upload")
+    
+    # 2. Check if user is a participant
+    user = client.users.get_current_user()
+    user_id = user["id"]
+    
+    agents_info = transaction.get("agentsInfo", {})
+    owner_agents = agents_info.get("ownerAgent", [])
+    co_agents = agents_info.get("coAgent", [])
+    
+    is_participant = False
+    for agent in owner_agents + co_agents:
+        if agent.get("agentId") == user_id:
+            is_participant = True
+            break
+    
+    if is_participant:
+        print(f"✅ User {user_id} is a participant")
+    else:
+        print(f"❌ User {user_id} is NOT a participant")
+        print("   → Cannot upload documents without being on the transaction")
+    
+    return dropbox_id, is_participant
+```
+
+**Solution 1: Use Dropbox Upload (if transaction has dropboxId)**
+
+```python
+import requests
+
+def upload_via_dropbox(transaction_id: str, checklist_item_id: str, file_path: str):
+    """Upload document using Dropbox approach."""
+    client = RezenClient()
+    
+    # Get transaction details
+    transaction = client.transactions.get_transaction(transaction_id)
+    dropbox_id = transaction["dropboxId"]
+    
+    # Get user info
+    user = client.users.get_current_user()
+    user_id = user["id"]
+    
+    # Step 1: Upload to Dropbox
+    api_key = client.transactions.api_key  # Get API key from sub-client
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    with open(file_path, "rb") as file:
+        files = {"file": (os.path.basename(file_path), file, "application/pdf")}
+        data = {"uploadedBy": user_id}
+        
+        response = requests.post(
+            f"https://dropbox.therealbrokerage.com/api/v1/dropboxes/{dropbox_id}/files",
+            headers=headers,
+            files=files,
+            data=data
+        )
+        
+        if response.status_code not in [200, 201]:
+            raise Exception(f"Dropbox upload failed: {response.status_code}")
+        
+        file_info = response.json()
+    
+    # Step 2: Link to checklist item
+    result = client.checklist.link_file_to_checklist_item(
+        checklist_item_id=checklist_item_id,
+        file_references=[{
+            "fileId": file_info["id"],
+            "filename": file_info["filename"]
+        }]
+    )
+    
+    print(f"✅ Document uploaded and linked successfully!")
+    return result
+```
+
+**Solution 2: Add User as Participant (if possible)**
+
+```python
+def add_user_to_transaction_builder(transaction_id: str):
+    """Try to add current user to transaction (if it's still in builder)."""
+    client = RezenClient()
+    
+    try:
+        # Check if it's a transaction builder
+        builder = client.transaction_builder.get_transaction_builder(transaction_id)
+        
+        # Add current user as co-agent
+        user = client.users.get_current_user()
+        co_agent_info = {
+            "agentId": user["id"],
+            "role": "REAL",
+            "receivesInvoice": False
+        }
+        
+        result = client.transaction_builder.add_co_agent(transaction_id, co_agent_info)
+        print("✅ Added as co-agent to transaction")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Cannot add to transaction: {e}")
+        return False
+```
+
+### ERR_CHECKLIST_002: Invalid File Format
+
+**Message**: `ValidationError: File is required for document upload`
+
+**Common Causes:**
+
+```python
+# ❌ Wrong: File not opened in binary mode
+with open("document.pdf", "r") as file:  # Text mode
+    client.checklist.add_document_to_checklist_item(...)
+
+# ✅ Correct: File opened in binary mode
+with open("document.pdf", "rb") as file:  # Binary mode
+    client.checklist.add_document_to_checklist_item(
+        checklist_item_id="item-123",
+        name="Document Name",
+        description="Document Description",
+        uploader_id="user-id",
+        transaction_id="tx-id",
+        file=file
+    )
+```
+
+### ERR_CHECKLIST_003: Missing Required Parameters
+
+**Message**: `ValidationError: Document name is required and cannot be empty`
+
+**Solution:**
+
+```python
+# Validate all required fields before upload
+def validate_upload_params(name, description, uploader_id, transaction_id):
+    """Validate all required parameters for document upload."""
+    errors = []
+    
+    if not name or not name.strip():
+        errors.append("Document name is required")
+    
+    if not description or not description.strip():
+        errors.append("Document description is required")
+    
+    if not uploader_id:
+        errors.append("Uploader ID is required")
+    
+    if not transaction_id:
+        errors.append("Transaction ID is required")
+    
+    if errors:
+        raise ValueError(f"Validation errors: {', '.join(errors)}")
+    
+    return True
+
+# Usage
+try:
+    validate_upload_params(
+        name="MLS Sheet",
+        description="Property listing information",
+        uploader_id=user_id,
+        transaction_id=transaction_id
+    )
+    
+    # Proceed with upload
+    with open("mls_sheet.pdf", "rb") as file:
+        result = client.checklist.add_document_to_checklist_item(...)
+        
+except ValueError as e:
+    print(f"❌ Validation failed: {e}")
+```
+
+### Choosing the Right Upload Method
+
+```python
+def choose_upload_method(transaction_id: str):
+    """Determine which upload method to use."""
+    client = RezenClient()
+    
+    transaction = client.transactions.get_transaction(transaction_id)
+    
+    if transaction.get("dropboxId"):
+        print("📁 Use Dropbox upload method (two-step process)")
+        print(f"   Dropbox ID: {transaction['dropboxId']}")
+        print("   See: examples/upload_to_checklist_via_dropbox.py")
+        return "dropbox"
+    else:
+        print("📤 Use direct checklist upload method")
+        print("   Call: client.checklist.add_document_to_checklist_item()")
+        return "direct"
 ```
 
 ---

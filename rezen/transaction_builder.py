@@ -226,30 +226,27 @@ class TransactionBuilderClient(BaseClient):
             # - dealType: "SALE" (not "COMPENSATING")
             # - propertyType: "RESIDENTIAL"
             # - Both commissions with negativeOrEmpty: false
-            
+
             result = client.update_price_and_date_info(transaction_id, price_data)
             ```
         """
-        data = {
+        data: Dict[str, Any] = {
             "dealType": deal_type,
             "propertyType": property_type,
-            "salePrice": {
-                "amount": sale_price,
-                "currency": "USD"
-            },
+            "salePrice": {"amount": sale_price, "currency": "USD"},
             "representationType": representation_type,
             "listingCommission": {
                 "commissionPercent": listing_commission_percent,
                 "percentEnabled": True,
-                "negativeOrEmpty": False
+                "negativeOrEmpty": False,
             },
             "saleCommission": {
                 "commissionPercent": sale_commission_percent,
                 "percentEnabled": True,
-                "negativeOrEmpty": False
-            }
+                "negativeOrEmpty": False,
+            },
         }
-        
+
         # Add optional fields if provided
         if acceptance_date:
             data["acceptanceDate"] = acceptance_date
@@ -261,7 +258,7 @@ class TransactionBuilderClient(BaseClient):
             data["downPayment"] = down_payment
         if loan_amount is not None:
             data["loanAmount"] = loan_amount
-            
+
         return data
 
     def update_price_and_date_info(
@@ -417,10 +414,12 @@ class TransactionBuilderClient(BaseClient):
                 raise InvalidFieldNameError(
                     snake, camel, "Use camelCase for date fields."
                 )
-                
+
         # Ensure commission objects have negativeOrEmpty field
         for commission_field in ["listingCommission", "saleCommission"]:
-            if commission_field in price_date_info and isinstance(price_date_info[commission_field], dict):
+            if commission_field in price_date_info and isinstance(
+                price_date_info[commission_field], dict
+            ):
                 if "negativeOrEmpty" not in price_date_info[commission_field]:
                     price_date_info[commission_field]["negativeOrEmpty"] = False
 
@@ -740,7 +739,7 @@ class TransactionBuilderClient(BaseClient):
         """Update commission splits information.
 
         ⚠️ CRITICAL: Commission splits require PARTICIPANT IDs, not AGENT IDs! ⚠️
-        
+
         After adding agents (owner agent, co-agents) to the transaction, each agent gets
         a PARTICIPANT ID. You must use these participant IDs for commission splits.
 
@@ -762,21 +761,21 @@ class TransactionBuilderClient(BaseClient):
             ```python
             # Step 1: Get the transaction to find participant IDs
             transaction = client.transaction_builder.get_transaction_builder(transaction_id)
-            
+
             # Step 2: Extract participant IDs from agents
             owner_participant_id = None
             co_agent_participant_id = None
-            
+
             # From owner agents
             for agent in transaction["agentsInfo"]["ownerAgent"]:
                 if agent["agentId"] == "your-agent-uuid":
                     owner_participant_id = agent["id"]  # This is the participant ID!
-            
-            # From co-agents  
+
+            # From co-agents
             for agent in transaction["agentsInfo"]["coAgents"]:
                 if agent["agentId"] == "co-agent-uuid":
                     co_agent_participant_id = agent["id"]  # This is the participant ID!
-            
+
             # Step 3: Create commission splits using PARTICIPANT IDs
             commission_splits = [
                 {
@@ -796,7 +795,7 @@ class TransactionBuilderClient(BaseClient):
                     }
                 }
             ]
-            
+
             # Step 4: Submit commission splits
             client.update_commission_splits(transaction_id, commission_splits)
             ```
@@ -1318,7 +1317,9 @@ class TransactionBuilderClient(BaseClient):
         return self.get(endpoint)
 
     # POST endpoints
-    def create_transaction_builder(self, builder_type: str = "TRANSACTION") -> Dict[str, Any]:
+    def create_transaction_builder(
+        self, builder_type: str = "TRANSACTION"
+    ) -> Dict[str, Any]:
         """Create empty transaction builder.
 
         This is the starting point for creating a new transaction. After creation,
@@ -1412,7 +1413,7 @@ class TransactionBuilderClient(BaseClient):
         endpoint = "transaction-builder"
         params = {"type": builder_type}
         response = self._request("POST", endpoint, params=params)
-        
+
         # Ensure consistent response format
         # The API returns just the ID string, so we wrap it
         if isinstance(response, dict):
@@ -1422,7 +1423,7 @@ class TransactionBuilderClient(BaseClient):
             # If dict with message, use message as ID
             elif "message" in response:
                 return {"id": str(response["message"])}
-        
+
         # If string response, wrap in dict
         return {"id": str(response)}
 
@@ -1478,12 +1479,12 @@ class TransactionBuilderClient(BaseClient):
         """Submit a transaction builder to create a transaction.
 
         ⚠️ CRITICAL REQUIREMENT: Commission splits MUST be populated before submission! ⚠️
-        
+
         The API will reject submission with error "commissionSplitsInfo cannot be empty"
         if commission splits are not properly configured.
 
         🔄 COMPLETE SUBMISSION WORKFLOW:
-        
+
         1. Create transaction builder
         2. Add location info (street, city, state, zip, county, yearBuilt, mlsNumber)
         3. Add price/date info with BOTH commissions and required fields:
@@ -1501,17 +1502,17 @@ class TransactionBuilderClient(BaseClient):
         WORKING EXAMPLE:
             ```python
             # After all setup steps...
-            
+
             # Get participant IDs
             transaction = client.transaction_builder.get_transaction_builder(transaction_id)
-            
+
             # Find participant IDs from agents
             owner_participant_id = None
             for agent in transaction["agentsInfo"]["ownerAgent"]:
                 if agent["agentId"] == current_user_id:
                     owner_participant_id = agent["id"]
                     break
-            
+
             # Add commission splits (REQUIRED!)
             commission_splits = [{
                 "participantId": owner_participant_id,
@@ -1524,7 +1525,7 @@ class TransactionBuilderClient(BaseClient):
             client.transaction_builder.update_commission_splits(
                 transaction_id, commission_splits
             )
-            
+
             # Now submit
             result = client.transaction_builder.submit_transaction(transaction_id)
             ```
@@ -2298,14 +2299,14 @@ class TransactionBuilderClient(BaseClient):
 
     def create_complete_transaction_example(self) -> str:
         """Returns a complete working example of creating and submitting a transaction.
-        
+
         This method provides documentation showing the EXACT workflow that has been
         proven to work in production based on real-world usage.
-        
+
         Returns:
             str: Complete working example code
         """
-        return '''
+        return """
         # COMPLETE WORKING TRANSACTION SUBMISSION EXAMPLE
         # Based on production-proven workflow
         
@@ -2414,4 +2415,4 @@ class TransactionBuilderClient(BaseClient):
         
         # The transaction is now created!
         # result contains the preview data of the submitted transaction
-        '''
+        """
