@@ -75,6 +75,14 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     [:octicons-arrow-right-24: Documents API](documents.md)
 
+-   ☁️ **Dropbox**
+
+    ---
+
+    Integrate with Dropbox for file storage and management
+
+    [:octicons-arrow-right-24: Dropbox API](dropbox.md)
+
 </div>
 
 ---
@@ -91,6 +99,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 | Directory | ✅ **Available** | 16 endpoints | Complete |
 | Checklist | ✅ **Available** | 9 endpoints | Complete |
 | Documents | ✅ **Available** | 13 endpoints | Complete |
+| Dropbox | ✅ **Available** | 5 endpoints | Complete |
 
 ---
 
@@ -112,6 +121,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
     - **Directory**: Standalone directory services
     - **Checklist**: Transaction checklists and item management
     - **Documents**: Document uploads and digital signatures
+    - **Dropbox**: Dropbox integration for file management
 
 ### Common Patterns
 
@@ -127,6 +137,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
     teams = client.teams.search_teams(status="ACTIVE")
     agents = client.agents.search_active_agents(name="John")
     checklist = client.checklist.get_checklist("checklist-123")
+    dropbox_folders = client.dropbox.get_folders("agent-id")
     ```
 
 === "Error Handling"
@@ -205,6 +216,11 @@ Handle documents and digital workflows:
 - **[Documents](documents.md)** - Digital signatures and document management
 - **[Checklist](checklist.md)** - Transaction checklists and compliance tracking
 
+### **☁️ Cloud Storage**
+Integrate with cloud storage providers:
+
+- **[Dropbox](dropbox.md)** - Dropbox integration for transaction documents
+
 ---
 
 ## 🎯 Key Features
@@ -259,3 +275,4 @@ Looking for a specific method? Use the search function above or browse by catego
 - **Contact lookup** → [Directory API](directory.md)
 - **Document signatures** → [Documents API](documents.md)
 - **Checklist tracking** → [Checklist API](checklist.md)
+- **Cloud file storage** → [Dropbox API](dropbox.md)

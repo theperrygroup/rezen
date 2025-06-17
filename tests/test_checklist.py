@@ -260,6 +260,8 @@ class TestChecklistClient:
     ) -> None:
         """Test adding document to checklist item with file upload."""
         checklist_item_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        uploader_id = "123e4567-e89b-12d3-a456-426614174000"
+        transaction_id = "987fcdeb-51d2-4321-b789-123456789012"
         file_content = b"test file content"
         file_obj = io.BytesIO(file_content)
 
@@ -284,8 +286,8 @@ class TestChecklistClient:
                 checklist_item_id=checklist_item_id,
                 name="Test Document",
                 description="Test document",
-                uploader_id="user-123",
-                transaction_id="txn-123",
+                uploader_id=uploader_id,
+                transaction_id=transaction_id,
                 file=file_obj,
             )
 
@@ -295,47 +297,50 @@ class TestChecklistClient:
                 data={
                     "name": "Test Document",
                     "description": "Test document",
-                    "uploaderId": "user-123",
-                    "transactionId": "txn-123",
+                    "uploaderId": uploader_id,
+                    "transactionId": transaction_id,
                 },
                 files={"file": file_obj},
             )
             assert result == expected_response
 
-    @responses.activate
-    def test_add_document_to_checklist_item_without_file(
+    def test_add_document_to_checklist_item_validation_errors(
         self, client: ChecklistClient
     ) -> None:
-        """Test adding document to checklist item without file upload."""
+        """Test validation errors for add_document_to_checklist_item."""
         checklist_item_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-        expected_response = {
-            "id": "doc-123",
-            "name": "Test Document",
-            "description": "Test document",
-        }
+        uploader_id = "123e4567-e89b-12d3-a456-426614174000"
+        transaction_id = "987fcdeb-51d2-4321-b789-123456789012"
+        file_obj = io.BytesIO(b"test content")
 
-        responses.add(
-            responses.POST,
-            f"{client.base_url}/checklists/checklist-items/{checklist_item_id}/documents",
-            json=expected_response,
-            status=200,
-        )
+        # Test empty name
+        with pytest.raises(ValidationError, match="Document name is required"):
+            client.add_document_to_checklist_item(
+                checklist_item_id=checklist_item_id,
+                name="",
+                description="Test document",
+                uploader_id=uploader_id,
+                transaction_id=transaction_id,
+                file=file_obj,
+            )
 
-        result = client.add_document_to_checklist_item(
-            checklist_item_id=checklist_item_id,
-            name="Test Document",
-            description="Test document",
-            uploader_id="user-123",
-            transaction_id="txn-123",
-        )
-
-        assert len(responses.calls) == 1
-        assert result == expected_response
+        # Test invalid UUID format
+        with pytest.raises(ValidationError, match="Invalid parameter format"):
+            client.add_document_to_checklist_item(
+                checklist_item_id=checklist_item_id,
+                name="Test Document",
+                description="Test document",
+                uploader_id="invalid-uuid",
+                transaction_id=transaction_id,
+                file=file_obj,
+            )
 
     @responses.activate
     def test_add_document_version_with_file(self, client: ChecklistClient) -> None:
         """Test adding document version with file upload."""
         checklist_document_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        uploader_id = "123e4567-e89b-12d3-a456-426614174000"
+        transaction_id = "987fcdeb-51d2-4321-b789-123456789012"
         file_content = b"test file content"
         file_obj = io.BytesIO(file_content)
 
@@ -361,8 +366,8 @@ class TestChecklistClient:
                 checklist_document_id=checklist_document_id,
                 name="Version 2",
                 description="Second version",
-                uploader_id="user-123",
-                transaction_id="txn-123",
+                uploader_id=uploader_id,
+                transaction_id=transaction_id,
                 file=file_obj,
             )
 
@@ -372,8 +377,8 @@ class TestChecklistClient:
                 data={
                     "name": "Version 2",
                     "description": "Second version",
-                    "uploaderId": "user-123",
-                    "transactionId": "txn-123",
+                    "uploaderId": uploader_id,
+                    "transactionId": transaction_id,
                 },
                 files={"file": file_obj},
             )
@@ -489,12 +494,15 @@ class TestChecklistClient:
     def test_post_document_to_checklist_legacy(self, client: ChecklistClient) -> None:
         """Test legacy post_document_to_checklist method."""
         checklist_item_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        uploader_id = "123e4567-e89b-12d3-a456-426614174000"
+        transaction_id = "987fcdeb-51d2-4321-b789-123456789012"
         data = {
             "name": "Legacy Document",
             "description": "Legacy description",
-            "uploaderId": "user-123",
-            "transactionId": "txn-123",
+            "uploaderId": uploader_id,
+            "transactionId": transaction_id,
         }
+        file_obj = io.BytesIO(b"legacy test content")
 
         expected_response = {"id": "doc-123", "name": "Legacy Document"}
 
@@ -505,10 +513,22 @@ class TestChecklistClient:
             status=200,
         )
 
-        result = client.post_document_to_checklist(checklist_item_id, data)
+        with patch.object(
+            client, "add_document_to_checklist_item", return_value=expected_response
+        ) as mock_method:
+            result = client.post_document_to_checklist(
+                checklist_item_id, data, file_obj
+            )
 
-        assert len(responses.calls) == 1
-        assert result == expected_response
+            mock_method.assert_called_once_with(
+                checklist_item_id=checklist_item_id,
+                name="Legacy Document",
+                description="Legacy description",
+                uploader_id=uploader_id,
+                transaction_id=transaction_id,
+                file=file_obj,
+            )
+            assert result == expected_response
 
     @responses.activate
     def test_mark_checklist_item_complete_legacy(self, client: ChecklistClient) -> None:

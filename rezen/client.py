@@ -5,7 +5,10 @@ from typing import Optional
 from .agents import AgentsClient
 from .api_keys import ApiKeysClient
 from .auth import AuthClient
+from .checklist import ChecklistClient
 from .directory import DirectoryClient
+from .documents import DocumentClient
+from .dropbox import DropboxClient
 from .mfa import MfaClient
 from .teams import TeamsClient
 from .transaction_builder import TransactionBuilderClient
@@ -63,6 +66,27 @@ class RezenClient:
         vendors = client.directory.search_vendors(
             page_number=0, page_size=10, is_archived=False
         )
+
+        # Use checklist endpoints to upload documents
+        with open('document.pdf', 'rb') as f:
+            result = client.checklist.add_document_to_checklist_item(
+                checklist_item_id='550e8400-e29b-41d4-a716-446655440000',
+                name='Purchase Agreement',
+                description='Signed purchase agreement',
+                uploader_id='123e4567-e89b-12d3-a456-426614174000',
+                transaction_id='987fcdeb-51d2-4321-b789-123456789012',
+                file=f
+            )
+
+        # Use document endpoints
+        doc_response = client.documents.post_document(
+            data={"title": "Contract"},
+            file=open('contract.pdf', 'rb')
+        )
+
+        # Use Dropbox endpoints
+        auth_url = client.dropbox.get_auth_url()
+        folders = client.dropbox.get_folders(agent_id="agent-uuid")
         ```
     """
 
@@ -86,6 +110,9 @@ class RezenClient:
         self._agents: Optional[AgentsClient] = None
         self._directory: Optional[DirectoryClient] = None
         self._users: Optional[UsersClient] = None
+        self._checklist: Optional[ChecklistClient] = None
+        self._documents: Optional[DocumentClient] = None
+        self._dropbox: Optional[DropboxClient] = None
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:
@@ -196,3 +223,40 @@ class RezenClient:
             # Users uses yenta API, so don't pass custom base_url
             self._users = UsersClient(api_key=self._api_key)
         return self._users
+
+    @property
+    def checklist(self) -> ChecklistClient:
+        """Access to checklist endpoints.
+
+        Returns:
+            ChecklistClient instance
+        """
+        if self._checklist is None:
+            # Checklist uses sherlock API, so don't pass custom base_url
+            self._checklist = ChecklistClient(api_key=self._api_key)
+        return self._checklist
+
+    @property
+    def documents(self) -> DocumentClient:
+        """Access to document/signature endpoints.
+
+        Returns:
+            DocumentClient instance
+        """
+        if self._documents is None:
+            self._documents = DocumentClient(
+                api_key=self._api_key, base_url=self._base_url
+            )
+        return self._documents
+
+    @property
+    def dropbox(self) -> DropboxClient:
+        """Access to Dropbox integration endpoints.
+
+        Returns:
+            DropboxClient instance
+        """
+        if self._dropbox is None:
+            # Dropbox uses sherlock API, so don't pass custom base_url
+            self._dropbox = DropboxClient(api_key=self._api_key)
+        return self._dropbox

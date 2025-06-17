@@ -134,6 +134,65 @@ class TestTransactionBuilderClient:
 
         assert result == expected_response
 
+    def test_prepare_price_and_date_data(self) -> None:
+        """Test the prepare_price_and_date_data helper method."""
+        # Test with all parameters
+        result = self.client.prepare_price_and_date_data(
+            sale_price=500000,
+            representation_type="BUYER",
+            listing_commission_percent=2.5,
+            sale_commission_percent=2.5,
+            deal_type="SALE",
+            property_type="RESIDENTIAL",
+            acceptance_date="2024-06-16",
+            closing_date="2024-07-16",
+            earnest_money=10000,
+            down_payment=100000,
+            loan_amount=400000
+        )
+        
+        # Verify required fields
+        assert result["dealType"] == "SALE"
+        assert result["propertyType"] == "RESIDENTIAL"
+        assert result["representationType"] == "BUYER"
+        assert result["salePrice"]["amount"] == 500000
+        assert result["salePrice"]["currency"] == "USD"
+        
+        # Verify commission objects have negativeOrEmpty field
+        assert result["listingCommission"]["commissionPercent"] == 2.5
+        assert result["listingCommission"]["percentEnabled"] is True
+        assert result["listingCommission"]["negativeOrEmpty"] is False
+        
+        assert result["saleCommission"]["commissionPercent"] == 2.5
+        assert result["saleCommission"]["percentEnabled"] is True
+        assert result["saleCommission"]["negativeOrEmpty"] is False
+        
+        # Verify optional fields
+        assert result["acceptanceDate"] == "2024-06-16"
+        assert result["closingDate"] == "2024-07-16"
+        assert result["earnestMoney"] == 10000
+        assert result["downPayment"] == 100000
+        assert result["loanAmount"] == 400000
+        
+        # Test with minimal parameters (defaults)
+        result_minimal = self.client.prepare_price_and_date_data(
+            sale_price=300000,
+            representation_type="SELLER"
+        )
+        
+        # Verify defaults
+        assert result_minimal["dealType"] == "SALE"
+        assert result_minimal["propertyType"] == "RESIDENTIAL"
+        assert result_minimal["listingCommission"]["commissionPercent"] == 3.0
+        assert result_minimal["saleCommission"]["commissionPercent"] == 3.0
+        
+        # Verify optional fields are not included when not provided
+        assert "acceptanceDate" not in result_minimal
+        assert "closingDate" not in result_minimal
+        assert "earnestMoney" not in result_minimal
+        assert "downPayment" not in result_minimal
+        assert "loanAmount" not in result_minimal
+
     @responses.activate
     def test_update_price_and_date_info(self) -> None:
         """Test update_price_and_date_info endpoint."""
@@ -620,9 +679,26 @@ class TestTransactionBuilderClient:
 
         result = self.client.create_transaction_builder("LISTING")
 
-        assert result == "new-builder-123"  # Method extracts ID from response
+        assert result == {"id": "new-builder-123"}  # Method now returns dict format
         request = responses.calls[0].request
         assert "type=LISTING" in request.url
+
+    @responses.activate
+    def test_create_transaction_builder_string_response(self) -> None:
+        """Test create_transaction_builder with string response."""
+        # API sometimes returns just a string ID
+        expected_response = "new-builder-456"
+        responses.add(
+            responses.POST,
+            f"{self.base_url}/transaction-builder",
+            body=expected_response,
+            status=200,
+        )
+
+        result = self.client.create_transaction_builder()
+
+        # Should wrap string response in dict format
+        assert result == {"id": "new-builder-456"}
 
     @responses.activate
     def test_create_builder_from_transaction(self) -> None:

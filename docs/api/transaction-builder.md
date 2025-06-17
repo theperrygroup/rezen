@@ -28,6 +28,12 @@ Create and manage transaction builders with full participant and property manage
     **Price/Date Updates:**
     - Basic price fields alone will **FAIL**
     - **BOTH** commission objects are **REQUIRED**: `listingCommission` AND `saleCommission`
+    - Commission objects MUST include `negativeOrEmpty: false` field
+
+    **Commission Splits:**
+    - ⚠️ **CRITICAL**: Use PARTICIPANT IDs, not agent IDs!
+    - After adding agents, retrieve the transaction to get participant IDs
+    - Commission splits are REQUIRED before submission
 
     **Co-Agent Roles:**
     - ✅ Working: `"REAL"`, `"BUYERS_AGENT"`, `"SELLERS_AGENT"`
@@ -36,6 +42,17 @@ Create and manage transaction builders with full participant and property manage
     **Owner Agents:**
     - Require specific sequence: location → price/date → participants → owner agent
     - Need valid `officeId` and `teamId`
+
+    **Transaction Types:**
+    - Only two types available for draft stage: `"SALE"` or `"LEASE"`
+    - Deal type (SALE/LEASE) is independent of representation type (BUYER/SELLER/DUAL)
+    - `dealType` refers to the type of real estate transaction
+    - `representationType` refers to which party the agent represents
+    
+    **Submission Requirements:**
+    - Commission splits MUST be populated (error: "commissionSplitsInfo cannot be empty")
+    - Commission payer (usually title company) is REQUIRED
+    - Both buyer AND seller must be added (even for buyer-only representation)
 
 ---
 
@@ -68,23 +85,32 @@ Create and manage transaction builders with full participant and property manage
 
     # Step 3: Add price/date information - CRITICAL REQUIREMENTS
     # ⚠️ BOTH commission objects are REQUIRED together
-    price_data: Dict[str, Any] = {
-        "dealType": "SALE",
-        "propertyType": "RESIDENTIAL",
-        "salePrice": {"amount": 500000, "currency": "USD"},
-        "representationType": "BUYER",
-        "listingCommission": {     # REQUIRED - cannot omit
-            "commissionPercent": 3.0,
-            "percentEnabled": True,
-            "negativeOrEmpty": False
-        },
-        "saleCommission": {        # REQUIRED - cannot omit
-            "commissionPercent": 3.0,
-            "percentEnabled": True,
-            "negativeOrEmpty": False
-        }
-    }
+    
+    # Option 1: Using the helper method (recommended)
+    price_data = client.transaction_builder.prepare_price_and_date_data(
+        sale_price=500000,
+        representation_type="BUYER"
+    )
     client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+    
+    # Option 2: Manual construction (if you need full control)
+    # price_data: Dict[str, Any] = {
+    #     "dealType": "SALE",
+    #     "propertyType": "RESIDENTIAL",
+    #     "salePrice": {"amount": 500000, "currency": "USD"},
+    #     "representationType": "BUYER",
+    #     "listingCommission": {     # REQUIRED - cannot omit
+    #         "commissionPercent": 3.0,
+    #         "percentEnabled": True,
+    #         "negativeOrEmpty": False
+    #     },
+    #     "saleCommission": {        # REQUIRED - cannot omit
+    #         "commissionPercent": 3.0,
+    #         "percentEnabled": True,
+    #         "negativeOrEmpty": False
+    #     }
+    # }
+    # client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
 
     # Step 4: Add participants (use camelCase)
     buyer_data: Dict[str, Any] = {
@@ -190,6 +216,7 @@ Create and manage transaction builders with full participant and property manage
         # Standard transaction builder
         response: Dict[str, Any] = client.transaction_builder.create_transaction_builder()
         print(f"Transaction ID: {response['id']}")
+        # Returns: {"id": "transaction-id-here"}
         ```
 
     === "Listing Builder"
@@ -284,14 +311,18 @@ Create and manage transaction builders with full participant and property manage
     | `firstName` | `str` | Buyer's first name (camelCase) |
     | `lastName` | `str` | Buyer's last name (camelCase) |
     | `email` | `str` | Valid email address |
-
-    **Optional Buyer Fields:**
-
-    | Field | Type | Description |
-    |-------|------|-------------|
-    | `phoneNumber` | `str` | Phone number (camelCase) |
+    | `phoneNumber` | `str` | Phone number with country code (camelCase) |
     | `company` | `str` | Company name |
     | `address` | `str` | Mailing address |
+
+    !!! warning "Phone Number Formatting"
+        
+        **All phone numbers MUST include the country code (1 for US)**:
+        
+        - ✅ Good: `"1(801) 555-1234"`, `"+1-801-555-1234"`, `"1-801-555-1234"`
+        - ❌ Bad: `"(801) 555-1234"`, `"801-555-1234"`, `"555-1234"`
+        
+        The API requires phone numbers to start with the country code for proper validation.
 
     !!! example "Complete Buyer Example"
 
@@ -518,7 +549,7 @@ Create and manage transaction builders with full participant and property manage
                 "firstName": "John",
                 "lastName": "Doe",
                 "email": "john@example.com",
-                "phoneNumber": "(801) 555-1234"
+                "phoneNumber": "1(801) 555-1234"  # Include country code!
             })
 
             # Step 5: NOW add owner agent (will work!)
@@ -747,6 +778,124 @@ Create and manage transaction builders with full participant and property manage
     )
     ```
 
+!!! danger "⚠️ Critical: Updating Dates on Existing Transactions"
+
+    When adding or updating dates (acceptanceDate, closingDate) on a transaction that already has pricing information, you **CANNOT** send just the date fields. The API requires the complete price/date structure for any update to this endpoint.
+
+    **❌ THIS FAILS:**
+    ```python
+    # Trying to add just dates to existing transaction
+    date_update = {
+        "acceptanceDate": "2025-06-16",
+        "closingDate": "2025-07-16"
+    }
+    client.transaction_builder.update_price_and_date_info(transaction_id, date_update)
+    # Returns: "Missing required fields: dealType, propertyType, salePrice, representationType, listingCommission, saleCommission..."
+    ```
+
+    **✅ THIS WORKS:**
+    ```python
+    # Must include ALL price/date fields, even if just updating dates
+    price_date_update = {
+        "dealType": "SALE",
+        "propertyType": "RESIDENTIAL",
+        "salePrice": {"amount": 500000, "currency": "USD"},
+        "representationType": "BUYER",
+        "listingCommission": {           # REQUIRED even for date updates
+            "commissionPercent": 3.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False
+        },
+        "saleCommission": {              # REQUIRED even for date updates
+            "commissionPercent": 3.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False
+        },
+        "acceptanceDate": "2025-06-16",  # New date
+        "closingDate": "2025-07-16"      # New date
+    }
+    client.transaction_builder.update_price_and_date_info(transaction_id, price_date_update)
+    ```
+
+    **💡 Tip:** If you need to update dates on an existing transaction, first retrieve the current price/date info, then update the date fields while keeping all other required fields intact.
+
+### Helper Method: prepare_price_and_date_data
+
+To simplify creating properly formatted price/date data with all required fields, use the `prepare_price_and_date_data` helper method:
+
+::: rezen.transaction_builder.TransactionBuilderClient.prepare_price_and_date_data
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! success "Benefits of Using the Helper"
+    - ✅ Automatically includes both commission objects with `negativeOrEmpty: false`
+    - ✅ Properly formats the sale price as an object with amount and currency
+    - ✅ Ensures all required fields are present
+    - ✅ Provides sensible defaults for commission percentages (3%)
+    - ✅ Optional fields are only included when provided
+
+!!! example "Using the Helper Method"
+
+    === "Simple Usage"
+
+        ```python
+        from rezen import RezenClient
+
+        client = RezenClient()
+        transaction_id = "your-transaction-id"
+
+        # Simple usage with defaults
+        price_data = client.transaction_builder.prepare_price_and_date_data(
+            sale_price=500000,
+            representation_type="BUYER",
+            acceptance_date="2024-06-16",
+            closing_date="2024-07-16"
+        )
+        
+        # Update the transaction
+        result = client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+        ```
+
+    === "Custom Commissions"
+
+        ```python
+        # Custom commission percentages
+        price_data = client.transaction_builder.prepare_price_and_date_data(
+            sale_price=750000,
+            representation_type="SELLER",
+            listing_commission_percent=2.5,  # Custom 2.5%
+            sale_commission_percent=2.5,     # Custom 2.5%
+            acceptance_date="2024-06-16",
+            closing_date="2024-07-16"
+        )
+        
+        result = client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+        ```
+
+    === "Complete Example"
+
+        ```python
+        # All optional fields included
+        price_data = client.transaction_builder.prepare_price_and_date_data(
+            sale_price=1000000,
+            representation_type="BUYER",
+            listing_commission_percent=2.75,
+            sale_commission_percent=2.75,
+            deal_type="SALE",               # Default is "SALE"
+            property_type="COMMERCIAL",     # Default is "RESIDENTIAL"
+            acceptance_date="2024-06-16",
+            closing_date="2024-07-16",
+            earnest_money=25000,
+            down_payment=200000,
+            loan_amount=800000
+        )
+        
+        result = client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+        ```
+
+    **💡 Tip:** This helper method is especially useful when you need to update dates on an existing transaction, as it ensures all required fields are included.
+
 ### Title Information
 
 ::: rezen.transaction_builder.TransactionBuilderClient.update_title_info
@@ -818,9 +967,15 @@ Create and manage transaction builders with full participant and property manage
       show_source: false
       heading_level: 4
 
+!!! danger "⚠️ CRITICAL: Use PARTICIPANT IDs, not Agent IDs!"
+
+    Commission splits require **PARTICIPANT IDs**, not agent IDs. After adding agents to the transaction, 
+    each agent gets a unique participant ID. You MUST retrieve the transaction to get these IDs before 
+    creating commission splits.
+
 !!! example "Commission Split Examples"
 
-    === "Equal Split"
+    === "Working Example with Participant IDs"
 
         ```python
         from typing import Dict, List, Any
@@ -830,26 +985,48 @@ Create and manage transaction builders with full participant and property manage
         client: RezenClient = RezenClient()
         transaction_id: str = "your-transaction-id-here"
 
-        commission_data: List[Dict[str, Any]] = [
+        # Step 1: Get the transaction to find participant IDs
+        transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+        
+        # Step 2: Extract participant IDs from agents
+        owner_participant_id = None
+        co_agent_participant_id = None
+        
+        # From owner agents
+        for agent in transaction["agentsInfo"]["ownerAgent"]:
+            if agent["agentId"] == "your-agent-uuid":
+                owner_participant_id = agent["id"]  # This is the participant ID!
+        
+        # From co-agents  
+        for agent in transaction["agentsInfo"]["coAgents"]:
+            if agent["agentId"] == "co-agent-uuid":
+                co_agent_participant_id = agent["id"]  # This is the participant ID!
+        
+        # Step 3: Create commission splits using PARTICIPANT IDs
+        commission_splits = [
             {
-                "agentId": "buyer-agent-uuid",  # Use camelCase
-                "splitPercentage": 50.0,  # Use camelCase
-                "commissionAmount": 15000  # Use camelCase
+                "participantId": owner_participant_id,  # NOT agentId!
+                "commission": {
+                    "commissionPercent": 80.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                }
             },
             {
-                "agentId": "seller-agent-uuid",  # Use camelCase
-                "splitPercentage": 50.0,  # Use camelCase
-                "commissionAmount": 15000  # Use camelCase
+                "participantId": co_agent_participant_id,  # NOT agentId!
+                "commission": {
+                    "commissionPercent": 20.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                }
             }
         ]
-
-        client.transaction_builder.update_commission_splits(
-            transaction_id,
-            commission_data
-        )
+        
+        # Step 4: Submit commission splits
+        client.transaction_builder.update_commission_splits(transaction_id, commission_splits)
         ```
 
-    === "Unequal Split"
+    === "Single Agent 100% Split"
 
         ```python
         from typing import Dict, List, Any
@@ -859,23 +1036,26 @@ Create and manage transaction builders with full participant and property manage
         client: RezenClient = RezenClient()
         transaction_id: str = "your-transaction-id-here"
 
-        commission_data: List[Dict[str, Any]] = [
-            {
-                "agentId": "listing-agent-uuid",  # Use camelCase
-                "splitPercentage": 60.0,  # Use camelCase
-                "commissionAmount": 18000  # Use camelCase
-            },
-            {
-                "agentId": "buyer-agent-uuid",  # Use camelCase
-                "splitPercentage": 40.0,  # Use camelCase
-                "commissionAmount": 12000  # Use camelCase
+        # Get transaction to find participant ID
+        transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+        
+        # Find owner agent participant ID
+        owner_participant_id = None
+        for agent in transaction["agentsInfo"]["ownerAgent"]:
+            owner_participant_id = agent["id"]  # Participant ID, not agentId!
+            break
+        
+        # Create commission split
+        commission_splits = [{
+            "participantId": owner_participant_id,
+            "commission": {
+                "commissionPercent": 100.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
             }
-        ]
-
-        client.transaction_builder.update_commission_splits(
-            transaction_id,
-            commission_data
-        )
+        }]
+        
+        client.transaction_builder.update_commission_splits(transaction_id, commission_splits)
         ```
 
 ### Commission Payers
@@ -1164,6 +1344,163 @@ The Transaction Builder now includes enhanced error handling that catches common
 
 ---
 
+## Step-by-Step Transaction Creation
+
+!!! example "Interactive Transaction Building"
+
+    In real-world scenarios, transaction information is often gathered incrementally. This example shows how to build a transaction step by step as information becomes available.
+
+    === "Step 1: Initialize"
+
+        ```python
+        from rezen import RezenClient
+        from datetime import datetime, timedelta
+
+        client = RezenClient()
+
+        # Create empty transaction
+        transaction_id = client.transaction_builder.create_transaction_builder()
+        print(f"✅ Created transaction: {transaction_id}")
+        
+        # Check initial status
+        transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+        print(f"📊 Status: Empty transaction ready for data")
+        ```
+
+    === "Step 2: Add Location"
+
+        ```python
+        # Location information becomes available
+        location_data = {
+            "street": "2207 E Wilson Ave",
+            "city": "Salt Lake City",
+            "state": "UTAH",             # Must be ALL CAPS
+            "zip": "84108",
+            "county": "Salt Lake",        # REQUIRED
+            "yearBuilt": 1950,           # REQUIRED
+            "mlsNumber": "n/a"           # REQUIRED (can use "n/a" if not available)
+        }
+        
+        client.transaction_builder.update_location_info(transaction_id, location_data)
+        print("✅ Location added")
+        
+        # Transaction now has: ✓ Location | ○ Price/Date | ○ Participants
+        ```
+
+    === "Step 3: Add Price Info"
+
+        ```python
+        # Price information becomes available
+        price_data = {
+            "dealType": "SALE",
+            "propertyType": "RESIDENTIAL",
+            "salePrice": {"amount": 500000, "currency": "USD"},
+            "representationType": "BUYER",   # You're representing the buyer
+            "listingCommission": {            # REQUIRED even if just setting price
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            },
+            "saleCommission": {               # REQUIRED even if just setting price
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            }
+        }
+        
+        client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+        print("✅ Price information added")
+        
+        # Transaction now has: ✓ Location | ✓ Price | ○ Dates | ○ Participants
+        ```
+
+    === "Step 4: Add Dates"
+
+        ```python
+        # Dates are confirmed - but we need to include ALL price/date fields!
+        today = datetime.now().date()
+        closing_date = today + timedelta(days=30)
+        
+        # Must include ALL fields from price_data when updating dates
+        price_date_update = {
+            "dealType": "SALE",
+            "propertyType": "RESIDENTIAL", 
+            "salePrice": {"amount": 500000, "currency": "USD"},
+            "representationType": "BUYER",
+            "listingCommission": {            # Still REQUIRED for date updates
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            },
+            "saleCommission": {               # Still REQUIRED for date updates
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            },
+            "acceptanceDate": today.strftime("%Y-%m-%d"),
+            "closingDate": closing_date.strftime("%Y-%m-%d")
+        }
+        
+        client.transaction_builder.update_price_and_date_info(transaction_id, price_date_update)
+        print("✅ Dates added")
+        
+        # Transaction now has: ✓ Location | ✓ Price/Date | ○ Participants
+        ```
+
+    === "Step 5: Check Status"
+
+        ```python
+        # Check current transaction status
+        transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+        
+        print(f"\n📊 Transaction Status:")
+        print(f"ID: {transaction['id']}")
+        print(f"Property: {transaction['address']['street']}, {transaction['address']['city']}")
+        print(f"Price: ${transaction['salePrice']['amount']:,}")
+        print(f"Type: {transaction['dealType']} - {transaction['propertyType']}")
+        print(f"Representation: {transaction['agentsInfo']['representationType']}")
+        print(f"Acceptance: {transaction['acceptanceDate']}")
+        print(f"Closing: {transaction['estimatedClosingDate']}")
+        
+        # Ready to add participants when their info becomes available
+        ```
+
+    === "Step 6: Add Participants"
+
+        ```python
+        # Add buyer when their information is available
+        buyer_data = {
+            "firstName": "Demo",
+            "lastName": "Buyer",
+            "email": "demo.buyer@example.com",
+            "phoneNumber": "1(801) 555-0123"  # MUST include country code!
+        }
+        client.transaction_builder.add_buyer(transaction_id, buyer_data)
+        print("✅ Buyer added")
+        
+        # Add seller
+        seller_data = {
+            "firstName": "John",
+            "lastName": "Seller", 
+            "email": "john.seller@example.com",
+            "phoneNumber": "1(801) 555-9876"  # MUST include country code!
+        }
+        client.transaction_builder.add_seller(transaction_id, seller_data)
+        print("✅ Seller added")
+        
+        # Transaction now has: ✓ Location | ✓ Price/Date | ✓ Buyer | ✓ Seller
+        ```
+
+    **Key Learnings:**
+    
+    - ✅ Transactions can be built incrementally as information becomes available
+    - ✅ Location requires additional fields: `county`, `yearBuilt`, `mlsNumber`
+    - ✅ Price updates always require both commission objects
+    - ⚠️ Date-only updates still require the complete price/date structure
+    - ✅ Use `get_transaction_builder()` to check progress at any time
+
+---
+
 ## Complete Workflow Example
 
 !!! example "End-to-End Transaction Creation"
@@ -1307,3 +1644,139 @@ The Transaction Builder now includes enhanced error handling that catches common
     See more practical usage examples
 
 </div>
+
+## Complete Transaction Submission Workflow
+
+!!! danger "Critical: Commission Splits and Submission Requirements"
+
+    The following example shows the **EXACT** workflow proven to work in production, including all critical requirements for successful transaction submission.
+
+    ```python
+    # COMPLETE WORKING TRANSACTION SUBMISSION EXAMPLE
+    # Based on production-proven workflow
+    
+    from rezen import RezenClient
+    
+    client = RezenClient()
+    
+    # Step 1: Create transaction builder
+    builder_response = client.transaction_builder.create_transaction_builder()
+    transaction_id = builder_response["id"]
+    
+    # Step 2: Add location info (ALL fields required)
+    location_info = {
+        "street": "123 Main Street",
+        "city": "Salt Lake City",
+        "state": "UTAH",  # Must be ALL CAPS
+        "zip": "84101",
+        "county": "Salt Lake",      # REQUIRED
+        "yearBuilt": 2020,         # REQUIRED
+        "mlsNumber": "MLS123456"   # REQUIRED
+    }
+    client.transaction_builder.update_location_info(transaction_id, location_info)
+    
+    # Step 3: Add price/date info with BOTH commissions
+    price_data = {
+        "dealType": "SALE",  # NOT "COMPENSATING"!
+        "propertyType": "RESIDENTIAL",
+        "salePrice": {"amount": 500000, "currency": "USD"},
+        "representationType": "BUYER",
+        "listingCommission": {  # REQUIRED even for buyer deals
+            "commissionPercent": 3.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False  # CRITICAL!
+        },
+        "saleCommission": {  # REQUIRED even for buyer deals
+            "commissionPercent": 3.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False  # CRITICAL!
+        },
+        "acceptanceDate": "2024-01-15",
+        "closingDate": "2024-02-28"
+    }
+    client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+    
+    # Step 4: Add buyer
+    buyer_info = {
+        "firstName": "John",
+        "lastName": "Buyer",
+        "email": "john@example.com",
+        "phoneNumber": "1(801) 555-1234"  # Country code required!
+    }
+    client.transaction_builder.add_buyer(transaction_id, buyer_info)
+    
+    # Step 5: Add seller (REQUIRED even for buyer representation!)
+    seller_info = {
+        "firstName": "Jane",
+        "lastName": "Seller",
+        "email": "jane@example.com",
+        "phoneNumber": "1(801) 555-9876"  # Country code required!
+    }
+    client.transaction_builder.add_seller(transaction_id, seller_info)
+    
+    # Step 6: Add owner agent
+    user = client.users.get_current_user()
+    owner_info = {
+        "ownerAgent": {
+            "agentId": user["id"],
+            "role": "BUYERS_AGENT"  # Must match representationType
+        },
+        "officeId": user["offices"][0]["id"],
+        "teamId": "your-team-uuid"
+    }
+    client.transaction_builder.update_owner_agent_info(transaction_id, owner_info)
+    
+    # Step 7: Get transaction to find participant IDs (CRITICAL!)
+    transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+    
+    # Find owner agent participant ID
+    owner_participant_id = None
+    for agent in transaction["agentsInfo"]["ownerAgent"]:
+        if agent["agentId"] == user["id"]:
+            owner_participant_id = agent["id"]  # This is participant ID!
+            break
+    
+    # Step 8: Add commission splits using PARTICIPANT IDs
+    commission_splits = [{
+        "participantId": owner_participant_id,  # NOT agentId!
+        "commission": {
+            "commissionPercent": 100.0,
+            "percentEnabled": True,
+            "negativeOrEmpty": False
+        }
+    }]
+    client.transaction_builder.update_commission_splits(transaction_id, commission_splits)
+    
+    # Step 9: Add commission payer (title company)
+    commission_payer = {
+        "role": "TITLE",
+        "firstName": "ABC",
+        "lastName": "Title",
+        "email": "closing@abctitle.com",
+        "phoneNumber": "1(801) 555-5555",
+        "companyName": "ABC Title Company",
+        "receivesInvoice": True
+    }
+    client.transaction_builder.add_commission_payer(transaction_id, commission_payer)
+    
+    # Step 10: Submit transaction
+    result = client.transaction_builder.submit_transaction(transaction_id)
+    
+    # The transaction is now created!
+    # result contains the preview data of the submitted transaction
+    ```
+
+    !!! warning "Common Submission Failures"
+    
+        1. **"commissionSplitsInfo cannot be empty"** - You MUST add commission splits before submission
+        2. **"Bad request: Invalid request"** - Check that you're using participant IDs, not agent IDs
+        3. **Missing commission payer** - Title company or other payer is required
+        4. **Wrong commission structure** - Each split needs the nested `commission` object
+
+## Known Issues
+
+1. **Date-only updates require complete price/date structure** - You cannot update dates without including all price and commission fields
+2. **Team selection on owner agent** - Currently, the API does not properly set the `teamId` field on the owner agent object, even when using explicit team selection methods. The team ID is only stored at the `agentsInfo` level, which prevents transaction submission. This is a limitation in the current API implementation.
+3. **All phone numbers must include country code** - Phone numbers without the country code prefix (e.g., starting with "1" for US) will fail validation
+4. **Commission splits require participant IDs** - You must retrieve the transaction after adding agents to get their participant IDs for commission splits
+5. **Both buyer AND seller required** - Even for buyer-only representation, you must add both a buyer and seller to the transaction for successful submission

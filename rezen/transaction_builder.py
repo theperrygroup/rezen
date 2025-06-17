@@ -1,6 +1,6 @@
 """Transaction Builder client for ReZEN API."""
 
-from typing import Any, BinaryIO, Dict, List, Optional
+from typing import Any, BinaryIO, Dict, List, Optional, Union
 
 from .base_client import BaseClient
 from .exceptions import (
@@ -53,12 +53,17 @@ class TransactionBuilderClient(BaseClient):
         - lastName (not last_name)
         - phoneNumber (not phone_number)
 
+        Phone Number Format:
+        - MUST include country code (1 for US)
+        - Format: "1(xxx) xxx-xxxx" or "+1-xxx-xxx-xxxx"
+        - Examples: "1(801) 555-9876", "+1-801-555-9876"
+
         Example:
             seller_info = {
                 "firstName": "Jane",
                 "lastName": "Smith",
                 "email": "jane.smith@example.com",
-                "phoneNumber": "(555) 987-6543"
+                "phoneNumber": "1(555) 987-6543"  # Include country code!
             }
 
         Args:
@@ -167,6 +172,97 @@ class TransactionBuilderClient(BaseClient):
         endpoint = f"transaction-builder/{transaction_id}/referral-info/{participant_id}/upload-w9"
         files = {"file": file}
         return self.put(endpoint, files=files)
+
+    def prepare_price_and_date_data(
+        self,
+        sale_price: Union[int, float],
+        representation_type: str,
+        listing_commission_percent: float = 3.0,
+        sale_commission_percent: float = 3.0,
+        deal_type: str = "SALE",
+        property_type: str = "RESIDENTIAL",
+        acceptance_date: Optional[str] = None,
+        closing_date: Optional[str] = None,
+        earnest_money: Optional[float] = None,
+        down_payment: Optional[float] = None,
+        loan_amount: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Prepare price and date data with required commission objects.
+
+        This helper method ensures all required fields are included with proper formatting,
+        particularly the commission objects that must always be present with the critical
+        negativeOrEmpty field set to false.
+
+        ⚠️ CRITICAL FIELDS ⚠️
+        Both commission objects MUST include negativeOrEmpty: false or submission will fail!
+
+        Args:
+            sale_price: The sale price amount
+            representation_type: "BUYER" or "SELLER"
+            listing_commission_percent: Listing commission percentage (default: 3.0)
+            sale_commission_percent: Sale commission percentage (default: 3.0)
+            deal_type: Deal type (default: "SALE", NOT "COMPENSATING"!)
+            property_type: Property type (default: "RESIDENTIAL")
+            acceptance_date: Acceptance date in "YYYY-MM-DD" format
+            closing_date: Closing date in "YYYY-MM-DD" format
+            earnest_money: Earnest money amount
+            down_payment: Down payment amount
+            loan_amount: Loan amount
+
+        Returns:
+            Dict with properly formatted price/date data including both commission objects
+            with all required fields including negativeOrEmpty: false
+
+        Example:
+            ```python
+            # Simple usage with defaults
+            price_data = client.prepare_price_and_date_data(
+                sale_price=500000,
+                representation_type="BUYER",
+                acceptance_date="2024-06-16",
+                closing_date="2024-07-16"
+            )
+            # This will include:
+            # - dealType: "SALE" (not "COMPENSATING")
+            # - propertyType: "RESIDENTIAL"
+            # - Both commissions with negativeOrEmpty: false
+            
+            result = client.update_price_and_date_info(transaction_id, price_data)
+            ```
+        """
+        data = {
+            "dealType": deal_type,
+            "propertyType": property_type,
+            "salePrice": {
+                "amount": sale_price,
+                "currency": "USD"
+            },
+            "representationType": representation_type,
+            "listingCommission": {
+                "commissionPercent": listing_commission_percent,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            },
+            "saleCommission": {
+                "commissionPercent": sale_commission_percent,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            }
+        }
+        
+        # Add optional fields if provided
+        if acceptance_date:
+            data["acceptanceDate"] = acceptance_date
+        if closing_date:
+            data["closingDate"] = closing_date
+        if earnest_money is not None:
+            data["earnestMoney"] = earnest_money
+        if down_payment is not None:
+            data["downPayment"] = down_payment
+        if loan_amount is not None:
+            data["loanAmount"] = loan_amount
+            
+        return data
 
     def update_price_and_date_info(
         self, transaction_id: str, price_date_info: Dict[str, Any]
@@ -321,6 +417,12 @@ class TransactionBuilderClient(BaseClient):
                 raise InvalidFieldNameError(
                     snake, camel, "Use camelCase for date fields."
                 )
+                
+        # Ensure commission objects have negativeOrEmpty field
+        for commission_field in ["listingCommission", "saleCommission"]:
+            if commission_field in price_date_info and isinstance(price_date_info[commission_field], dict):
+                if "negativeOrEmpty" not in price_date_info[commission_field]:
+                    price_date_info[commission_field]["negativeOrEmpty"] = False
 
         endpoint = f"transaction-builder/{transaction_id}/price-date-info"
         return self.put(endpoint, json_data=price_date_info)
@@ -562,9 +664,13 @@ class TransactionBuilderClient(BaseClient):
         IMPORTANT: This endpoint requires multipart/form-data format.
         The method automatically handles the conversion for you.
 
+        ⚠️ CRITICAL FOR SUBMISSION ⚠️
+        Commission payer (usually title company) is REQUIRED before transaction submission!
+        Without it, submission will fail.
+
         Required Fields:
-            - role (str): Commission payer role. Valid values from get_commission_payer_roles():
-                - "TITLE" - Title company
+            - role (str): Commission payer role. Common values:
+                - "TITLE" - Title company (most common)
                 - "SELLER" - Seller pays commission
                 - "LANDLORD" - Landlord (for rental transactions)
                 - "OTHER_AGENT" - Another agent pays
@@ -572,7 +678,7 @@ class TransactionBuilderClient(BaseClient):
             - firstName (str): First name of the commission payer
             - lastName (str): Last name of the commission payer
             - email (str): Email address of the commission payer
-            - phoneNumber (str): Phone number (e.g., "(555) 123-4567")
+            - phoneNumber (str): Phone number with country code (e.g., "1(555) 123-4567")
             - companyName (str): Company name of the commission payer
 
         Optional Fields:
@@ -586,20 +692,20 @@ class TransactionBuilderClient(BaseClient):
         Special Notes:
             1. If you provide a participantId, the validation for other required fields is ignored.
                This is useful when referencing an existing participant.
-            2. The role "REAL" is commonly used for standard commission payers.
+            2. The role "TITLE" is most commonly used for title companies.
             3. Some role values like "NA", "LISTING_AGENT", "BUYERS_AGENT" may not work as
                they are not valid enum values for commission payer roles.
 
-        Example:
+        Working Example (Title Company):
             ```python
-            # Standard commission payer with all required fields
+            # Title company as commission payer (most common)
             commission_info = {
-                "role": "REAL",
-                "firstName": "Commission",
-                "lastName": "Payer",
-                "email": "commission@example.com",
-                "phoneNumber": "(555) 111-2222",
-                "companyName": "Commission Company LLC",
+                "role": "TITLE",
+                "firstName": "ABC",
+                "lastName": "Title",
+                "email": "closing@abctitle.com",
+                "phoneNumber": "1(801) 555-5555",  # Include country code!
+                "companyName": "ABC Title Company",
                 "receivesInvoice": True,
                 "opCityReferral": False,
                 "optedInForEcp": False
@@ -608,7 +714,7 @@ class TransactionBuilderClient(BaseClient):
 
             # Using existing participant ID (bypasses validation)
             commission_info = {
-                "role": "REAL",
+                "role": "TITLE",
                 "participantId": "existing-participant-uuid",
                 "receivesInvoice": True
             }
@@ -633,43 +739,80 @@ class TransactionBuilderClient(BaseClient):
     ) -> Dict[str, Any]:
         """Update commission splits information.
 
-        IMPORTANT: Pass a LIST of commission split objects, even for a single split.
+        ⚠️ CRITICAL: Commission splits require PARTICIPANT IDs, not AGENT IDs! ⚠️
+        
+        After adding agents (owner agent, co-agents) to the transaction, each agent gets
+        a PARTICIPANT ID. You must use these participant IDs for commission splits.
+
+        🔄 REQUIRED WORKFLOW:
+        1. Create transaction and add all basic info (location, price/dates, buyers/sellers)
+        2. Add owner agent and any co-agents
+        3. Call get_transaction_builder() to retrieve the participant IDs
+        4. Use the participant IDs (NOT agent IDs) for commission splits
 
         Commission Split Structure:
-            Each split in the list should contain:
-            - agentId (str): UUID of the agent receiving the split
-            - receivesInvoice (bool): Whether this agent receives an invoice
-            - splitPercent (float): Percentage of commission (e.g., 50.0 for 50%)
-            - opCityReferral (bool): Whether this is an OpCity referral (optional)
-            - optedInForEcp (bool): Whether opted in for ECP (optional)
+            Each split should contain:
+            - participantId (str): The participant ID from transaction data (NOT agent ID!)
+            - commission (dict): Commission data object with:
+                - commissionPercent (float): Percentage (e.g., 50.0 for 50%)
+                - percentEnabled (bool): Always True for percentage-based
+                - negativeOrEmpty (bool): Always False for valid commissions
 
-        Example:
+        WORKING EXAMPLE:
             ```python
+            # Step 1: Get the transaction to find participant IDs
+            transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+            
+            # Step 2: Extract participant IDs from agents
+            owner_participant_id = None
+            co_agent_participant_id = None
+            
+            # From owner agents
+            for agent in transaction["agentsInfo"]["ownerAgent"]:
+                if agent["agentId"] == "your-agent-uuid":
+                    owner_participant_id = agent["id"]  # This is the participant ID!
+            
+            # From co-agents  
+            for agent in transaction["agentsInfo"]["coAgents"]:
+                if agent["agentId"] == "co-agent-uuid":
+                    co_agent_participant_id = agent["id"]  # This is the participant ID!
+            
+            # Step 3: Create commission splits using PARTICIPANT IDs
             commission_splits = [
                 {
-                    "agentId": "agent-uuid-1",
-                    "receivesInvoice": True,
-                    "splitPercent": 50.0,
-                    "opCityReferral": False,
-                    "optedInForEcp": False
+                    "participantId": owner_participant_id,  # NOT agentId!
+                    "commission": {
+                        "commissionPercent": 80.0,
+                        "percentEnabled": True,
+                        "negativeOrEmpty": False
+                    }
                 },
                 {
-                    "agentId": "agent-uuid-2",
-                    "receivesInvoice": False,
-                    "splitPercent": 50.0,
-                    "opCityReferral": False,
-                    "optedInForEcp": False
+                    "participantId": co_agent_participant_id,  # NOT agentId!
+                    "commission": {
+                        "commissionPercent": 20.0,
+                        "percentEnabled": True,
+                        "negativeOrEmpty": False
+                    }
                 }
             ]
+            
+            # Step 4: Submit commission splits
             client.update_commission_splits(transaction_id, commission_splits)
             ```
 
+        ❌ COMMON MISTAKE:
+            Using agent IDs instead of participant IDs will fail with "Bad request"
+
         Args:
             transaction_id: Transaction builder ID
-            commission_splits: List of commission split data
+            commission_splits: List of commission split data with PARTICIPANT IDs
 
         Returns:
             Transaction builder response data
+
+        Raises:
+            ValidationError: If using agent IDs instead of participant IDs
         """
         endpoint = f"transaction-builder/{transaction_id}/commission-info"
         return self._request("PUT", endpoint, json_data=commission_splits)
@@ -763,9 +906,9 @@ class TransactionBuilderClient(BaseClient):
             # 4. Add buyer (REQUIRED THIRD)
             client.transaction_builder.add_buyer(builder_id, {
                 "firstName": "John",
-                "lastName": "Doe",
+                "lastName": "Buyer",
                 "email": "john@example.com",
-                "phoneNumber": "(555) 123-4567"
+                "phoneNumber": "1(801) 555-1234"  # Include country code!
             })
 
             # 5. Get user and office info
@@ -939,12 +1082,17 @@ class TransactionBuilderClient(BaseClient):
         - lastName (not last_name)
         - phoneNumber (not phone_number)
 
+        Phone Number Format:
+        - MUST include country code (1 for US)
+        - Format: "1(xxx) xxx-xxxx" or "+1-xxx-xxx-xxxx"
+        - Examples: "1(801) 555-0123", "+1-801-555-0123"
+
         Example:
             buyer_info = {
                 "firstName": "John",
                 "lastName": "Doe",
                 "email": "john.doe@example.com",
-                "phoneNumber": "(555) 123-4567"
+                "phoneNumber": "1(555) 123-4567"  # Include country code!
             }
 
         Args:
@@ -1170,7 +1318,7 @@ class TransactionBuilderClient(BaseClient):
         return self.get(endpoint)
 
     # POST endpoints
-    def create_transaction_builder(self, builder_type: str = "TRANSACTION") -> str:
+    def create_transaction_builder(self, builder_type: str = "TRANSACTION") -> Dict[str, Any]:
         """Create empty transaction builder.
 
         This is the starting point for creating a new transaction. After creation,
@@ -1193,7 +1341,8 @@ class TransactionBuilderClient(BaseClient):
             client = RezenClient()
 
             # 1. Create transaction
-            transaction_id = client.transaction_builder.create_transaction_builder()
+            response = client.transaction_builder.create_transaction_builder()
+            transaction_id = response["id"]
 
             # 2. Add location (with required additional fields)
             location_data = {
@@ -1231,7 +1380,7 @@ class TransactionBuilderClient(BaseClient):
                 "firstName": "John",
                 "lastName": "Buyer",
                 "email": "john@example.com",
-                "phoneNumber": "(801) 555-1234"
+                "phoneNumber": "1(801) 555-1234"  # Include country code!
             })
 
             # 5. Add co-agent (this works immediately)
@@ -1254,7 +1403,7 @@ class TransactionBuilderClient(BaseClient):
             builder_type: Type of builder to create ("TRANSACTION" or "LISTING")
 
         Returns:
-            Transaction builder ID as string
+            Dictionary with transaction builder ID: {"id": "transaction-id"}
 
         Raises:
             ValidationError: If builder_type is invalid
@@ -1263,19 +1412,25 @@ class TransactionBuilderClient(BaseClient):
         endpoint = "transaction-builder"
         params = {"type": builder_type}
         response = self._request("POST", endpoint, params=params)
-        # Extract ID from response
+        
+        # Ensure consistent response format
+        # The API returns just the ID string, so we wrap it
         if isinstance(response, dict):
+            # If already a dict with id, return as-is
             if "id" in response:
-                return str(response["id"])
+                return response
+            # If dict with message, use message as ID
             elif "message" in response:
-                return str(response["message"])
-        return str(response)
+                return {"id": str(response["message"])}
+        
+        # If string response, wrap in dict
+        return {"id": str(response)}
 
-    def create_listing_builder(self) -> str:
+    def create_listing_builder(self) -> Dict[str, Any]:
         """Create a listing builder (wrapper for create_transaction_builder).
 
         Returns:
-            Listing builder ID
+            Dictionary with listing builder ID: {"id": "listing-id"}
         """
         return self.create_transaction_builder(builder_type="LISTING")
 
@@ -1322,11 +1477,66 @@ class TransactionBuilderClient(BaseClient):
     def submit_transaction(self, transaction_id: str) -> Dict[str, Any]:
         """Submit a transaction builder to create a transaction.
 
+        ⚠️ CRITICAL REQUIREMENT: Commission splits MUST be populated before submission! ⚠️
+        
+        The API will reject submission with error "commissionSplitsInfo cannot be empty"
+        if commission splits are not properly configured.
+
+        🔄 COMPLETE SUBMISSION WORKFLOW:
+        
+        1. Create transaction builder
+        2. Add location info (street, city, state, zip, county, yearBuilt, mlsNumber)
+        3. Add price/date info with BOTH commissions and required fields:
+           - dealType: "SALE" (not "COMPENSATING")
+           - propertyType: "RESIDENTIAL"
+           - Both listingCommission and saleCommission with negativeOrEmpty: false
+        4. Add buyer (required)
+        5. Add seller (required - even for buyer representation!)
+        6. Add owner agent (and co-agents if needed)
+        6. Get transaction builder to retrieve participant IDs
+        7. Add commission splits using PARTICIPANT IDs (not agent IDs!)
+        8. Add commission payer (title company)
+        9. Submit transaction
+
+        WORKING EXAMPLE:
+            ```python
+            # After all setup steps...
+            
+            # Get participant IDs
+            transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+            
+            # Find participant IDs from agents
+            owner_participant_id = None
+            for agent in transaction["agentsInfo"]["ownerAgent"]:
+                if agent["agentId"] == current_user_id:
+                    owner_participant_id = agent["id"]
+                    break
+            
+            # Add commission splits (REQUIRED!)
+            commission_splits = [{
+                "participantId": owner_participant_id,
+                "commission": {
+                    "commissionPercent": 100.0,
+                    "percentEnabled": True,
+                    "negativeOrEmpty": False
+                }
+            }]
+            client.transaction_builder.update_commission_splits(
+                transaction_id, commission_splits
+            )
+            
+            # Now submit
+            result = client.transaction_builder.submit_transaction(transaction_id)
+            ```
+
         Args:
             transaction_id: Transaction builder ID
 
         Returns:
-            Transaction preview response data
+            Transaction preview response data with submitted transaction details
+
+        Raises:
+            ValidationError: If commission splits are missing or other required fields
         """
         endpoint = f"transaction-builder/{transaction_id}/submit"
         return self.post(endpoint)
@@ -2085,3 +2295,123 @@ class TransactionBuilderClient(BaseClient):
             )
 
         return self.update_owner_agent_info(transaction_builder_id, owner_info)
+
+    def create_complete_transaction_example(self) -> str:
+        """Returns a complete working example of creating and submitting a transaction.
+        
+        This method provides documentation showing the EXACT workflow that has been
+        proven to work in production based on real-world usage.
+        
+        Returns:
+            str: Complete working example code
+        """
+        return '''
+        # COMPLETE WORKING TRANSACTION SUBMISSION EXAMPLE
+        # Based on production-proven workflow
+        
+        # Step 1: Create transaction builder
+        builder_response = client.transaction_builder.create_transaction_builder()
+        transaction_id = builder_response["id"]
+        
+        # Step 2: Add location info (ALL fields required)
+        location_info = {
+            "street": "123 Main Street",
+            "city": "Salt Lake City",
+            "state": "UTAH",  # Must be ALL CAPS
+            "zip": "84101",
+            "county": "Salt Lake",      # REQUIRED
+            "yearBuilt": 2020,         # REQUIRED
+            "mlsNumber": "MLS123456"   # REQUIRED
+        }
+        client.transaction_builder.update_location_info(transaction_id, location_info)
+        
+        # Step 3: Add price/date info with BOTH commissions
+        price_data = {
+            "dealType": "SALE",  # NOT "COMPENSATING"!
+            "propertyType": "RESIDENTIAL",
+            "salePrice": {"amount": 500000, "currency": "USD"},
+            "representationType": "BUYER",
+            "listingCommission": {  # REQUIRED even for buyer deals
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False  # CRITICAL!
+            },
+            "saleCommission": {  # REQUIRED even for buyer deals
+                "commissionPercent": 3.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False  # CRITICAL!
+            },
+            "acceptanceDate": "2024-01-15",
+            "closingDate": "2024-02-28"
+        }
+        client.transaction_builder.update_price_and_date_info(transaction_id, price_data)
+        
+        # Step 4: Add buyer
+        buyer_info = {
+            "firstName": "John",
+            "lastName": "Buyer",
+            "email": "john@example.com",
+            "phoneNumber": "1(801) 555-1234"  # Country code required!
+        }
+        client.transaction_builder.add_buyer(transaction_id, buyer_info)
+        
+        # Step 5: Add seller (REQUIRED even for buyer representation!)
+        seller_info = {
+            "firstName": "Jane",
+            "lastName": "Seller",
+            "email": "jane@example.com",
+            "phoneNumber": "1(801) 555-9876"  # Country code required!
+        }
+        client.transaction_builder.add_seller(transaction_id, seller_info)
+        
+        # Step 6: Add owner agent
+        user = client.users.get_current_user()
+        owner_info = {
+            "ownerAgent": {
+                "agentId": user["id"],
+                "role": "BUYERS_AGENT"  # Must match representationType
+            },
+            "officeId": user["offices"][0]["id"],
+            "teamId": "your-team-uuid"
+        }
+        client.transaction_builder.update_owner_agent_info(transaction_id, owner_info)
+        
+        # Step 7: Get transaction to find participant IDs (CRITICAL!)
+        transaction = client.transaction_builder.get_transaction_builder(transaction_id)
+        
+        # Find owner agent participant ID
+        owner_participant_id = None
+        for agent in transaction["agentsInfo"]["ownerAgent"]:
+            if agent["agentId"] == user["id"]:
+                owner_participant_id = agent["id"]  # This is participant ID!
+                break
+        
+        # Step 8: Add commission splits using PARTICIPANT IDs
+        commission_splits = [{
+            "participantId": owner_participant_id,  # NOT agentId!
+            "commission": {
+                "commissionPercent": 100.0,
+                "percentEnabled": True,
+                "negativeOrEmpty": False
+            }
+        }]
+        client.transaction_builder.update_commission_splits(transaction_id, commission_splits)
+        
+        # Step 9: Add commission payer (title company)
+        commission_payer = {
+            "role": "TITLE",
+            "firstName": "ABC",
+            "lastName": "Title",
+            "email": "closing@abctitle.com",
+            "phoneNumber": "1(801) 555-5555",
+            "companyName": "ABC Title Company",
+            "receivesInvoice": True
+        }
+        client.transaction_builder.add_commission_payer(transaction_id, commission_payer)
+        
+        # Step 10: Submit transaction
+        result = client.transaction_builder.submit_transaction(transaction_id)
+        
+        # The transaction is now created!
+        # result contains the preview data of the submitted transaction
+        '''

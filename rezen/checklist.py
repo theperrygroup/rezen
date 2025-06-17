@@ -1,8 +1,27 @@
 """ReZEN Checklist API client implementation."""
 
+import re
 from typing import Any, BinaryIO, Dict, List, Optional, Union
 
 from .base_client import BaseClient
+from .exceptions import ValidationError
+
+
+def _validate_uuid(value: str, field_name: str) -> None:
+    """Validate that a string is a valid UUID format.
+
+    Args:
+        value: The string to validate
+        field_name: Name of the field for error messages
+
+    Raises:
+        ValidationError: If the value is not a valid UUID format
+    """
+    uuid_pattern = re.compile(
+        r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
+    )
+    if not uuid_pattern.match(value):
+        raise ValidationError(f"{field_name} must be a valid UUID format, got: {value}")
 
 
 class ChecklistClient(BaseClient):
@@ -196,39 +215,102 @@ class ChecklistClient(BaseClient):
         description: str,
         uploader_id: str,
         transaction_id: str,
-        file: Optional[BinaryIO] = None,
+        file: BinaryIO,
     ) -> Dict[str, Any]:
         """
         Add a new document to the given checklist item ID.
 
         Args:
-            checklist_item_id: The checklist item ID
-            name: Document name
-            description: Document description
-            uploader_id: ID of the user uploading the document
-            transaction_id: Transaction ID
-            file: File to upload (optional)
+            checklist_item_id: The checklist item ID (must be valid UUID)
+            name: Document name (required)
+            description: Document description (required)
+            uploader_id: ID of the user uploading the document (must be valid UUID)
+            transaction_id: Transaction ID (must be valid UUID)
+            file: File to upload (required - must be opened in binary mode)
 
         Returns:
             Dict containing document details
 
         Raises:
+            ValidationError: If required parameters are missing or invalid format
             RezenError: If the API request fails
-        """
-        endpoint = f"checklists/checklist-items/{checklist_item_id}/documents"
 
+        Example:
+            >>> with open('document.pdf', 'rb') as f:
+            ...     result = client.add_document_to_checklist_item(
+            ...         checklist_item_id='550e8400-e29b-41d4-a716-446655440000',
+            ...         name='MLS Sheet',
+            ...         description='Property MLS information',
+            ...         uploader_id='123e4567-e89b-12d3-a456-426614174000',
+            ...         transaction_id='987fcdeb-51d2-4321-b789-123456789012',
+            ...         file=f
+            ...     )
+        """
+        # Validate required parameters
+        if not name or not name.strip():
+            raise ValidationError("Document name is required and cannot be empty")
+
+        if not description or not description.strip():
+            raise ValidationError(
+                "Document description is required and cannot be empty"
+            )
+
+        if not checklist_item_id or not checklist_item_id.strip():
+            raise ValidationError("Checklist item ID is required and cannot be empty")
+
+        if not uploader_id or not uploader_id.strip():
+            raise ValidationError("Uploader ID is required and cannot be empty")
+
+        if not transaction_id or not transaction_id.strip():
+            raise ValidationError("Transaction ID is required and cannot be empty")
+
+        if file is None:
+            raise ValidationError(
+                "File is required for document upload. Please provide a file opened in binary mode (e.g., open('file.pdf', 'rb'))"
+            )
+
+        # Validate UUID formats
+        try:
+            _validate_uuid(checklist_item_id.strip(), "checklist_item_id")
+            _validate_uuid(uploader_id.strip(), "uploader_id")
+            _validate_uuid(transaction_id.strip(), "transaction_id")
+        except ValidationError as e:
+            raise ValidationError(f"Invalid parameter format: {e}")
+
+        endpoint = f"checklists/checklist-items/{checklist_item_id.strip()}/documents"
+
+        # Prepare form data exactly as specified in OpenAPI schema
         data = {
-            "name": name,
-            "description": description,
-            "uploaderId": uploader_id,
-            "transactionId": transaction_id,
+            "name": name.strip(),
+            "description": description.strip(),
+            "uploaderId": uploader_id.strip(),  # API expects camelCase
+            "transactionId": transaction_id.strip(),  # API expects camelCase
         }
 
-        if file:
-            files = {"file": file}
+        files = {"file": file}
+
+        try:
             return self._request("POST", endpoint, data=data, files=files)
-        else:
-            return self.post(endpoint, data=data)
+        except ValidationError as e:
+            # Add more context to validation errors
+            error_msg = f"Document upload failed: {str(e)}"
+            if "Bad request" in str(e):
+                error_msg += (
+                    "\n\nDebugging checklist:\n"
+                    f"- Checklist Item ID: {checklist_item_id} (valid UUID: {bool(re.match(r'^[0-9a-f-]{36}$', checklist_item_id, re.I))})\n"
+                    f"- Uploader ID: {uploader_id} (valid UUID: {bool(re.match(r'^[0-9a-f-]{36}$', uploader_id, re.I))})\n"
+                    f"- Transaction ID: {transaction_id} (valid UUID: {bool(re.match(r'^[0-9a-f-]{36}$', transaction_id, re.I))})\n"
+                    f"- Document name: '{name}' (length: {len(name)})\n"
+                    f"- Description: '{description}' (length: {len(description)})\n"
+                    f"- File provided: {file is not None}\n"
+                    f"- File readable: {hasattr(file, 'read') if file else False}\n"
+                    "\nCommon issues:\n"
+                    "1. Ensure all IDs are valid UUIDs (36 characters with dashes)\n"
+                    "2. Ensure the file is opened in binary mode: open('file.pdf', 'rb')\n"
+                    "3. Ensure the uploader has permission to upload to this checklist item\n"
+                    "4. Ensure the transaction_id is associated with the checklist"
+                )
+            raise ValidationError(error_msg)
 
     def add_document_version(
         self,
@@ -237,39 +319,88 @@ class ChecklistClient(BaseClient):
         description: str,
         uploader_id: str,
         transaction_id: str,
-        file: Optional[BinaryIO] = None,
+        file: BinaryIO,
     ) -> Dict[str, Any]:
         """
         Add a new version for given document ID.
 
         Args:
-            checklist_document_id: The checklist document ID
-            name: Version name
-            description: Version description
-            uploader_id: ID of the user uploading the version
-            transaction_id: Transaction ID
-            file: File to upload (optional)
+            checklist_document_id: The checklist document ID (must be valid UUID)
+            name: Version name (required)
+            description: Version description (required)
+            uploader_id: ID of the user uploading the version (must be valid UUID)
+            transaction_id: Transaction ID (must be valid UUID)
+            file: File to upload (required - must be opened in binary mode)
 
         Returns:
             Dict containing version details
 
         Raises:
+            ValidationError: If required parameters are missing or invalid format
             RezenError: If the API request fails
         """
-        endpoint = f"checklists/checklist-documents/{checklist_document_id}/versions"
+        # Validate required parameters
+        if not name or not name.strip():
+            raise ValidationError("Version name is required and cannot be empty")
 
+        if not description or not description.strip():
+            raise ValidationError("Version description is required and cannot be empty")
+
+        if not checklist_document_id or not checklist_document_id.strip():
+            raise ValidationError(
+                "Checklist document ID is required and cannot be empty"
+            )
+
+        if not uploader_id or not uploader_id.strip():
+            raise ValidationError("Uploader ID is required and cannot be empty")
+
+        if not transaction_id or not transaction_id.strip():
+            raise ValidationError("Transaction ID is required and cannot be empty")
+
+        if file is None:
+            raise ValidationError(
+                "File is required for document version upload. Please provide a file opened in binary mode (e.g., open('file.pdf', 'rb'))"
+            )
+
+        # Validate UUID formats
+        try:
+            _validate_uuid(checklist_document_id.strip(), "checklist_document_id")
+            _validate_uuid(uploader_id.strip(), "uploader_id")
+            _validate_uuid(transaction_id.strip(), "transaction_id")
+        except ValidationError as e:
+            raise ValidationError(f"Invalid parameter format: {e}")
+
+        endpoint = (
+            f"checklists/checklist-documents/{checklist_document_id.strip()}/versions"
+        )
+
+        # Prepare form data exactly as specified in OpenAPI schema
         data = {
-            "name": name,
-            "description": description,
-            "uploaderId": uploader_id,
-            "transactionId": transaction_id,
+            "name": name.strip(),
+            "description": description.strip(),
+            "uploaderId": uploader_id.strip(),  # API expects camelCase
+            "transactionId": transaction_id.strip(),  # API expects camelCase
         }
 
-        if file:
-            files = {"file": file}
+        files = {"file": file}
+
+        try:
             return self._request("POST", endpoint, data=data, files=files)
-        else:
-            return self.post(endpoint, data=data)
+        except ValidationError as e:
+            # Add more context to validation errors
+            error_msg = f"Document version upload failed: {str(e)}"
+            if "Bad request" in str(e):
+                error_msg += (
+                    "\n\nDebugging checklist:\n"
+                    f"- Document ID: {checklist_document_id} (valid UUID: {bool(re.match(r'^[0-9a-f-]{36}$', checklist_document_id, re.I))})\n"
+                    f"- Uploader ID: {uploader_id} (valid UUID: {bool(re.match(r'^[0-9a-f-]{36}$', uploader_id, re.I))})\n"
+                    f"- Transaction ID: {transaction_id} (valid UUID: {bool(re.match(r'^[0-9a-f-]{36}$', transaction_id, re.I))})\n"
+                    f"- Version name: '{name}' (length: {len(name)})\n"
+                    f"- Description: '{description}' (length: {len(description)})\n"
+                    f"- File provided: {file is not None}\n"
+                    f"- File readable: {hasattr(file, 'read') if file else False}"
+                )
+            raise ValidationError(error_msg)
 
     def batch_update_checklists(
         self, batch_items: List[Dict[str, Any]]
@@ -344,34 +475,39 @@ class ChecklistClient(BaseClient):
         self,
         checklist_item_id: str,
         data: Dict[str, Any],
-        file: Optional[BinaryIO] = None,
+        file: BinaryIO,
     ) -> Dict[str, Any]:
         """
         Upload document to checklist item (legacy method).
 
         Args:
             checklist_item_id: The checklist item ID to upload to
-            data: Document metadata (e.g., document type, name, etc.)
-            file: File to upload (optional)
+            data: Document metadata (must include name, description, uploaderId, transactionId)
+            file: File to upload (required - must be opened in binary mode)
 
         Returns:
             Dict containing upload response
 
         Raises:
+            ValidationError: If required fields are missing from data
             RezenError: If the API request fails
         """
-        # Extract required fields from data for the new method
-        name = data.get("name", "")
-        description = data.get("description", "")
-        uploader_id = data.get("uploaderId", "")
-        transaction_id = data.get("transactionId", "")
+        # Validate required fields in data dict
+        required_fields = ["name", "description", "uploaderId", "transactionId"]
+        missing_fields = [field for field in required_fields if not data.get(field)]
+
+        if missing_fields:
+            raise ValidationError(
+                f"Missing required fields in data: {missing_fields}. "
+                f"Required fields: {required_fields}"
+            )
 
         return self.add_document_to_checklist_item(
             checklist_item_id=checklist_item_id,
-            name=name,
-            description=description,
-            uploader_id=uploader_id,
-            transaction_id=transaction_id,
+            name=data["name"],
+            description=data["description"],
+            uploader_id=data["uploaderId"],
+            transaction_id=data["transactionId"],
             file=file,
         )
 

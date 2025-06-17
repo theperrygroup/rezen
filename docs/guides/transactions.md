@@ -73,6 +73,27 @@ price_data = {
 }
 ```
 
+!!! danger "⚠️ Date-Only Updates Also Require All Fields"
+
+    When updating **only dates** on a transaction that already has pricing, you **MUST** still include all price/date fields:
+
+    ```python
+    # ❌ FAILS - Sending only dates
+    date_update = {"acceptanceDate": "2025-06-16", "closingDate": "2025-07-16"}
+    
+    # ✅ WORKS - Must include ALL fields even for date-only updates
+    price_date_update = {
+        "dealType": "SALE",
+        "propertyType": "RESIDENTIAL",
+        "salePrice": {"amount": 500000, "currency": "USD"},
+        "representationType": "BUYER",
+        "listingCommission": {...},      # Full commission object required
+        "saleCommission": {...},          # Full commission object required
+        "acceptanceDate": "2025-06-16",   # New date
+        "closingDate": "2025-07-16"       # New date
+    }
+    ```
+
 ### 👥 Co-Agent Roles
 
 **✅ WORKING ROLES:**
@@ -204,6 +225,22 @@ Choose the approach that best fits your needs:
     # - Uses smart default logic (LEADER > ADMIN > first team)
     # - Shows warning if you have multiple teams
     # - Handles all ID resolution automatically
+    ```
+
+### 📌 Both Buyer AND Seller Required
+
+!!! danger "Critical Requirement: Always Add Both Buyer AND Seller"
+
+    Even for buyer-only representation transactions, you **MUST** add both a buyer and a seller. The API will fail submission if either is missing.
+
+    ```python
+    # ✅ CORRECT - Add both parties
+    client.transaction_builder.add_buyer(transaction_id, buyer_info)
+    client.transaction_builder.add_seller(transaction_id, seller_info)  # Required!
+    
+    # ❌ INCORRECT - Adding only buyer will fail
+    client.transaction_builder.add_buyer(transaction_id, buyer_info)
+    # Missing seller causes submission to fail
     ```
 
 === "Option 2: Discovery + Selection"
@@ -506,7 +543,7 @@ if transaction_id:
                 "firstName": "John",  # camelCase required
                 "lastName": "Doe",
                 "email": "john.doe@example.com",
-                "phoneNumber": "(801) 555-1234"  # camelCase required
+                "phoneNumber": "1(801) 555-1234"  # camelCase required, country code required!
             }
             client.transaction_builder.add_buyer(transaction_id, buyer_data)
             print("✅ Added buyer")
@@ -516,7 +553,7 @@ if transaction_id:
                 "firstName": "Jane",
                 "lastName": "Smith",
                 "email": "jane.smith@example.com",
-                "phoneNumber": "(801) 555-5678"
+                "phoneNumber": "1(801) 555-5678"  # Include country code!
             }
             client.transaction_builder.add_seller(transaction_id, seller_data)
             print("✅ Added seller")
@@ -538,7 +575,7 @@ if transaction_id:
                 "firstName": "Sarah",
                 "lastName": "Johnson",
                 "email": "sarah@premiertitle.com",
-                "phoneNumber": "(801) 555-9999"
+                "phoneNumber": "1(801) 555-9999"  # Include country code!
             }
             client.transaction_builder.update_title_info(transaction_id, title_info)
             print("✅ Added title company")
@@ -547,7 +584,7 @@ if transaction_id:
             mortgage_info = {
                 "lenderName": "First National Bank",
                 "lenderContact": "Mike Banker",
-                "lenderPhone": "(801) 555-2468",
+                "lenderPhone": "1(801) 555-2468",  # Include country code!
                 "lenderEmail": "mike@firstnational.com"
             }
             client.transaction_builder.update_mortgage_info(transaction_id, mortgage_info)
@@ -629,7 +666,7 @@ if transaction_id:
                 "firstName": "John",      # Use camelCase
                 "lastName": "Doe",        # Use camelCase  
                 "email": "john.doe@email.com",
-                "phoneNumber": "(555) 123-4567"  # Use camelCase
+                "phoneNumber": "1(555) 123-4567"  # Use camelCase, include country code!
             }
             client.transaction_builder.add_buyer(transaction_id, buyer_data)
             print("✅ Added buyer")
@@ -639,7 +676,7 @@ if transaction_id:
                 "firstName": "Jane",
                 "lastName": "Smith",
                 "email": "jane.smith@email.com",
-                "phoneNumber": "(555) 987-6543"
+                "phoneNumber": "1(555) 987-6543"  # Include country code!
             }
             client.transaction_builder.add_seller(transaction_id, seller_data)
             print("✅ Added seller")
@@ -673,7 +710,7 @@ if transaction_id:
                 "firstName": "Mike",      # Use camelCase
                 "lastName": "Inspector",  # Use camelCase
                 "company": "Quality Inspections Inc",
-                "phoneNumber": "(555) INSPECT",  # Use camelCase
+                "phoneNumber": "1(555) INSPECT",  # Use camelCase, include country code!
                 "email": "mike@qualityinspections.com"
             },
             {
@@ -681,7 +718,7 @@ if transaction_id:
                 "firstName": "Sarah",
                 "lastName": "Banker",
                 "company": "First National Bank",
-                "phoneNumber": "(555) 555-LOAN",
+                "phoneNumber": "1(555) 555-LOAN",  # Include country code!
                 "email": "sarah@firstnational.com"
             },
             {
@@ -689,7 +726,7 @@ if transaction_id:
                 "firstName": "Bob",
                 "lastName": "Appraiser",
                 "company": "Accurate Appraisals",
-                "phoneNumber": "(555) 555-VALU",
+                "phoneNumber": "1(555) 555-VALU",  # Include country code!
                 "email": "bob@accurateappraisals.com"
             }
         ]
@@ -725,7 +762,7 @@ if transaction_id:
                 "firstName": "Commission",
                 "lastName": "Payer",
                 "email": "commission@example.com", 
-                "phoneNumber": "(555) 111-2222",
+                "phoneNumber": "1(555) 111-2222",  # Include country code!
                 "companyName": "Commission Company LLC",
                 "receivesInvoice": True,
                 "opCityReferral": False,
@@ -1093,6 +1130,7 @@ The ReZEN API has specific field name requirements that must be followed exactly
     | First Name | `first_name`, `firstname` | `firstName` | camelCase required |
     | Last Name | `last_name`, `lastname` | `lastName` | camelCase required |
     | Phone | `phone`, `phone_number` | `phoneNumber` | camelCase required |
+    | Phone Format | `(801) 555-1234` | `1(801) 555-1234` | **Must include country code (1 for US)** |
     | **Financial** |
     | Sale Price | `salePrice: 500000` | `salePrice: {amount: 500000, currency: "USD"}` | Must be object |
     | Earnest Money | `earnest_money` | `earnestMoney` | camelCase required |
@@ -1145,7 +1183,19 @@ The ReZEN API has specific field name requirements that must be followed exactly
        client.transaction_builder.add_co_agent(transaction_id, co_agent_info)
        ```
 
-    4. **Owner Agents Require Specific Sequence**
+    4. **Phone Numbers Must Include Country Code**
+       ```python
+       # ❌ WRONG
+       buyer_data = {"phoneNumber": "(801) 555-1234"}
+       seller_data = {"phoneNumber": "801-555-1234"}
+       
+       # ✅ CORRECT
+       buyer_data = {"phoneNumber": "1(801) 555-1234"}
+       seller_data = {"phoneNumber": "+1-801-555-1234"}
+       # Both formats work as long as they start with 1 (US country code)
+       ```
+
+    5. **Owner Agents Require Specific Sequence**
        ```python
        # Owner agents MUST be added after:
        # 1. Location info
@@ -1193,6 +1243,17 @@ The ReZEN API has specific field name requirements that must be followed exactly
         # Fix state to uppercase if present
         if "state" in corrected and isinstance(corrected["state"], str):
             corrected["state"] = corrected["state"].upper()
+            
+        # Fix phone numbers to include country code if missing
+        if "phoneNumber" in corrected and isinstance(corrected["phoneNumber"], str):
+            phone = corrected["phoneNumber"]
+            # Check if it already has country code
+            if not phone.startswith("1") and not phone.startswith("+1"):
+                # Add country code - preserve original format style
+                if phone.startswith("("):
+                    corrected["phoneNumber"] = "1" + phone
+                else:
+                    corrected["phoneNumber"] = "1-" + phone
             
         return corrected
     ```
@@ -1342,14 +1403,14 @@ client.transaction_builder.add_buyer(transaction_id, {
     "firstName": "John",
     "lastName": "Buyer",
     "email": "john@example.com",
-    "phoneNumber": "(801) 555-1234"
+    "phoneNumber": "1(801) 555-1234"  # Include country code!
 })
 
 client.transaction_builder.add_seller(transaction_id, {
     "firstName": "Jane",
     "lastName": "Seller", 
     "email": "jane@example.com",
-    "phoneNumber": "(801) 555-5678"
+    "phoneNumber": "1(801) 555-5678"  # Include country code!
 })
 
 # 5. Add co-agents (working roles)
