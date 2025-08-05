@@ -27,8 +27,8 @@ class TestBaseClientInit:
         client = BaseClient(api_key="test_key")
         assert client.api_key == "test_key"
         assert client.base_url == "https://arrakis.therealbrokerage.com/api/v1"
-        assert "Authorization" in client.session.headers
-        assert client.session.headers["Authorization"] == "Bearer test_key"
+        assert "X-API-KEY" in client.session.headers
+        assert client.session.headers["X-API-KEY"] == "test_key"
 
     def test_init_with_custom_base_url(self) -> None:
         """Test initialization with custom base URL."""
@@ -54,7 +54,7 @@ class TestBaseClientInit:
         """Test that session headers are set correctly."""
         client = BaseClient(api_key="test_key")
         headers = client.session.headers
-        assert headers["Authorization"] == "Bearer test_key"
+        assert headers["X-API-KEY"] == "test_key"
         assert headers["Content-Type"] == "application/json"
         assert headers["Accept"] == "application/json"
 

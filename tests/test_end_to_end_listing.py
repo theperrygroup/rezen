@@ -19,7 +19,7 @@ class TestEndToEndListingPosting:
     def setup_method(self) -> None:
         """Set up test fixtures."""
         self.api_key = "test_api_key_12345"
-        self.base_url = "https://api.therealbrokerage.com/rezen/v1"
+        self.base_url = "https://arrakis.therealbrokerage.com/api/v1"
         self.client = TransactionBuilderClient(api_key=self.api_key)
 
     @responses.activate
