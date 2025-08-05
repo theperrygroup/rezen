@@ -2,6 +2,9 @@
 
 The ReZEN Python API client provides multiple ways to authenticate and configure your connection to the ReZEN API platform.
 
+!!! critical "Authentication Method"
+    The ReZEN API uses **X-API-KEY header authentication**, not Authorization Bearer tokens. The Python client handles this automatically.
+
 ---
 
 ## Installation
