@@ -408,7 +408,7 @@ jobs:
     environment: release
     steps:
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: dist
         path: dist/
@@ -450,7 +450,7 @@ jobs:
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: dist
         path: dist/
