@@ -97,6 +97,17 @@ Comprehensive agent search, network management, and detailed information retriev
       show_source: false
       heading_level: 4
 
+!!! tip "Endpoint"
+    This calls `GET https://yenta.therealbrokerage.com/api/v1/agents/{id}`
+
+```python
+from rezen import RezenClient
+
+client = RezenClient()
+agent = client.agents.get_agent("5dc73abf-49b6-4926-b817-7da731a01813")
+print(agent["firstName"], agent["lastName"])  # Example output
+```
+
 ### Get Agent Cap Information
 
 ::: rezen.agents.AgentsClient.get_cap_info

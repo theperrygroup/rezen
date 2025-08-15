@@ -55,43 +55,26 @@ class AgentsClient(BaseClient):
         super().__init__(api_key=api_key, base_url=agents_base_url)
 
     def get_agent(self, agent_id: str) -> Dict[str, Any]:
-        """
-        Get a single agent by ID.
+        """Get a single agent by ID.
+
+        This method calls the Agents service directly using the `yenta` base
+        URL and the endpoint path `agents/{id}`.
+
+        Example endpoint:
+            https://yenta.therealbrokerage.com/api/v1/agents/{agent_id}
 
         Args:
-            agent_id: The agent's ID
+            agent_id: UUID of the agent to retrieve
 
         Returns:
-            Dict containing agent information
+            Agent record as a dictionary
 
         Raises:
-            RezenError: If agent not found or API error
+            NotFoundError: If the agent does not exist
+            AuthenticationError: If the API key is invalid
+            RezenError: For other API errors
         """
-        try:
-            # Use existing batch method with single ID
-            response = self.get_agents_by_ids([agent_id])
-
-            # The response is expected to be a dictionary with agent data
-            # Check if the response contains agents
-            if isinstance(response, dict):
-                # Handle different possible response formats
-                if "agents" in response and response["agents"]:
-                    agent_data = response["agents"][0]
-                    return agent_data if isinstance(agent_data, dict) else {}
-                elif "data" in response and response["data"]:
-                    agent_data = response["data"][0]
-                    return agent_data if isinstance(agent_data, dict) else {}
-                elif isinstance(response, dict) and len(response) > 0:
-                    # If response is a direct agent object
-                    return response
-
-            raise Exception(f"Agent {agent_id} not found")
-
-        except Exception as e:
-            # Log error and re-raise with context
-            from .exceptions import RezenError
-
-            raise RezenError(f"Failed to get agent {agent_id}: {str(e)}")
+        return self.get(f"agents/{agent_id}")
 
     def get_cap_info(self, agent_id: str) -> Dict[str, Any]:
         """
