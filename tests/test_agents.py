@@ -31,6 +31,25 @@ class TestAgentsClient:
         assert client.base_url == custom_url
 
     @responses.activate
+    def test_get_agent_direct_endpoint(self, client: AgentsClient) -> None:
+        """Test that get_agent calls the direct yenta endpoint /agents/{id}."""
+        agent_id = "5dc73abf-49b6-4926-b817-7da731a01813"
+        responses.add(
+            responses.GET,
+            f"https://yenta.therealbrokerage.com/api/v1/agents/{agent_id}",
+            json={"id": agent_id, "firstName": "Test", "lastName": "Agent"},
+            status=200,
+        )
+
+        result = client.get_agent(agent_id)
+
+        assert len(responses.calls) == 1
+        assert responses.calls[0].request.url == (
+            f"https://yenta.therealbrokerage.com/api/v1/agents/{agent_id}"
+        )
+        assert result["id"] == agent_id
+
+    @responses.activate
     def test_get_agents_by_email(self, client: AgentsClient) -> None:
         """Test getting agents by email address."""
         responses.add(
