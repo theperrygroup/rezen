@@ -26,11 +26,7 @@ from .exceptions import (
     ValidationError,
 )
 from .mfa import MfaClient
-from .models import (
-    Address,
-    Agent,
-    AgentParticipantInfo,
-)
+from .models import Address, Agent, AgentParticipantInfo
 from .models import (
     AgentStatus as ModelAgentStatus,  # Core data models; Request/Response models; Enums
 )
@@ -67,12 +63,7 @@ from .models import (
     RevokeApiKeyRequest,
 )
 from .models import StateOrProvince as ModelStateOrProvince
-from .models import (
-    Team,
-    TeamAgent,
-    TeamConfig,
-    TeamInvitation,
-)
+from .models import Team, TeamAgent, TeamConfig, TeamInvitation
 from .models import TeamStatus as ModelTeamStatus
 from .models import TeamType as ModelTeamType
 from .models import (
@@ -86,7 +77,7 @@ from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .users import UsersClient
 
-__version__ = "2.2.10"
+__version__ = "2.2.11"
 __all__ = [
     # Client classes
     "RezenClient",

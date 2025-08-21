@@ -600,6 +600,12 @@ Create and manage transaction builders with full participant and property manage
           show_source: false
           heading_level: 5
 
+    !!! note "Multipart form-data"
+
+        This endpoint uses multipart/form-data. The client automatically sends
+        all provided key/value pairs as form fields and sets the correct `X-API-KEY`
+        authentication header. Provide a plain dict like `{ "role": "OTHER_AGENT", "firstName": "Joshua", ... }`.
+
     **Participant Types:**
 
     | Type | Description |
@@ -1065,15 +1071,10 @@ To simplify creating properly formatted price/date data with all required fields
       show_source: false
       heading_level: 4
 
-### Update Commission Payer
+!!! note "Multipart form-data"
 
-::: rezen.transaction_builder.TransactionBuilderClient.update_commission_payer
-    options:
-      show_source: false
-      heading_level: 4
-
-!!! tip "Alias Method"
-    This is an alias for `add_commission_payer()` provided for backward compatibility.
+    This endpoint requires multipart/form-data. Pass a dictionary and the
+    client will format it correctly and use the `X-API-KEY` header. Do not send JSON.
 
 **Payer Types:**
 

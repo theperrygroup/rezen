@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+import responses
 
 from rezen import RezenClient
 from rezen.base_client import BaseClient
@@ -66,6 +67,39 @@ class TestAuthenticationHeaders:
         assert "X-API-KEY" in session_headers
         assert session_headers["X-API-KEY"] == "test_key_12345"
         assert "Authorization" not in session_headers
+
+    @responses.activate
+    def test_multipart_requests_use_x_api_key_header(self):
+        """Multipart requests must use X-API-KEY, not Authorization Bearer."""
+        from rezen import RezenClient
+
+        api_key = "multipart_test_key"
+        client = RezenClient(api_key=api_key)
+
+        transaction_id = "tx-abc-123"
+        base_url = "https://arrakis.therealbrokerage.com/api/v1"
+        responses.add(
+            responses.PUT,
+            f"{base_url}/transaction-builder/{transaction_id}/other-participants",
+            json={"ok": True},
+            status=200,
+        )
+
+        participant_info = {
+            "role": "OTHER_AGENT",
+            "firstName": "Test",
+            "lastName": "Agent",
+            "email": "t@example.com",
+            "phoneNumber": "1(555) 555-5555",
+        }
+
+        client.transaction_builder.add_participant(transaction_id, participant_info)
+
+        # Verify headers used in multipart request
+        req_headers = responses.calls[0].request.headers
+        assert req_headers.get("X-API-KEY") == api_key
+        assert "Authorization" not in req_headers
+        assert "multipart/form-data" in req_headers.get("Content-Type", "")
 
     def test_api_key_format_validation(self):
         """Test that API keys are properly formatted."""
