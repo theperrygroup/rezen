@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.11] - 2025-08-21
+
+### 🔐 Authentication & Multipart
+- Ensure all multipart/form-data requests send `X-API-KEY` (not Authorization Bearer)
+- Fix `add_participant` to send multipart form fields like Postman examples
+- Add tests verifying multipart header and content-type behavior
+- Update docs for `add_participant` and `add_commission_payer` to call out multipart requirements
+
+### 🧪 Tests & Tooling
+- Expand auth header tests to cover multipart scenarios
+
+---
+
 ## [2.2.6] - 2025-01-29
 
 ### 🎯 Critical Fix

@@ -7,21 +7,8 @@ API interactions with the ReZEN library.
 from decimal import Decimal
 from uuid import uuid4
 
-from rezen import (
-    Address,
-    Agent,
-    Commission,
-    Money,
-    Team,
-    TeamConfig,
-)
-from rezen.models import (
-    AgentStatus,
-    Country,
-    StateOrProvince,
-    TeamStatus,
-    TeamType,
-)
+from rezen import Address, Agent, Commission, Money, Team, TeamConfig
+from rezen.models import AgentStatus, Country, StateOrProvince, TeamStatus, TeamType
 
 
 def main() -> None:

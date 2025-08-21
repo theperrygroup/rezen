@@ -151,7 +151,8 @@ class BaseClient:
         try:
             headers = {}
             if files:
-                # Don't set Content-Type for multipart requests, let requests handle it
+                # Don't set Content-Type for multipart requests, let requests handle it.
+                # Preserve our required X-API-KEY authentication header.
                 headers = {
                     k: v
                     for k, v in self.session.headers.items()
@@ -164,7 +165,8 @@ class BaseClient:
                 import requests as req
 
                 final_headers = {
-                    "Authorization": f"Bearer {self.api_key}",
+                    # Use X-API-KEY per ReZEN API authentication requirements
+                    "X-API-KEY": self.api_key,
                     "Accept": "application/json",
                     # NO Content-Type - let requests set it for multipart
                 }
