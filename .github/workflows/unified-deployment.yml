@@ -182,7 +182,7 @@ jobs:
     - name: Install quality tools
       run: |
         python -m pip install --upgrade pip
-        pip install black isort flake8 mypy bandit safety
+          pip install black "isort<6" flake8 mypy bandit safety
         pip install flake8-docstrings flake8-import-order types-requests
 
     - name: Check code formatting with Black
