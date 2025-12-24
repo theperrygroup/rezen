@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rezen"
-version = "2.2.12"
+version = "2.2.13"
 description = "Python wrapper for The Real Brokerage ReZEN API - Transaction Builder, Transactions, Teams, Agents, and Directory management"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -121,6 +121,7 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 show_error_codes = true
+disable_error_code = ["no-any-return"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

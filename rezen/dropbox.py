@@ -1,6 +1,6 @@
 """ReZEN Dropbox API client implementation."""
 
-from typing import Any, BinaryIO, Dict, List, Optional, Union
+from typing import Any, BinaryIO, Dict, List, Optional, Union, cast
 
 from .base_client import BaseClient
 from .exceptions import RezenError, ValidationError
@@ -124,9 +124,7 @@ class DropboxClient(BaseClient):
 
         response = self.get(endpoint, params=params if params else None)
 
-        # The API returns an array according to the schema, but base client types it as Dict
-        # Cast to the expected list type
-        return response  # type: ignore[return-value]
+        return cast(List[Dict[str, Any]], response)
 
     def upload_file(self, agent_id: str, file: BinaryIO, path: str) -> Dict[str, Any]:
         """
