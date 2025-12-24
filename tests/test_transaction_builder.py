@@ -1,10 +1,17 @@
 """Tests for the transaction builder client."""
 
 import io
+from typing import Any, Dict
 
 import pytest
 import responses
 
+from rezen.exceptions import (
+    InvalidFieldNameError,
+    InvalidFieldValueError,
+    TransactionSequenceError,
+    ValidationError,
+)
 from rezen.transaction_builder import TransactionBuilderClient
 
 
@@ -52,6 +59,11 @@ class TestTransactionBuilderClient:
         result = self.client.add_seller(self.transaction_id, seller_info)
 
         assert result == expected_response
+
+    def test_add_seller_rejects_snake_case_fields(self) -> None:
+        """Test add_seller rejects snake_case field names."""
+        with pytest.raises(InvalidFieldNameError):
+            self.client.add_seller(self.transaction_id, {"first_name": "Jane"})
 
     @responses.activate
     def test_add_referral_info(self) -> None:
@@ -223,6 +235,87 @@ class TestTransactionBuilderClient:
         result = self.client.update_price_and_date_info(self.transaction_id, price_info)
 
         assert result == expected_response
+
+    def test_update_price_and_date_info_validations(self) -> None:
+        """Test validation branches for update_price_and_date_info."""
+        with pytest.raises(ValidationError, match="Missing required fields"):
+            self.client.update_price_and_date_info(
+                self.transaction_id, {"dealType": "SALE"}
+            )
+
+        with pytest.raises(InvalidFieldValueError, match="salePrice"):
+            self.client.update_price_and_date_info(
+                self.transaction_id,
+                {
+                    "dealType": "SALE",
+                    "propertyType": "RESIDENTIAL",
+                    "salePrice": 500000,
+                    "representationType": "BUYER",
+                    "listingCommission": {"commissionPercent": 3.0},
+                    "saleCommission": {"commissionPercent": 3.0},
+                },
+            )
+
+        with pytest.raises(InvalidFieldValueError, match="salePrice"):
+            self.client.update_price_and_date_info(
+                self.transaction_id,
+                {
+                    "dealType": "SALE",
+                    "propertyType": "RESIDENTIAL",
+                    "salePrice": {"amount": 500000},
+                    "representationType": "BUYER",
+                    "listingCommission": {"commissionPercent": 3.0},
+                    "saleCommission": {"commissionPercent": 3.0},
+                },
+            )
+
+        with pytest.raises(InvalidFieldValueError, match="representationType"):
+            self.client.update_price_and_date_info(
+                self.transaction_id,
+                {
+                    "dealType": "SALE",
+                    "propertyType": "RESIDENTIAL",
+                    "salePrice": {"amount": 500000, "currency": "USD"},
+                    "representationType": "BUYERS_AGENT",
+                    "listingCommission": {"commissionPercent": 3.0},
+                    "saleCommission": {"commissionPercent": 3.0},
+                },
+            )
+
+        with pytest.raises(InvalidFieldNameError):
+            self.client.update_price_and_date_info(
+                self.transaction_id,
+                {
+                    "dealType": "SALE",
+                    "propertyType": "RESIDENTIAL",
+                    "salePrice": {"amount": 500000, "currency": "USD"},
+                    "representationType": "BUYER",
+                    "listingCommission": {"commissionPercent": 3.0},
+                    "saleCommission": {"commissionPercent": 3.0},
+                    "acceptance_date": "2025-01-01",
+                },
+            )
+
+    def test_update_price_and_date_info_adds_negative_or_empty(self) -> None:
+        """Commission objects should default negativeOrEmpty to False."""
+        payload = {
+            "dealType": "SALE",
+            "propertyType": "RESIDENTIAL",
+            "salePrice": {"amount": 500000, "currency": "USD"},
+            "representationType": "BUYER",
+            "listingCommission": {"commissionPercent": 3.0, "percentEnabled": True},
+            "saleCommission": {"commissionPercent": 3.0, "percentEnabled": True},
+        }
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(self.client, "put", lambda *_args, **_kwargs: {"ok": True})
+            result = self.client.update_price_and_date_info(
+                self.transaction_id, payload
+            )
+            assert result == {"ok": True}
+
+        assert payload["listingCommission"]["negativeOrEmpty"] is False
+        assert payload["saleCommission"]["negativeOrEmpty"] is False
 
     @responses.activate
     def test_update_personal_deal_info(self) -> None:
@@ -456,6 +549,13 @@ class TestTransactionBuilderClient:
 
         assert result == expected_response
 
+    def test_add_buyer_rejects_snake_case_fields(self) -> None:
+        """Test add_buyer rejects snake_case field names."""
+        with pytest.raises(InvalidFieldNameError):
+            self.client.add_buyer(
+                self.transaction_id, {"phone_number": "1(555) 111-2222"}
+            )
+
     @responses.activate
     def test_update_buyer_and_seller_info(self) -> None:
         """Test update_buyer_and_seller_info endpoint."""
@@ -648,6 +748,25 @@ class TestTransactionBuilderClient:
         assert result == expected_response
 
     @responses.activate
+    def test_get_commission_payer_roles_and_display_names_with_representation_type(
+        self,
+    ) -> None:
+        """Test optional representationType param is passed through."""
+        expected_response = {"roles": {"SELLER": "Seller"}}
+        responses.add(
+            responses.GET,
+            f"{self.base_url}/transaction-builder/commission-payer-roles-and-display-name",
+            json=expected_response,
+            status=200,
+        )
+
+        result = self.client.get_commission_payer_roles_and_display_names(
+            representation_type="SELLER"
+        )
+        assert result == expected_response
+        assert "representationType=SELLER" in responses.calls[0].request.url
+
+    @responses.activate
     def test_get_metadata_for_participant_creation(self) -> None:
         """Test get_metadata_for_participant_creation endpoint."""
         expected_response = {"metadata": {"required_fields": ["name", "email"]}}
@@ -686,7 +805,7 @@ class TestTransactionBuilderClient:
     def test_create_transaction_builder_string_response(self) -> None:
         """Test create_transaction_builder with string response."""
         # API sometimes returns just a string ID
-        expected_response = "new-builder-456"
+        expected_response = '"new-builder-456"'
         responses.add(
             responses.POST,
             f"{self.base_url}/transaction-builder",
@@ -698,6 +817,18 @@ class TestTransactionBuilderClient:
 
         # Should wrap string response in dict format
         assert result == {"id": "new-builder-456"}
+
+    @responses.activate
+    def test_create_transaction_builder_message_response(self) -> None:
+        """Test create_transaction_builder wraps dict message field as id."""
+        responses.add(
+            responses.POST,
+            f"{self.base_url}/transaction-builder",
+            json={"message": "builder-xyz"},
+            status=200,
+        )
+
+        assert self.client.create_transaction_builder() == {"id": "builder-xyz"}
 
     @responses.activate
     def test_create_builder_from_transaction(self) -> None:
@@ -712,6 +843,52 @@ class TestTransactionBuilderClient:
 
         result = self.client.create_builder_from_transaction(self.transaction_id)
 
+        assert result == expected_response
+
+    @responses.activate
+    def test_convert_transaction_to_builder(self) -> None:
+        """Test convert_transaction_to_builder convenience method."""
+        expected_response = {"success": True, "builder_id": "builder-999"}
+        responses.add(
+            responses.POST,
+            f"{self.base_url}/transaction-builder/{self.transaction_id}/transaction-to-builder",
+            json=expected_response,
+            status=200,
+        )
+
+        result = self.client.convert_transaction_to_builder(self.transaction_id)
+        assert result == expected_response
+
+    @responses.activate
+    def test_convert_listing_transaction_to_builder(self) -> None:
+        """Test listing transaction to builder conversion."""
+        listing_transaction_id = "listing-transaction-abc"
+        expected_response = {"success": True, "builder_id": "builder-from-listing"}
+        responses.add(
+            responses.POST,
+            f"{self.base_url}/transaction-builder/{listing_transaction_id}/transaction-to-builder",
+            json=expected_response,
+            status=200,
+        )
+
+        result = self.client.convert_listing_transaction_to_builder(
+            listing_transaction_id
+        )
+        assert result == expected_response
+
+    @responses.activate
+    def test_convert_listing_to_transaction_deprecated_alias(self) -> None:
+        """Test legacy alias convert_listing_to_transaction still works."""
+        listing_transaction_id = "listing-transaction-legacy"
+        expected_response = {"success": True, "builder_id": "legacy-builder"}
+        responses.add(
+            responses.POST,
+            f"{self.base_url}/transaction-builder/{listing_transaction_id}/transaction-to-builder",
+            json=expected_response,
+            status=200,
+        )
+
+        result = self.client.convert_listing_to_transaction(listing_transaction_id)
         assert result == expected_response
 
     @responses.activate
@@ -1077,3 +1254,399 @@ class TestTransactionBuilderClient:
 
         with pytest.raises(NotFoundError):
             self.client.update_title_info(self.transaction_id, {"title": "Test"})
+
+    def test_update_owner_agent_info_validation_branches(self) -> None:
+        """Test update_owner_agent_info validates payload shape before sending."""
+        # Missing ownerAgent
+        with pytest.raises(
+            ValidationError, match="Missing required field 'ownerAgent'"
+        ):
+            self.client.update_owner_agent_info(self.transaction_id, {"officeId": "o1"})
+
+        # ownerAgent must be dict
+        with pytest.raises(InvalidFieldValueError, match="ownerAgent"):
+            self.client.update_owner_agent_info(
+                self.transaction_id,
+                {"ownerAgent": "nope", "officeId": "o1", "teamId": "t1"},
+            )
+
+        # Missing agentId / role
+        with pytest.raises(ValidationError, match="agentId"):
+            self.client.update_owner_agent_info(
+                self.transaction_id,
+                {
+                    "ownerAgent": {"role": "BUYERS_AGENT"},
+                    "officeId": "o1",
+                    "teamId": "t1",
+                },
+            )
+        with pytest.raises(ValidationError, match="role"):
+            self.client.update_owner_agent_info(
+                self.transaction_id,
+                {"ownerAgent": {"agentId": "a1"}, "officeId": "o1", "teamId": "t1"},
+            )
+
+        # Invalid role
+        with pytest.raises(InvalidFieldValueError, match="role"):
+            self.client.update_owner_agent_info(
+                self.transaction_id,
+                {
+                    "ownerAgent": {"agentId": "a1", "role": "LISTING_AGENT"},
+                    "officeId": "o1",
+                    "teamId": "t1",
+                },
+            )
+
+        # Missing officeId / teamId
+        with pytest.raises(ValidationError, match="officeId"):
+            self.client.update_owner_agent_info(
+                self.transaction_id,
+                {
+                    "ownerAgent": {"agentId": "a1", "role": "BUYERS_AGENT"},
+                    "teamId": "t1",
+                },
+            )
+        with pytest.raises(ValidationError, match="teamId"):
+            self.client.update_owner_agent_info(
+                self.transaction_id,
+                {
+                    "ownerAgent": {"agentId": "a1", "role": "BUYERS_AGENT"},
+                    "officeId": "o1",
+                },
+            )
+
+    def test_update_owner_agent_info_sequence_error(self) -> None:
+        """Test update_owner_agent_info maps generic invalid-request errors to TransactionSequenceError."""
+        payload = {
+            "ownerAgent": {"agentId": "a1", "role": "BUYERS_AGENT"},
+            "officeId": "o1",
+            "teamId": "t1",
+        }
+
+        def _raise(*_args: Any, **_kwargs: Any) -> Dict[str, Any]:
+            raise ValidationError("Bad request: Invalid request")
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(self.client, "put", _raise)
+            with pytest.raises(TransactionSequenceError):
+                self.client.update_owner_agent_info(self.transaction_id, payload)
+
+    def test_update_owner_agent_info_reraises_other_validation_error(self) -> None:
+        """Non-sequence ValidationError should be re-raised as-is."""
+        payload = {
+            "ownerAgent": {"agentId": "a1", "role": "BUYERS_AGENT"},
+            "officeId": "o1",
+            "teamId": "t1",
+        }
+
+        def _raise(*_args: Any, **_kwargs: Any) -> Dict[str, Any]:
+            raise ValidationError("Bad request: Something else")
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(self.client, "put", _raise)
+            with pytest.raises(ValidationError, match="Something else"):
+                self.client.update_owner_agent_info(self.transaction_id, payload)
+
+    def test_backward_compat_aliases_delegate(self) -> None:
+        """Back-compat alias methods should delegate to the canonical implementation."""
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(self.client, "add_buyer", lambda *_a, **_k: {"buyer": True})
+            mp.setattr(self.client, "add_seller", lambda *_a, **_k: {"seller": True})
+            mp.setattr(
+                self.client,
+                "update_location_info",
+                lambda *_a, **_k: {"location": True},
+            )
+            mp.setattr(
+                self.client,
+                "update_price_and_date_info",
+                lambda *_a, **_k: {"price_date": True},
+            )
+            mp.setattr(
+                self.client, "add_commission_payer", lambda *_a, **_k: {"payer": True}
+            )
+            mp.setattr(
+                self.client,
+                "update_personal_deal_info",
+                lambda *_a, **_k: {"deal": True},
+            )
+            mp.setattr(
+                self.client, "update_title_info", lambda *_a, **_k: {"title": True}
+            )
+
+            assert self.client.put_buyer_to_draft("t1", {}) == {"buyer": True}
+            assert self.client.put_seller_to_draft("t1", {}) == {"seller": True}
+            assert self.client.put_location_to_draft("t1", {}) == {"location": True}
+            assert self.client.put_price_and_date_to_draft("t1", {}) == {
+                "price_date": True
+            }
+            assert self.client.update_commission_payer("t1", {}) == {"payer": True}
+            assert self.client.update_personal_deal("t1", {}) == {"deal": True}
+            assert self.client.update_real_title("t1", {}) == {"title": True}
+
+    def test_owner_agent_convenience_methods_and_helpers(self) -> None:
+        """Cover owner-agent convenience helpers for team/office selection."""
+        import rezen.users as users_module
+
+        class DummyUsersClient:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {
+                    "id": "user-1",
+                    "teams": [
+                        {
+                            "teamId": "team-1",
+                            "teamName": "Team One",
+                            "teamRoles": ["LEADER"],
+                            "teamType": "NORMAL",
+                        }
+                    ],
+                    "offices": [{"id": "office-1"}],
+                }
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClient)
+            mp.setattr(
+                self.client, "update_owner_agent_info", lambda *_a, **_k: {"ok": True}
+            )
+
+            result = self.client.set_current_user_as_owner_agent(
+                transaction_builder_id="builder-1",
+                role="BUYERS_AGENT",
+                users_client=None,
+            )
+            assert result == {"ok": True}
+
+        # get_user_teams_and_offices import branch + leader selection
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClient)
+            info = self.client.get_user_teams_and_offices(users_client=None)
+            assert info["default_team"]["id"] == "team-1"
+            assert info["office_id"] == "office-1"
+
+        # set_current_user_as_owner_agent_with_team import branch + membership validation
+        class DummyUsersClientMultiTeam(DummyUsersClient):
+            def get_current_user(self) -> Dict[str, Any]:
+                base = super().get_current_user()
+                base["teams"].append(
+                    {
+                        "teamId": "team-2",
+                        "teamName": "Team Two",
+                        "teamRoles": ["ADMIN"],
+                        "teamType": "NORMAL",
+                    }
+                )
+                return base
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientMultiTeam)
+            mp.setattr(
+                self.client, "update_owner_agent_info", lambda *_a, **_k: {"ok": True}
+            )
+            assert self.client.set_current_user_as_owner_agent_with_team(
+                transaction_builder_id="builder-1",
+                role="SELLERS_AGENT",
+                team_id="team-2",
+                users_client=None,
+            ) == {"ok": True}
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientMultiTeam)
+            with pytest.raises(ValidationError, match="not a member of team"):
+                self.client.set_current_user_as_owner_agent_with_team(
+                    transaction_builder_id="builder-1",
+                    role="SELLERS_AGENT",
+                    team_id="team-unknown",
+                    users_client=None,
+                )
+
+    def test_owner_agent_convenience_additional_branches(self) -> None:
+        """Cover remaining owner-agent helper branches (warnings and error paths)."""
+        import builtins
+
+        import rezen.users as users_module
+
+        class DummyUsersClientNoDefaultTeam:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {"id": "user-1", "teams": [], "offices": [{"id": "office-1"}]}
+
+        class DummyUsersClientNoOffices:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {
+                    "id": "user-1",
+                    "teams": [
+                        {
+                            "teamId": "team-1",
+                            "teamName": "Team One",
+                            "teamRoles": ["LEADER"],
+                            "teamType": "NORMAL",
+                        }
+                    ],
+                    "offices": [],
+                }
+
+        class DummyUsersClientTwoTeams:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {
+                    "id": "user-1",
+                    "teams": [
+                        {
+                            "teamId": "team-1",
+                            "teamName": "Team One",
+                            "teamRoles": ["LEADER"],
+                            "teamType": "NORMAL",
+                        },
+                        {
+                            "teamId": "team-2",
+                            "teamName": "Team Two",
+                            "teamRoles": ["ADMIN"],
+                            "teamType": "NORMAL",
+                        },
+                    ],
+                    "offices": [{"id": "office-1"}],
+                }
+
+        # Warning branch: multiple teams prints a message.
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientTwoTeams)
+            mp.setattr(builtins, "print", lambda *_a, **_k: None)
+            mp.setattr(
+                self.client, "update_owner_agent_info", lambda *_a, **_k: {"ok": True}
+            )
+            self.client.set_current_user_as_owner_agent(
+                transaction_builder_id="builder-1",
+                role="BUYERS_AGENT",
+                users_client=None,
+            )
+
+        # No default team branch.
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientNoDefaultTeam)
+            mp.setattr(
+                self.client,
+                "get_user_teams_and_offices",
+                lambda *_a, **_k: {"default_team": None},
+            )
+            with pytest.raises(
+                ValidationError, match="must belong to at least one team"
+            ):
+                self.client.set_current_user_as_owner_agent(
+                    transaction_builder_id="builder-1",
+                    role="BUYERS_AGENT",
+                    users_client=None,
+                )
+
+        # No offices branch.
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientNoOffices)
+            mp.setattr(
+                self.client,
+                "get_user_teams_and_offices",
+                lambda *_a, **_k: {"default_team": {"id": "team-1"}},
+            )
+            with pytest.raises(ValidationError, match="no offices available"):
+                self.client.set_current_user_as_owner_agent(
+                    transaction_builder_id="builder-1",
+                    role="BUYERS_AGENT",
+                    users_client=None,
+                )
+
+        # get_user_teams_and_offices no offices ValueError branch.
+        class DummyUsersClientNoOfficesForTeams:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {"id": "user-1", "teams": [], "offices": []}
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientNoOfficesForTeams)
+            with pytest.raises(ValueError, match="User has no offices"):
+                self.client.get_user_teams_and_offices(users_client=None)
+
+        # Admin-default branch.
+        class DummyUsersClientAdminTeam:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {
+                    "id": "user-1",
+                    "teams": [
+                        {
+                            "teamId": "team-admin",
+                            "teamName": "Admin Team",
+                            "teamRoles": ["ADMIN"],
+                            "teamType": "NORMAL",
+                        }
+                    ],
+                    "offices": [{"id": "office-1"}],
+                }
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientAdminTeam)
+            info = self.client.get_user_teams_and_offices(users_client=None)
+            assert info["default_team"]["role"] == "ADMIN"
+
+        # Fallback-to-first-team branch (no roles => MEMBER).
+        class DummyUsersClientMemberTeam:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {
+                    "id": "user-1",
+                    "teams": [
+                        {
+                            "teamId": "team-member",
+                            "teamName": "Member Team",
+                            "teamRoles": [],
+                            "teamType": "NORMAL",
+                        }
+                    ],
+                    "offices": [{"id": "office-1"}],
+                }
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientMemberTeam)
+            info = self.client.get_user_teams_and_offices(users_client=None)
+            assert info["default_team"]["id"] == "team-member"
+
+        # set_current_user_as_owner_agent_with_team no offices branch.
+        class DummyUsersClientWithTeamNoOffices:
+            def __init__(self, api_key: str) -> None:
+                self.api_key = api_key
+
+            def get_current_user(self) -> Dict[str, Any]:
+                return {
+                    "id": "user-1",
+                    "teams": [{"teamId": "team-1"}],
+                    "offices": [],
+                }
+
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(users_module, "UsersClient", DummyUsersClientWithTeamNoOffices)
+            with pytest.raises(ValidationError, match="no offices available"):
+                self.client.set_current_user_as_owner_agent_with_team(
+                    transaction_builder_id="builder-1",
+                    role="BUYERS_AGENT",
+                    team_id="team-1",
+                    users_client=None,
+                )
+
+    def test_create_complete_transaction_example_returns_string(self) -> None:
+        """create_complete_transaction_example should return documentation string."""
+        example = self.client.create_complete_transaction_example()
+        assert isinstance(example, str)
+        assert "COMPLETE WORKING TRANSACTION SUBMISSION EXAMPLE" in example

@@ -104,7 +104,7 @@ class TestAuthenticationHeaders:
     def test_api_key_format_validation(self):
         """Test that API keys are properly formatted."""
         # Test with real-like API key format
-        api_key = "real_Qp1vOeBFiVevF3XV0APgznZ2frPp8fSlaqq7"
+        api_key = "real_test_key_12345"
         client = BaseClient(api_key=api_key)
 
         assert client.session.headers["X-API-KEY"] == api_key

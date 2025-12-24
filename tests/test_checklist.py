@@ -335,6 +335,91 @@ class TestChecklistClient:
                 file=file_obj,
             )
 
+    def test_add_document_to_checklist_item_additional_validation_errors(
+        self, client: ChecklistClient
+    ) -> None:
+        """Test additional required-field validations."""
+        valid_uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        file_obj = io.BytesIO(b"test content")
+
+        with pytest.raises(ValidationError, match="Document description is required"):
+            client.add_document_to_checklist_item(
+                checklist_item_id=valid_uuid,
+                name="Test Document",
+                description="",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=file_obj,
+            )
+
+        with pytest.raises(ValidationError, match="Checklist item ID is required"):
+            client.add_document_to_checklist_item(
+                checklist_item_id="",
+                name="Test Document",
+                description="Test document",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=file_obj,
+            )
+
+        with pytest.raises(ValidationError, match="Uploader ID is required"):
+            client.add_document_to_checklist_item(
+                checklist_item_id=valid_uuid,
+                name="Test Document",
+                description="Test document",
+                uploader_id="",
+                transaction_id=valid_uuid,
+                file=file_obj,
+            )
+
+        with pytest.raises(ValidationError, match="Transaction ID is required"):
+            client.add_document_to_checklist_item(
+                checklist_item_id=valid_uuid,
+                name="Test Document",
+                description="Test document",
+                uploader_id=valid_uuid,
+                transaction_id="",
+                file=file_obj,
+            )
+
+        with pytest.raises(
+            ValidationError, match="File is required for document upload"
+        ):
+            client.add_document_to_checklist_item(
+                checklist_item_id=valid_uuid,
+                name="Test Document",
+                description="Test document",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=None,  # type: ignore[arg-type]
+            )
+
+    def test_add_document_to_checklist_item_enhanced_bad_request_message(
+        self, client: ChecklistClient
+    ) -> None:
+        """Test enhanced debugging information when API returns Bad request."""
+        valid_uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(
+                client,
+                "_request",
+                lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    ValidationError("Bad request: Invalid request")
+                ),
+            )
+
+            with pytest.raises(ValidationError) as exc:
+                client.add_document_to_checklist_item(
+                    checklist_item_id=valid_uuid,
+                    name="Test Document",
+                    description="Test document",
+                    uploader_id=valid_uuid,
+                    transaction_id=valid_uuid,
+                    file=io.BytesIO(b"x"),
+                )
+
+            assert "Debugging checklist" in str(exc.value)
+
     @responses.activate
     def test_add_document_version_with_file(self, client: ChecklistClient) -> None:
         """Test adding document version with file upload."""
@@ -383,6 +468,114 @@ class TestChecklistClient:
                 files={"file": file_obj},
             )
             assert result == expected_response
+
+    def test_add_document_version_validation_errors(
+        self, client: ChecklistClient
+    ) -> None:
+        """Test validation errors for add_document_version."""
+        valid_uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+        with pytest.raises(ValidationError, match="Version name is required"):
+            client.add_document_version(
+                checklist_document_id=valid_uuid,
+                name="",
+                description="Second version",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=io.BytesIO(b"x"),
+            )
+
+        with pytest.raises(ValidationError, match="Version description is required"):
+            client.add_document_version(
+                checklist_document_id=valid_uuid,
+                name="Version 2",
+                description="",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=io.BytesIO(b"x"),
+            )
+
+        with pytest.raises(ValidationError, match="Checklist document ID is required"):
+            client.add_document_version(
+                checklist_document_id="",
+                name="Version 2",
+                description="Second version",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=io.BytesIO(b"x"),
+            )
+
+        with pytest.raises(ValidationError, match="Uploader ID is required"):
+            client.add_document_version(
+                checklist_document_id=valid_uuid,
+                name="Version 2",
+                description="Second version",
+                uploader_id="",
+                transaction_id=valid_uuid,
+                file=io.BytesIO(b"x"),
+            )
+
+        with pytest.raises(ValidationError, match="Transaction ID is required"):
+            client.add_document_version(
+                checklist_document_id=valid_uuid,
+                name="Version 2",
+                description="Second version",
+                uploader_id=valid_uuid,
+                transaction_id="",
+                file=io.BytesIO(b"x"),
+            )
+
+        with pytest.raises(
+            ValidationError, match="File is required for document version upload"
+        ):
+            client.add_document_version(
+                checklist_document_id=valid_uuid,
+                name="Version 2",
+                description="Second version",
+                uploader_id=valid_uuid,
+                transaction_id=valid_uuid,
+                file=None,  # type: ignore[arg-type]
+            )
+
+    def test_add_document_version_invalid_uuid_format(
+        self, client: ChecklistClient
+    ) -> None:
+        """Test invalid UUIDs are wrapped with context for add_document_version."""
+        with pytest.raises(ValidationError, match="Invalid parameter format"):
+            client.add_document_version(
+                checklist_document_id="not-a-uuid",
+                name="Version 2",
+                description="Second version",
+                uploader_id="also-not-a-uuid",
+                transaction_id="still-not-a-uuid",
+                file=io.BytesIO(b"x"),
+            )
+
+    def test_add_document_version_enhanced_bad_request_message(
+        self, client: ChecklistClient
+    ) -> None:
+        """Test enhanced debugging information when version upload fails with Bad request."""
+        valid_uuid = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(
+                client,
+                "_request",
+                lambda *_args, **_kwargs: (_ for _ in ()).throw(
+                    ValidationError("Bad request: Invalid request")
+                ),
+            )
+
+            with pytest.raises(ValidationError) as exc:
+                client.add_document_version(
+                    checklist_document_id=valid_uuid,
+                    name="Version 2",
+                    description="Second version",
+                    uploader_id=valid_uuid,
+                    transaction_id=valid_uuid,
+                    file=io.BytesIO(b"x"),
+                )
+
+            assert "Debugging checklist" in str(exc.value)
 
     @responses.activate
     def test_batch_update_checklists(self, client: ChecklistClient) -> None:
@@ -489,6 +682,22 @@ class TestChecklistClient:
         assert len(responses.calls) == 1
         assert result == expected_response
 
+    @responses.activate
+    def test_link_file_to_checklist_item(self, client: ChecklistClient) -> None:
+        """Test link_file_to_checklist_item endpoint."""
+        checklist_item_id = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        responses.add(
+            responses.POST,
+            f"{client.base_url}/checklists/checklist-items/{checklist_item_id}/file-references",
+            json={"ok": True},
+            status=200,
+        )
+
+        result = client.link_file_to_checklist_item(
+            checklist_item_id, [{"fileId": "file-1", "filename": "x.pdf"}]
+        )
+        assert result == {"ok": True}
+
     # Legacy method tests
     @responses.activate
     def test_post_document_to_checklist_legacy(self, client: ChecklistClient) -> None:
@@ -529,6 +738,15 @@ class TestChecklistClient:
                 file=file_obj,
             )
             assert result == expected_response
+
+    def test_post_document_to_checklist_legacy_missing_fields_raises(
+        self, client: ChecklistClient
+    ) -> None:
+        """Test legacy post_document_to_checklist validates required fields."""
+        with pytest.raises(ValidationError, match="Missing required fields in data"):
+            client.post_document_to_checklist(
+                "checklist-item-1", {"name": "Only name"}, io.BytesIO(b"x")
+            )
 
     @responses.activate
     def test_mark_checklist_item_complete_legacy(self, client: ChecklistClient) -> None:

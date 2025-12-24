@@ -290,9 +290,8 @@ def add_owner_agent_to_transaction(transaction_id: str) -> bool:
         team_id: str = user['team']['id']
         office_id: str = user['office']['id']
         
-        # Get agent ID from keymaker
-        keymaker: Dict[str, Any] = client.users.get_keymaker_ids(user['id'])
-        agent_id: str = keymaker['id']
+        # In ReZEN, user ID = agent ID for owner-agent payloads
+        agent_id: str = str(user['id'])
         
         # Create owner data structure
         owner_data: Dict[str, Any] = {

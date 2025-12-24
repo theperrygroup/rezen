@@ -32,9 +32,9 @@ print(f"User: {current_user['firstName']} {current_user['lastName']}")
 print(f"Team ID: {current_user['team']['id']}")
 print(f"Office ID: {current_user['office']['id']}")
 
-# Get keymaker IDs for transaction owner setup
-keymaker_ids = client.users.get_keymaker_ids(current_user['id'])
-print(f"Agent ID: {keymaker_ids['id']}")
+# In ReZEN, the user ID is the agent ID used for owner-agent setup.
+agent_id = client.users.get_agent_id_for_current_user()
+print(f"Agent ID: {agent_id}")
 ```
 
 ---
@@ -91,7 +91,8 @@ print(f"Agent ID: {keymaker_ids['id']}")
 
 !!! important "Agent ID for Transactions"
     
-    The `get_keymaker_ids()` method returns the agent ID needed for owner agent operations in transactions.
+    For owner-agent operations in transactions, you typically do **not** need to call `get_keymaker_ids()`.
+    In ReZEN, the authenticated user's `id` is the agent ID used in owner-agent payloads.
 
 ---
 
@@ -115,9 +116,8 @@ user: Dict[str, Any] = client.users.get_current_user()
 team_id: str = user['team']['id']
 office_id: str = user['office']['id']
 
-# Step 2: Get agent ID from keymaker
-keymaker: Dict[str, Any] = client.users.get_keymaker_ids(user['id'])
-agent_id: str = keymaker['id']
+# Step 2: In ReZEN, user ID = agent ID for owner-agent payloads
+agent_id: str = str(user['id'])
 
 # Step 3: Use in transaction owner agent setup
 owner_data: Dict[str, Any] = {
@@ -177,16 +177,15 @@ client.transaction_builder.set_current_user_as_owner_agent(
 }
 ```
 
-### Keymaker Response
+### Keymaker IDs Response
+
+`get_keymaker_ids()` returns a list of UUID strings:
 
 ```python
-{
-    "id": "agent-uuid",  # This is the agent ID for transactions
-    "userId": "user-uuid",
-    "agentStatus": "ACTIVE",
-    "licenseNumber": "123456",
-    "licenseState": "UT"
-}
+[
+    "keymaker-uuid-1",
+    "keymaker-uuid-2",
+]
 ```
 
 ---
@@ -206,10 +205,10 @@ client.transaction_builder.set_current_user_as_owner_agent(
 
         # Get all required info for owner agent
         user: Dict[str, Any] = client.users.get_current_user()
-        keymaker: Dict[str, Any] = client.users.get_keymaker_ids(user['id'])
+        agent_id: str = str(user["id"])
 
         owner_info = {
-            "agent_id": keymaker['id'],
+            "agent_id": agent_id,
             "team_id": user['team']['id'],
             "office_id": user['office']['id'],
             "user_name": f"{user['firstName']} {user['lastName']}"
@@ -229,11 +228,11 @@ client.transaction_builder.set_current_user_as_owner_agent(
         team_member_id = "member-user-uuid"
         member = client.users.get_user_by_id(team_member_id)
 
-        # Get their agent ID if needed
-        member_keymaker = client.users.get_keymaker_ids(team_member_id)
+        # In ReZEN, a user's ID is the agent ID used in transaction payloads.
+        agent_id = str(member["id"])
 
         print(f"Team member: {member['firstName']} {member['lastName']}")
-        print(f"Agent ID: {member_keymaker['id']}")
+        print(f"Agent ID: {agent_id}")
         ```
 
 ---
@@ -255,11 +254,8 @@ client.transaction_builder.set_current_user_as_owner_agent(
     except Exception as e:
         print(f"Error getting user info: {e}")
 
-    # Handle missing keymaker data
-    try:
-        keymaker = client.users.get_keymaker_ids(user_id)
-    except NotFoundError:
-        print("User does not have associated agent ID")
+    # If you need Keymaker IDs for other systems, `get_keymaker_ids()` returns a list:
+    # keymaker_ids = client.users.get_keymaker_ids(user_id)
     ```
 
 ---

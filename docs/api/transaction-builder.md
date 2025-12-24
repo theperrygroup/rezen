@@ -143,7 +143,8 @@ Create and manage transaction builders with full participant and property manage
     client: RezenClient = RezenClient()
 
     # Create listing builder using dedicated method
-    listing_id: str = client.transaction_builder.create_listing_builder()
+    listing: Dict[str, Any] = client.transaction_builder.create_listing_builder()
+    listing_id: str = listing["id"]
 
     # Configure listing-specific details (use camelCase)
     seller_data: Dict[str, Any] = {
@@ -164,11 +165,17 @@ Create and manage transaction builders with full participant and property manage
 
     client: RezenClient = RezenClient()
 
-    # Convert existing listing to transaction
-    listing_id: str = "existing-listing-id"
-    response: Dict[str, Any] = client.transaction_builder.convert_listing_to_transaction(listing_id)
-    transaction_id: str = response['id']
-    print(f"Converted listing {listing_id} to transaction {transaction_id}")
+    # Convert a LISTING TRANSACTION to a transaction builder.
+    #
+    # IMPORTANT: This expects the listing's transaction id (often called
+    # `published_rezen_sale_guid` downstream), not a "listing builder id".
+    listing_transaction_id: str = "published_rezen_sale_guid-or-listing-transaction-id"
+    builder: Dict[str, Any] = client.transaction_builder.convert_listing_transaction_to_builder(
+        listing_transaction_id
+    )
+    print(
+        f"Converted listing transaction {listing_transaction_id} to builder {builder.get('id')}"
+    )
     ```
 
 ---
@@ -195,7 +202,21 @@ Create and manage transaction builders with full participant and property manage
 !!! tip "Convenience Method"
     This is a wrapper around `create_transaction_builder(builder_type='LISTING')` for easier listing creation.
 
-### Convert Listing to Transaction
+### Convert Transaction to Builder
+
+::: rezen.transaction_builder.TransactionBuilderClient.convert_transaction_to_builder
+    options:
+      show_source: false
+      heading_level: 4
+
+### Convert Listing Transaction to Builder
+
+::: rezen.transaction_builder.TransactionBuilderClient.convert_listing_transaction_to_builder
+    options:
+      show_source: false
+      heading_level: 4
+
+### Convert Listing to Transaction (Deprecated)
 
 ::: rezen.transaction_builder.TransactionBuilderClient.convert_listing_to_transaction
     options:
@@ -242,10 +263,12 @@ Create and manage transaction builders with full participant and property manage
 
         client: RezenClient = RezenClient()
 
-        # Convert listing to transaction
-        listing_id = "existing-listing-id"
-        response: Dict[str, Any] = client.transaction_builder.convert_listing_to_transaction(listing_id)
-        print(f"New transaction ID: {response['id']}")
+        # Convert a LISTING TRANSACTION to a transaction builder.
+        listing_transaction_id = "published_rezen_sale_guid-or-listing-transaction-id"
+        builder: Dict[str, Any] = client.transaction_builder.convert_listing_transaction_to_builder(
+            listing_transaction_id
+        )
+        print(f"New builder ID: {builder.get('id')}")
         ```
 
 ### Get Transaction Builder

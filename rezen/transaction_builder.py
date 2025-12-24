@@ -1,5 +1,6 @@
 """Transaction Builder client for ReZEN API."""
 
+import warnings
 from typing import Any, BinaryIO, Dict, List, Optional, Union
 
 from .base_client import BaseClient
@@ -1436,15 +1437,65 @@ class TransactionBuilderClient(BaseClient):
         return self.create_transaction_builder(builder_type="LISTING")
 
     def convert_listing_to_transaction(self, listing_id: str) -> Dict[str, Any]:
-        """Convert a listing to a transaction (wrapper for create_builder_from_transaction).
+        """Convert a listing transaction to a transaction builder.
+
+        IMPORTANT:
+            ReZEN's OpenAPI spec exposes only one conversion endpoint:
+            `POST /transaction-builder/{id}/transaction-to-builder`.
+
+            In practice, listing "conversions" use the listing's *transaction id* (often
+            called `published_rezen_sale_guid` in downstream systems) with that same
+            endpoint.
+
+        Deprecated:
+            This method name is misleading. Prefer one of:
+            - `convert_transaction_to_builder(transaction_id=...)`
+            - `convert_listing_transaction_to_builder(listing_transaction_id=...)`
 
         Args:
-            listing_id: Listing ID to convert
+            listing_id: Listing transaction id (NOT a listing builder id).
 
         Returns:
             Transaction builder response data
         """
-        return self.create_builder_from_transaction(listing_id)
+        warnings.warn(
+            "convert_listing_to_transaction() is deprecated. Use "
+            "convert_transaction_to_builder(transaction_id=...) for standard transactions, "
+            "or convert_listing_transaction_to_builder(listing_transaction_id=...) for "
+            "listing transaction conversions.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.convert_listing_transaction_to_builder(
+            listing_transaction_id=listing_id
+        )
+
+    def convert_transaction_to_builder(self, transaction_id: str) -> Dict[str, Any]:
+        """Convert a transaction to a transaction builder.
+
+        Args:
+            transaction_id: Transaction ID to create a builder from.
+
+        Returns:
+            Transaction builder response data.
+        """
+        return self.create_builder_from_transaction(transaction_id)
+
+    def convert_listing_transaction_to_builder(
+        self, listing_transaction_id: str
+    ) -> Dict[str, Any]:
+        """Convert a listing transaction to a transaction builder.
+
+        A "listing transaction" is typically referenced by downstream systems as a
+        `published_rezen_sale_guid` or similar identifier.
+
+        Args:
+            listing_transaction_id: Listing transaction ID to create a builder from.
+
+        Returns:
+            Transaction builder response data.
+        """
+        return self.create_builder_from_transaction(listing_transaction_id)
 
     def create_builder_from_transaction(self, transaction_id: str) -> Dict[str, Any]:
         """Create transaction builder from given transaction.

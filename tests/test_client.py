@@ -20,6 +20,9 @@ class TestRezenClient:
         client = RezenClient()
         assert client._api_key is None
         assert client._base_url is None
+        assert client._timeout_seconds is None
+        assert client._max_retries is None
+        assert client._retry_backoff_seconds is None
         assert client._transaction_builder is None
         assert client._transactions is None
         assert client._teams is None
@@ -33,6 +36,9 @@ class TestRezenClient:
         client = RezenClient(api_key="test_key", base_url="https://test.example.com")
         assert client._api_key == "test_key"
         assert client._base_url == "https://test.example.com"
+        assert client._timeout_seconds is None
+        assert client._max_retries is None
+        assert client._retry_backoff_seconds is None
         assert client._transaction_builder is None
         assert client._transactions is None
         assert client._teams is None
@@ -110,6 +116,35 @@ class TestRezenClient:
         transactions_client = client.transactions
 
         assert transactions_client.api_key == "env_test_key"
+
+    def test_load_dotenv_opt_in(self) -> None:
+        """Test that dotenv loading is opt-in."""
+        with patch("dotenv.load_dotenv") as load:
+            RezenClient(load_dotenv=True)
+            load.assert_called_once()
+
+    def test_timeout_and_retry_settings_propagate_to_subclients(self) -> None:
+        """Test that configured timeouts/retries propagate to created sub-clients."""
+        client = RezenClient(
+            api_key="test_key",
+            timeout_seconds=12.0,
+            max_retries=1,
+            retry_backoff_seconds=0.1,
+        )
+
+        assert client.transaction_builder.timeout_seconds == 12.0
+        assert client.transaction_builder.max_retries == 1
+        assert client.transaction_builder.retry_backoff_seconds == 0.1
+
+        assert client.transactions.timeout_seconds == 12.0
+        assert client.transactions.max_retries == 1
+        assert client.transactions.retry_backoff_seconds == 0.1
+
+        # Different base URLs still receive the same transport configuration.
+        assert client.agents.timeout_seconds == 12.0
+        assert client.teams.timeout_seconds == 12.0
+        assert client.directory.timeout_seconds == 12.0
+        assert client.users.timeout_seconds == 12.0
 
     def test_teams_property_lazy_loading(self) -> None:
         """Test that teams property creates client on first access."""

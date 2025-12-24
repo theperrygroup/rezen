@@ -66,10 +66,15 @@ REZEN_API_KEY=your_api_key_here
 Then load it in your Python code:
 
 ```python
+from rezen import RezenClient
+
+# Option 1 (recommended): let rezen load `.env` (requires `pip install rezen[dotenv]`)
+client = RezenClient(load_dotenv=True)
+
+# Option 2: load manually (requires `pip install python-dotenv`)
 from dotenv import load_dotenv
 load_dotenv()
 
-from rezen import RezenClient
 client = RezenClient()  # Will automatically use the API key from .env
 ```
 
@@ -104,9 +109,16 @@ pip install rezen
 The ReZEN client automatically installs these dependencies:
 
 - **requests** - HTTP client for API calls
+- **pydantic** - Validation helpers used by the library
 - **typing-extensions** - Enhanced type hints (Python < 3.8)
 
 ### Optional Dependencies
+
+For `.env` loading (optional):
+
+```bash
+pip install rezen[dotenv]
+```
 
 For development and testing:
 
@@ -120,7 +132,7 @@ This includes:
 - **black** - Code formatting
 - **isort** - Import sorting
 - **mypy** - Type checking
-- **python-dotenv** - Environment variable loading
+- **python-dotenv** - Optional `.env` loading
 
 ## ✅ Verify Installation
 

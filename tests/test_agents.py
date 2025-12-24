@@ -1,5 +1,6 @@
 """Tests for AgentsClient."""
 
+import re
 from datetime import date
 
 import pytest
@@ -50,6 +51,34 @@ class TestAgentsClient:
         assert result["id"] == agent_id
 
     @responses.activate
+    def test_get_cap_info(self, client: AgentsClient) -> None:
+        """Test getting agent cap info."""
+        agent_id = "agent-123"
+        responses.add(
+            responses.GET,
+            f"https://yenta.therealbrokerage.com/api/v1/agents/{agent_id}/cap-info",
+            json={"agentId": agent_id, "cap": {"amount": 0}},
+            status=200,
+        )
+
+        result = client.get_cap_info(agent_id)
+        assert result["agentId"] == agent_id
+
+    def test_agent_search_branches(self, client: AgentsClient) -> None:
+        """Test agent_search backward-compatibility branching."""
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(client, "get_agents_by_email", lambda _e: {"by": "email"})
+            mp.setattr(
+                client,
+                "search_active_agents",
+                lambda **kwargs: {"by": "phone", **kwargs},
+            )
+
+            assert client.agent_search(email="a@example.com") == {"by": "email"}
+            assert client.agent_search(phone="15555555555")["by"] == "phone"
+            assert client.agent_search() == {"results": []}
+
+    @responses.activate
     def test_get_agents_by_email(self, client: AgentsClient) -> None:
         """Test getting agents by email address."""
         responses.add(
@@ -63,10 +92,26 @@ class TestAgentsClient:
 
         assert len(responses.calls) == 1
         assert "emailAddress=test%40example.com" in responses.calls[0].request.url
-        # Cast result to list for test - the mocked API returns a list directly
-        agents_list = result  # type: ignore[assignment]
-        assert agents_list[0]["id"] == "agent-123"
-        assert agents_list[0]["email"] == "test@example.com"
+        assert isinstance(result, list)
+        assert result[0]["id"] == "agent-123"
+        assert result[0]["email"] == "test@example.com"
+
+    def test_get_agents_by_email_wrapped_payload(self, client: AgentsClient) -> None:
+        """get_agents_by_email should accept a wrapped list payload for robustness."""
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(
+                client, "get", lambda *_args, **_kwargs: {"agents": [{"id": "a1"}]}
+            )
+            assert client.get_agents_by_email("a@example.com") == [{"id": "a1"}]
+
+    def test_get_agents_by_email_raises_for_unexpected_payload(
+        self, client: AgentsClient
+    ) -> None:
+        """get_agents_by_email should raise when the payload isn't a list."""
+        with pytest.raises(ValueError):
+            with pytest.MonkeyPatch.context() as mp:
+                mp.setattr(client, "get", lambda *_args, **_kwargs: {"agents": "nope"})
+                client.get_agents_by_email("a@example.com")
 
     @responses.activate
     def test_get_sponsor_tree(self, client: AgentsClient) -> None:
@@ -257,6 +302,23 @@ class TestAgentsClient:
         assert "pageSize=10" in request_url
         assert "sortDirection=DESC" in request_url
         assert result["agentId"] == agent_id
+
+    @responses.activate
+    def test_search_active_agents_includes_email_and_phone_params(
+        self, client: AgentsClient
+    ) -> None:
+        """Test search_active_agents includes optional email/phone params."""
+        responses.add(
+            responses.GET,
+            "https://yenta.therealbrokerage.com/api/v1/agents/search/active",
+            json={"results": []},
+            status=200,
+        )
+
+        client.search_active_agents(email="e@example.com", phone="15555555555")
+        request_url = responses.calls[0].request.url
+        assert "email=e%40example.com" in request_url
+        assert "phone=15555555555" in request_url
 
     @responses.activate
     def test_get_payment_details(self, client: AgentsClient) -> None:
@@ -673,17 +735,44 @@ class TestAgentsClient:
     @responses.activate
     def test_get_active_agent_ids(self, client: AgentsClient) -> None:
         """Test getting active agent IDs."""
+        joined_after = date(2025, 1, 1)
         responses.add(
             responses.GET,
-            "https://yenta.therealbrokerage.com/api/v1/agents/active-agent-ids",
+            re.compile(
+                r"https://yenta\.therealbrokerage\.com/api/v1/agents/active-agent-ids.*"
+            ),
             json={"agentIds": ["agent-123", "agent-456"]},
             status=200,
         )
 
-        result = client.get_active_agent_ids()
+        result = client.get_active_agent_ids(joined_after=joined_after)
 
         assert len(responses.calls) == 1
-        assert len(result["agentIds"]) == 2
+        assert result == ["agent-123", "agent-456"]
+        request_url = responses.calls[0].request.url
+        assert "joinedAfter=2025-01-01" in request_url
+        assert "pageNumber=0" in request_url
+        assert "pageSize=100" in request_url
+
+    def test_get_active_agent_ids_list_payload(self, client: AgentsClient) -> None:
+        """get_active_agent_ids should accept a raw list payload for robustness."""
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(client, "get", lambda *_args, **_kwargs: ["a1", "a2"])
+            assert client.get_active_agent_ids(joined_after=date(2025, 1, 1)) == [
+                "a1",
+                "a2",
+            ]
+
+    def test_get_active_agent_ids_raises_for_unexpected_payload(
+        self, client: AgentsClient
+    ) -> None:
+        """get_active_agent_ids should raise when the payload isn't recognized."""
+        with pytest.raises(ValueError):
+            with pytest.MonkeyPatch.context() as mp:
+                mp.setattr(
+                    client, "get", lambda *_args, **_kwargs: {"agentIds": "nope"}
+                )
+                client.get_active_agent_ids(joined_after=date(2025, 1, 1))
 
     @responses.activate
     def test_authentication_error(self, client: AgentsClient) -> None:

@@ -16,7 +16,13 @@ class DocumentClient(BaseClient):
     """
 
     def __init__(
-        self, api_key: Optional[str] = None, base_url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        *,
+        timeout_seconds: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_backoff_seconds: Optional[float] = None,
     ) -> None:
         """
         Initialize the Document/Signature API client.
@@ -24,8 +30,17 @@ class DocumentClient(BaseClient):
         Args:
             api_key: ReZEN API key for authentication
             base_url: Base URL for the documents API. Defaults to production URL
+            timeout_seconds: Default request timeout (seconds).
+            max_retries: Maximum number of retries for transient failures.
+            retry_backoff_seconds: Base backoff (seconds) between retries.
         """
-        super().__init__(api_key=api_key, base_url=base_url)
+        super().__init__(
+            api_key=api_key,
+            base_url=base_url,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
+            retry_backoff_seconds=retry_backoff_seconds,
+        )
 
     def post_document(
         self, data: Dict[str, Any], file: Optional[BinaryIO] = None

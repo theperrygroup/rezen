@@ -91,16 +91,43 @@ class RezenClient:
     """
 
     def __init__(
-        self, api_key: Optional[str] = None, base_url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        *,
+        load_dotenv: bool = False,
+        timeout_seconds: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_backoff_seconds: Optional[float] = None,
     ) -> None:
         """Initialize the ReZEN client.
 
         Args:
             api_key: API key for authentication. If None, will look for REZEN_API_KEY env var
             base_url: Base URL for the API. Defaults to production URL
+            load_dotenv: If True, load environment variables from a `.env` file using
+                `python-dotenv`. This is opt-in to avoid import-time side effects.
+            timeout_seconds: Default request timeout (seconds) passed to all sub-clients.
+                If None, clients will use BaseClient defaults/env vars.
+            max_retries: Maximum number of retries for transient failures passed to all
+                sub-clients. If None, clients will use BaseClient defaults/env vars.
+            retry_backoff_seconds: Base backoff (seconds) between retries passed to all
+                sub-clients. If None, clients will use BaseClient defaults/env vars.
         """
+        if load_dotenv:
+            try:
+                from dotenv import load_dotenv as _load_dotenv
+            except ImportError as e:  # pragma: no cover
+                raise ImportError(
+                    "python-dotenv is required to use load_dotenv=True"
+                ) from e
+            _load_dotenv()
+
         self._api_key = api_key
         self._base_url = base_url
+        self._timeout_seconds = timeout_seconds
+        self._max_retries = max_retries
+        self._retry_backoff_seconds = retry_backoff_seconds
         self._auth: Optional[AuthClient] = None
         self._mfa: Optional[MfaClient] = None
         self._api_keys: Optional[ApiKeysClient] = None
@@ -123,7 +150,11 @@ class RezenClient:
         """
         if self._transaction_builder is None:
             self._transaction_builder = TransactionBuilderClient(
-                api_key=self._api_key, base_url=self._base_url
+                api_key=self._api_key,
+                base_url=self._base_url,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
             )
         return self._transaction_builder
 
@@ -136,7 +167,11 @@ class RezenClient:
         """
         if self._transactions is None:
             self._transactions = TransactionsClient(
-                api_key=self._api_key, base_url=self._base_url
+                api_key=self._api_key,
+                base_url=self._base_url,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
             )
         return self._transactions
 
@@ -149,7 +184,12 @@ class RezenClient:
         """
         if self._teams is None:
             # Teams uses yenta API, so don't pass custom base_url
-            self._teams = TeamsClient(api_key=self._api_key)
+            self._teams = TeamsClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._teams
 
     @property
@@ -161,7 +201,12 @@ class RezenClient:
         """
         if self._agents is None:
             # Agents uses yenta API, so don't pass custom base_url
-            self._agents = AgentsClient(api_key=self._api_key)
+            self._agents = AgentsClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._agents
 
     @property
@@ -173,7 +218,12 @@ class RezenClient:
         """
         if self._directory is None:
             # Directory uses yenta API, so don't pass custom base_url
-            self._directory = DirectoryClient(api_key=self._api_key)
+            self._directory = DirectoryClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._directory
 
     @property
@@ -185,7 +235,12 @@ class RezenClient:
         """
         if self._auth is None:
             # Auth uses keymaker API, so don't pass custom base_url
-            self._auth = AuthClient(api_key=self._api_key)
+            self._auth = AuthClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._auth
 
     @property
@@ -197,7 +252,12 @@ class RezenClient:
         """
         if self._mfa is None:
             # MFA uses keymaker API, so don't pass custom base_url
-            self._mfa = MfaClient(api_key=self._api_key)
+            self._mfa = MfaClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._mfa
 
     @property
@@ -209,7 +269,12 @@ class RezenClient:
         """
         if self._api_keys is None:
             # API keys uses keymaker API, so don't pass custom base_url
-            self._api_keys = ApiKeysClient(api_key=self._api_key)
+            self._api_keys = ApiKeysClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._api_keys
 
     @property
@@ -221,7 +286,12 @@ class RezenClient:
         """
         if self._users is None:
             # Users uses yenta API, so don't pass custom base_url
-            self._users = UsersClient(api_key=self._api_key)
+            self._users = UsersClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._users
 
     @property
@@ -233,7 +303,12 @@ class RezenClient:
         """
         if self._checklist is None:
             # Checklist uses sherlock API, so don't pass custom base_url
-            self._checklist = ChecklistClient(api_key=self._api_key)
+            self._checklist = ChecklistClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._checklist
 
     @property
@@ -245,7 +320,11 @@ class RezenClient:
         """
         if self._documents is None:
             self._documents = DocumentClient(
-                api_key=self._api_key, base_url=self._base_url
+                api_key=self._api_key,
+                base_url=self._base_url,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
             )
         return self._documents
 
@@ -258,5 +337,10 @@ class RezenClient:
         """
         if self._dropbox is None:
             # Dropbox uses sherlock API, so don't pass custom base_url
-            self._dropbox = DropboxClient(api_key=self._api_key)
+            self._dropbox = DropboxClient(
+                api_key=self._api_key,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
         return self._dropbox
