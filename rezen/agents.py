@@ -41,7 +41,13 @@ class AgentsClient(BaseClient):
     """
 
     def __init__(
-        self, api_key: Optional[str] = None, base_url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        *,
+        timeout_seconds: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_backoff_seconds: Optional[float] = None,
     ) -> None:
         """
         Initialize the Agents API client.
@@ -49,10 +55,19 @@ class AgentsClient(BaseClient):
         Args:
             api_key: ReZEN API key for authentication
             base_url: Base URL for the agents API. Defaults to yenta production URL
+            timeout_seconds: Default request timeout (seconds).
+            max_retries: Maximum number of retries for transient failures.
+            retry_backoff_seconds: Base backoff (seconds) between retries.
         """
         # Use the yenta base URL for agents API
         agents_base_url = base_url or "https://yenta.therealbrokerage.com/api/v1"
-        super().__init__(api_key=api_key, base_url=agents_base_url)
+        super().__init__(
+            api_key=api_key,
+            base_url=agents_base_url,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
+            retry_backoff_seconds=retry_backoff_seconds,
+        )
 
     def get_agent(self, agent_id: str) -> Dict[str, Any]:
         """Get a single agent by ID.
@@ -91,7 +106,9 @@ class AgentsClient(BaseClient):
         """
         return self.get(f"agents/{agent_id}/cap-info")
 
-    def agent_search(self, email: str = "", phone: str = "") -> Dict[str, Any]:
+    def agent_search(
+        self, email: str = "", phone: str = ""
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Search agents by email or phone - backward compatibility method.
 
@@ -100,7 +117,10 @@ class AgentsClient(BaseClient):
             phone: Phone number to search for
 
         Returns:
-            Dict containing search results
+            Search results. This may be either:
+            - List of agent dicts (when searching by email), or
+            - Dict payload (when searching by phone), or
+            - Dict with empty results when no search criteria provided.
 
         Raises:
             RezenError: If the API request fails
@@ -113,7 +133,7 @@ class AgentsClient(BaseClient):
         else:
             return {"results": []}
 
-    def get_agents_by_email(self, email_address: str) -> Dict[str, Any]:
+    def get_agents_by_email(self, email_address: str) -> List[Dict[str, Any]]:
         """
         Get agent(s) by email address.
 
@@ -121,13 +141,24 @@ class AgentsClient(BaseClient):
             email_address: Email address to search for
 
         Returns:
-            Agent information matching the email address
+            List of agent objects matching the email address.
 
         Raises:
             RezenError: If the API request fails
+            ValueError: If the API response is not a list payload.
         """
         params = {"emailAddress": email_address}
-        return self.get("agents", params=params)
+        response: Any = self.get("agents", params=params)
+        if isinstance(response, list):
+            return response
+
+        # Defensive fallback if the API ever wraps the array.
+        if isinstance(response, dict):
+            agents = response.get("agents")
+            if isinstance(agents, list):
+                return agents
+
+        raise ValueError("Expected agents list payload from get_agents_by_email().")
 
     def get_sponsor_tree(self, agent_id: str) -> Dict[str, Any]:
         """
@@ -771,14 +802,48 @@ class AgentsClient(BaseClient):
 
         return self.get("agents/active", params=params)
 
-    def get_active_agent_ids(self) -> Dict[str, Any]:
+    def get_active_agent_ids(
+        self,
+        joined_after: Union[date, str],
+        page_number: int = 0,
+        page_size: int = 100,
+    ) -> List[str]:
         """
-        Get active agent IDs.
+        Get active agent IDs created on or after a given date.
+
+        Args:
+            joined_after: Only include agents who joined on or after this date. Accepts
+                either a `date` or an ISO date string ("YYYY-MM-DD").
+            page_number: Page number for pagination (default: 0).
+            page_size: Page size for pagination (default: 100).
 
         Returns:
-            List of active agent IDs
+            List of active agent IDs (UUID strings).
 
         Raises:
             RezenError: If the API request fails
+            ValueError: If the API response payload is not recognized.
         """
-        return self.get("agents/active-agent-ids")
+        joined_after_str = (
+            joined_after.isoformat()
+            if isinstance(joined_after, date)
+            else str(joined_after)
+        )
+        params: Dict[str, Any] = {
+            "joinedAfter": joined_after_str,
+            "pageNumber": page_number,
+            "pageSize": page_size,
+        }
+        response: Any = self.get("agents/active-agent-ids", params=params)
+
+        if isinstance(response, list):
+            return [str(item) for item in response]
+
+        if isinstance(response, dict):
+            # Common response shapes observed across services.
+            for key in ("agentIds", "ids"):
+                value = response.get(key)
+                if isinstance(value, list):
+                    return [str(item) for item in value]
+
+        raise ValueError("Expected agent IDs payload from get_active_agent_ids().")

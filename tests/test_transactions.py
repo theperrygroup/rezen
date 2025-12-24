@@ -1,9 +1,16 @@
 """Tests for the transactions client."""
 
+from datetime import date
+
 import pytest
 import responses
 
-from rezen.transactions import TransactionsClient
+from rezen.transactions import (
+    NormalizedTransactionAddress,
+    TransactionsClient,
+    _parse_date,
+    normalize_transaction,
+)
 
 
 class TestTransactionsClient:
@@ -31,6 +38,145 @@ class TestTransactionsClient:
         result = self.client.get_transaction(self.transaction_id)
 
         assert result == expected_response
+
+    def test_normalize_transaction_closed(self) -> None:
+        """Test normalization of a closed transaction."""
+        normalized = normalize_transaction(
+            {
+                "id": "tx-1",
+                "status": "CLOSED",
+                "closedAt": "2025-01-31",
+                "closingDateEstimated": "2025-02-15",
+                "contractAcceptanceDate": "2025-01-10T00:00:00Z",
+                "address": {
+                    "street": "123 Main St",
+                    "street2": "Unit 4",
+                    "city": "Salt Lake City",
+                    "state": "UTAH",
+                    "zip": "84101",
+                },
+            }
+        )
+
+        assert normalized.id == "tx-1"
+        assert normalized.status == "closed"
+        assert normalized.is_closed is True
+        assert normalized.closing_date_actual == date(2025, 1, 31)
+        assert normalized.closing_date_estimated == date(2025, 2, 15)
+        assert normalized.under_contract_date == date(2025, 1, 10)
+        assert normalized.address.street_line == "123 Main St, Unit 4"
+        assert (
+            normalized.address.one_line
+            == "123 Main St, Unit 4, Salt Lake City, UTAH 84101"
+        )
+        assert normalized.closing_date == date(2025, 1, 31)
+
+    def test_normalize_transaction_terminated(self) -> None:
+        """Test normalization of a terminated transaction."""
+        normalized = normalize_transaction(
+            {"id": "tx-2", "status": "TERMINATED", "address": {"street": "1 A St"}}
+        )
+        assert normalized.status == "terminated"
+        assert normalized.is_closed is False
+
+    def test_normalize_transaction_active(self) -> None:
+        """Test normalization of an active transaction."""
+        normalized = normalize_transaction({"id": "tx-3", "status": "ACTIVE"})
+        assert normalized.status == "active"
+        assert normalized.is_closed is False
+
+    def test_parse_date_variants(self) -> None:
+        """Test _parse_date handles common API formats."""
+        assert _parse_date(None) is None
+        assert _parse_date("") is None
+        assert _parse_date("1700000000") is not None
+        assert _parse_date("2025-01-31") == date(2025, 1, 31)
+        assert _parse_date("2025-01-31T00:00:00Z") == date(2025, 1, 31)
+        assert _parse_date("not a date") is None
+        assert _parse_date("2025-99-99T00:00:00Z") is None
+        assert _parse_date({"unexpected": "type"}) is None
+
+        # Seconds and milliseconds timestamps.
+        assert _parse_date(1_700_000_000) is not None
+        assert _parse_date(1_700_000_000_000) is not None
+
+        # Extremely large values should safely return None.
+        assert _parse_date(10**20) is None
+
+    def test_normalized_transaction_address_empty(self) -> None:
+        """Test address normalization when no fields are present."""
+        addr = NormalizedTransactionAddress(
+            street=None, street2=None, city=None, state=None, zip=None
+        )
+        assert addr.street_line is None
+        assert addr.one_line is None
+
+    @responses.activate
+    def test_get_transaction_normalized(self) -> None:
+        """Test get_transaction_normalized endpoint wrapper."""
+        expected_response = {
+            "id": self.transaction_id,
+            "status": "CLOSED",
+            "closedAt": "2025-01-31",
+            "address": {"street": "123 Main St", "city": "SLC", "state": "UTAH"},
+        }
+        responses.add(
+            responses.GET,
+            f"{self.base_url}/transactions/{self.transaction_id}",
+            json=expected_response,
+            status=200,
+        )
+
+        normalized = self.client.get_transaction_normalized(self.transaction_id)
+        assert normalized.status == "closed"
+        assert normalized.closing_date_actual == date(2025, 1, 31)
+        assert normalized.address.street_line == "123 Main St"
+
+    def test_get_transaction_normalized_raises_for_non_dict_payload(self) -> None:
+        """Test get_transaction_normalized raises if the API returns non-dict JSON."""
+        with pytest.raises(ValueError):
+            with pytest.MonkeyPatch.context() as mp:
+                mp.setattr(
+                    self.client, "get_transaction", lambda _tid: ["not", "a", "dict"]
+                )
+                self.client.get_transaction_normalized(self.transaction_id)
+
+    def test_backward_compatibility_wrappers(self) -> None:
+        """Test wrapper methods delegate to the newer endpoints."""
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(
+                self.client,
+                "get_participant_transactions",
+                lambda yenta_id: {"yenta_id": yenta_id},
+            )
+            mp.setattr(
+                self.client,
+                "get_participant_current_transactions",
+                lambda yenta_id: {"current": yenta_id},
+            )
+            mp.setattr(
+                self.client,
+                "get_participant_listing_transactions",
+                lambda **kwargs: {"kwargs": kwargs},
+            )
+
+            assert self.client.get_agent_transactions("u1") == {"yenta_id": "u1"}
+            assert self.client.get_agent_current_transactions("u2") == {"current": "u2"}
+            listings = self.client.get_agent_current_listings("u3")
+            assert listings["kwargs"]["lifecycle_group"] == "CURRENT"
+            assert listings["kwargs"]["page_size"] == 100
+
+    @responses.activate
+    def test_request_termination(self) -> None:
+        """Test request_termination endpoint."""
+        responses.add(
+            responses.POST,
+            f"{self.base_url}/transactions/{self.transaction_id}/request-termination",
+            json={"ok": True},
+            status=200,
+        )
+
+        assert self.client.request_termination(self.transaction_id) == {"ok": True}
 
     @responses.activate
     def test_get_transaction_explanation(self) -> None:

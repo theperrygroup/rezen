@@ -1,6 +1,6 @@
 """Users client for ReZEN API."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from .base_client import BaseClient
 
@@ -14,17 +14,32 @@ class UsersClient(BaseClient):
     """
 
     def __init__(
-        self, api_key: Optional[str] = None, base_url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        *,
+        timeout_seconds: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_backoff_seconds: Optional[float] = None,
     ) -> None:
         """Initialize the users client.
 
         Args:
             api_key: API key for authentication. If None, will look for REZEN_API_KEY env var
             base_url: Base URL for the users API. Defaults to yenta production URL
+            timeout_seconds: Default request timeout (seconds).
+            max_retries: Maximum number of retries for transient failures.
+            retry_backoff_seconds: Base backoff (seconds) between retries.
         """
         # Use the yenta base URL for users API
         users_base_url = base_url or "https://yenta.therealbrokerage.com/api/v1"
-        super().__init__(api_key=api_key, base_url=users_base_url)
+        super().__init__(
+            api_key=api_key,
+            base_url=users_base_url,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
+            retry_backoff_seconds=retry_backoff_seconds,
+        )
 
     def get_current_user(self) -> Dict[str, Any]:
         """Get current authenticated user information from Yenta.
@@ -126,21 +141,22 @@ class UsersClient(BaseClient):
         """
         return self.get("users/generic/me")
 
-    def get_keymaker_ids(self, yenta_ids: List[str]) -> Dict[str, Any]:
+    def get_keymaker_ids(self, yenta_ids: Union[str, List[str]]) -> List[str]:
         """Get keymaker IDs for the given Yenta IDs.
 
         Note: For owner agent setup in transactions, you typically don't need this method.
         The user ID from get_current_user() can be used directly as the agent ID.
 
         Args:
-            yenta_ids: List of Yenta user IDs (UUIDs)
+            yenta_ids: A single Yenta user ID (UUID) or a list of Yenta user IDs.
 
         Returns:
-            Dictionary containing keymaker IDs or list of keymaker IDs
+            List of Keymaker user IDs corresponding to the provided Yenta IDs.
 
         Raises:
             ValidationError: If yenta_ids is empty or invalid
             RezenError: If the API request fails
+            ValueError: If the API response payload is not recognized.
 
         Example:
             ```python
@@ -149,8 +165,20 @@ class UsersClient(BaseClient):
             keymaker_ids = client.users.get_keymaker_ids(yenta_ids)
             ```
         """
-        params = {"yentaIds": yenta_ids}
-        return self.get("users/keymaker-ids", params=params)
+        yenta_ids_list = [yenta_ids] if isinstance(yenta_ids, str) else yenta_ids
+        params = {"yentaIds": yenta_ids_list}
+        response: Any = self.get("users/keymaker-ids", params=params)
+        if isinstance(response, list):
+            return [str(item) for item in response]
+
+        # Defensive fallback if the API ever wraps the array.
+        if isinstance(response, dict):
+            for key in ("ids", "keymakerIds", "keymaker_ids"):
+                value = response.get(key)
+                if isinstance(value, list):
+                    return [str(item) for item in value]
+
+        raise ValueError("Expected keymaker IDs list payload from get_keymaker_ids().")
 
     def get_agent_id_for_current_user(self) -> str:
         """Get the agent ID for the current user.

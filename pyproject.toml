@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rezen"
-version = "2.2.11"
+version = "2.2.12"
 description = "Python wrapper for The Real Brokerage ReZEN API - Transaction Builder, Transactions, Teams, Agents, and Directory management"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -43,13 +43,16 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "requests>=2.31.0",
-    "python-dotenv>=1.0.0",
     "pydantic>=2.5.0",
     "typing-extensions>=4.8.0"
 ]
 
 [project.optional-dependencies]
+dotenv = [
+    "python-dotenv>=1.0.0",
+]
 dev = [
+    "python-dotenv>=1.0.0",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.12.0",

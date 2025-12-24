@@ -2,11 +2,14 @@
 
 from rezen.exceptions import (
     AuthenticationError,
+    InvalidFieldNameError,
+    InvalidFieldValueError,
     NetworkError,
     NotFoundError,
     RateLimitError,
     RezenError,
     ServerError,
+    TransactionSequenceError,
     ValidationError,
 )
 
@@ -132,3 +135,37 @@ class TestNetworkError:
         error = NetworkError("Connection failed")
         assert str(error) == "Connection failed"
         assert error.status_code is None
+
+
+class TestTransactionSequenceError:
+    """Test the TransactionSequenceError exception."""
+
+    def test_init_with_required_steps(self) -> None:
+        """Test message formatting with required steps."""
+        error = TransactionSequenceError(
+            "Sequence error", required_steps=["Step A", "Step B"]
+        )
+        assert "Required sequence" in str(error)
+        assert "1. Step A" in str(error)
+        assert "2. Step B" in str(error)
+        assert error.required_steps == ["Step A", "Step B"]
+
+
+class TestInvalidFieldNameError:
+    """Test the InvalidFieldNameError exception."""
+
+    def test_message_contains_correct_field_name(self) -> None:
+        """Test that the error suggests the correct field name."""
+        error = InvalidFieldNameError("first_name", "firstName", "Use camelCase.")
+        assert "first_name" in str(error)
+        assert "firstName" in str(error)
+
+
+class TestInvalidFieldValueError:
+    """Test the InvalidFieldValueError exception."""
+
+    def test_message_contains_expected_format(self) -> None:
+        """Test that the error includes expected format information."""
+        error = InvalidFieldValueError("state", "Utah", "ALL CAPS")
+        assert "state" in str(error)
+        assert "ALL CAPS" in str(error)

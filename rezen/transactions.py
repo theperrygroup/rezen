@@ -1,8 +1,209 @@
 """Transactions client for ReZEN API."""
 
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from datetime import date, datetime, timezone
+from typing import Any, Dict, List, Literal, Optional
 
 from .base_client import BaseClient
+
+TransactionStatus = Literal["active", "closed", "terminated"]
+
+
+def _parse_date(value: Any) -> Optional[date]:
+    """Parse a date-like value from the ReZEN API into a `date`.
+
+    The ReZEN API can return date fields as:
+    - ISO date strings (e.g. "2025-01-31")
+    - ISO datetime strings (e.g. "2025-01-31T00:00:00Z")
+    - Epoch timestamps in seconds or milliseconds (int/float)
+
+    Args:
+        value: Raw value from the API.
+
+    Returns:
+        Parsed date if recognized, otherwise None.
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, (int, float)):
+        # Heuristic: timestamps larger than 1e12 are usually epoch millis.
+        seconds = (
+            float(value) / 1000.0 if float(value) > 1_000_000_000_000 else float(value)
+        )
+        try:
+            return datetime.fromtimestamp(seconds, tz=timezone.utc).date()
+        except (OverflowError, OSError, ValueError):
+            return None
+
+    if isinstance(value, str):
+        raw = value.strip()
+        if raw == "":
+            return None
+
+        # If the API returns a numeric timestamp as a string, support that too.
+        if raw.isdigit():
+            return _parse_date(int(raw))
+
+        # Date-only ISO format.
+        try:
+            return date.fromisoformat(raw)
+        except ValueError:
+            pass
+
+        # Datetime ISO format (commonly includes a trailing 'Z').
+        try:
+            normalized = raw.replace("Z", "+00:00")
+            return datetime.fromisoformat(normalized).date()
+        except ValueError:
+            return None
+
+    return None
+
+
+def _first_date(transaction: Dict[str, Any], keys: List[str]) -> Optional[date]:
+    """Return the first parseable date from a list of candidate keys."""
+    for key in keys:
+        if key in transaction and transaction[key] is not None:
+            parsed = _parse_date(transaction.get(key))
+            if parsed is not None:
+                return parsed
+    return None
+
+
+@dataclass(frozen=True)
+class NormalizedTransactionAddress:
+    """Normalized address fields derived from a ReZEN transaction payload."""
+
+    street: Optional[str]
+    street2: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
+    zip: Optional[str]
+
+    @property
+    def street_line(self) -> Optional[str]:
+        """Street line (street + street2), without city/state/zip."""
+        parts = [p for p in [self.street, self.street2] if p and p.strip()]
+        if not parts:
+            return None
+        if len(parts) == 1:
+            return parts[0].strip()
+        return f"{parts[0].strip()}, {parts[1].strip()}"
+
+    @property
+    def one_line(self) -> Optional[str]:
+        """One-line address suitable for display (street line + city/state/zip)."""
+        street_line = self.street_line
+        parts: List[str] = []
+        if street_line:
+            parts.append(street_line)
+        if self.city and self.city.strip():
+            parts.append(self.city.strip())
+        state_zip = " ".join(
+            [p.strip() for p in [self.state or "", self.zip or ""] if p and p.strip()]
+        )
+        if state_zip:
+            parts.append(state_zip)
+        if not parts:
+            return None
+        return ", ".join(parts)
+
+
+@dataclass(frozen=True)
+class NormalizedTransaction:
+    """A stable, downstream-friendly view of a ReZEN transaction payload."""
+
+    id: str
+    status: TransactionStatus
+    closing_date_actual: Optional[date]
+    closing_date_estimated: Optional[date]
+    under_contract_date: Optional[date]
+    address: NormalizedTransactionAddress
+
+    @property
+    def is_closed(self) -> bool:
+        """Whether the transaction is closed."""
+        return self.status == "closed"
+
+    @property
+    def closing_date(self) -> Optional[date]:
+        """Best-effort closing date (actual preferred, falls back to estimated)."""
+        return self.closing_date_actual or self.closing_date_estimated
+
+
+def normalize_transaction(transaction: Dict[str, Any]) -> NormalizedTransaction:
+    """Normalize a raw transaction payload into a stable, typed view.
+
+    Args:
+        transaction: Raw transaction payload from `GET /transactions/{id}`.
+
+    Returns:
+        NormalizedTransaction with stable semantics.
+    """
+    transaction_id = str(transaction.get("id") or "")
+
+    address_payload = transaction.get("address")
+    address_dict: Dict[str, Any] = (
+        address_payload if isinstance(address_payload, dict) else {}
+    )
+    normalized_address = NormalizedTransactionAddress(
+        street=address_dict.get("street"),
+        street2=address_dict.get("street2"),
+        city=address_dict.get("city"),
+        state=address_dict.get("state"),
+        zip=address_dict.get("zip") or address_dict.get("zipCode"),
+    )
+
+    closing_date_actual = _first_date(
+        transaction,
+        [
+            "closedAt",
+            "rezenClosedAt",
+            "skySlopeActualClosingDate",
+            "closedDate",
+            "closeDate",
+            "closingDateActual",
+        ],
+    )
+    closing_date_estimated = _first_date(
+        transaction,
+        [
+            "closingDateEstimated",
+            "skySlopeEscrowClosingDate",
+            "closingDate",
+            "estimatedClosingDate",
+        ],
+    )
+    under_contract_date = _first_date(
+        transaction,
+        [
+            "contractAcceptanceDate",
+            "acceptanceDate",
+            "underContractDate",
+            "underContractAt",
+        ],
+    )
+
+    status_raw = str(
+        transaction.get("status") or transaction.get("lifecycleState") or ""
+    ).lower()
+
+    if closing_date_actual is not None or "closed" in status_raw:
+        status: TransactionStatus = "closed"
+    elif "terminat" in status_raw:
+        status = "terminated"
+    else:
+        status = "active"
+
+    return NormalizedTransaction(
+        id=transaction_id,
+        status=status,
+        closing_date_actual=closing_date_actual,
+        closing_date_estimated=closing_date_estimated,
+        under_contract_date=under_contract_date,
+        address=normalized_address,
+    )
 
 
 class TransactionsClient(BaseClient):
@@ -21,6 +222,31 @@ class TransactionsClient(BaseClient):
         """
         endpoint = f"transactions/{transaction_id}"
         return self.get(endpoint)
+
+    def get_transaction_normalized(self, transaction_id: str) -> NormalizedTransaction:
+        """Get a transaction and return a normalized, typed view.
+
+        This helps downstream systems answer common questions with stable semantics:
+        - Is the transaction closed?
+        - What is the best closing date (actual vs estimated)?
+        - What is the under-contract date?
+        - What is the street-line address?
+
+        Args:
+            transaction_id: Transaction ID.
+
+        Returns:
+            NormalizedTransaction view.
+
+        Raises:
+            ValueError: If the API response is not a dict payload.
+        """
+        transaction = self.get_transaction(transaction_id)
+        if not isinstance(transaction, dict):
+            raise ValueError(
+                "Expected transaction payload to be a dict from get_transaction()."
+            )
+        return normalize_transaction(transaction)
 
     def get_transaction_explanation(self, transaction_id: str) -> Dict[str, Any]:
         """Get verbose explanation of transaction without participant payout explanations.

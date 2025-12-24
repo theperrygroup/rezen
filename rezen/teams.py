@@ -54,17 +54,32 @@ class TeamsClient(BaseClient):
     """
 
     def __init__(
-        self, api_key: Optional[str] = None, base_url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        *,
+        timeout_seconds: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_backoff_seconds: Optional[float] = None,
     ) -> None:
         """Initialize the teams client.
 
         Args:
             api_key: API key for authentication. If None, will look for REZEN_API_KEY env var
             base_url: Base URL for the teams API. Defaults to yenta production URL
+            timeout_seconds: Default request timeout (seconds).
+            max_retries: Maximum number of retries for transient failures.
+            retry_backoff_seconds: Base backoff (seconds) between retries.
         """
         # Use the yenta base URL for teams API
         teams_base_url = base_url or "https://yenta.therealbrokerage.com/api/v1"
-        super().__init__(api_key=api_key, base_url=teams_base_url)
+        super().__init__(
+            api_key=api_key,
+            base_url=teams_base_url,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
+            retry_backoff_seconds=retry_backoff_seconds,
+        )
 
     def search_teams(
         self,

@@ -114,7 +114,11 @@ def test_all_endpoints(api_key: str) -> None:
 
 def main() -> None:
     """Main function to execute the test script."""
-    api_key = os.getenv("REZEN_API_KEY", "real_Qp1vOeBFiVevF3XV0APgznZ2frPp8fSlaqq7")
+    api_key = os.getenv("REZEN_API_KEY")
+    if not api_key:
+        raise SystemExit(
+            "Missing REZEN_API_KEY. Set it in your environment to run this script."
+        )
 
     test_all_endpoints(api_key)
 

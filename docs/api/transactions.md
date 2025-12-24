@@ -51,6 +51,21 @@ client.transactions.create_participant(transaction_id, participant)
       show_source: false
       heading_level: 4
 
+### Normalized Transaction View
+
+::: rezen.transactions.TransactionsClient.get_transaction_normalized
+    options:
+      show_source: false
+      heading_level: 4
+
+!!! tip "Downstream-friendly fields"
+    `get_transaction_normalized()` returns a `NormalizedTransaction` that makes common questions easy:
+
+    - **status**: `"active" | "closed" | "terminated"`
+    - **closing_date**: best-effort close date (actual preferred, falls back to estimated)
+    - **under_contract_date**: contract acceptance / under-contract date
+    - **address.street_line**: street + street2 (no city/state/zip)
+
 ### Agent Transaction Methods
 
 ::: rezen.transactions.TransactionsClient.get_agent_transactions

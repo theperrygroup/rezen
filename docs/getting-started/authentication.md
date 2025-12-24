@@ -52,19 +52,22 @@ The ReZEN Python API client provides multiple ways to authenticate and configure
 
     !!! tip "Environment Files"
 
-        Use a `.env` file with python-dotenv for local development:
+        Use a `.env` file for local development (optional):
 
         ```bash title=".env"
         REZEN_API_KEY=your_api_key_here
         ```
 
         ```python
-        from dotenv import load_dotenv
-
         from rezen import RezenClient
 
-        load_dotenv()  # Load .env file
-        client: RezenClient = RezenClient()  # Uses REZEN_API_KEY from .env
+        # Option 1: let rezen load `.env` (requires `pip install rezen[dotenv]`)
+        client: RezenClient = RezenClient(load_dotenv=True)
+
+        # Option 2: load manually (requires `pip install python-dotenv`)
+        # from dotenv import load_dotenv
+        # load_dotenv()
+        # client: RezenClient = RezenClient()
         ```
 
 === ":material-key-variant: Explicit"

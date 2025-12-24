@@ -14,17 +14,32 @@ class ApiKeysClient(BaseClient):
     """
 
     def __init__(
-        self, api_key: Optional[str] = None, base_url: Optional[str] = None
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        *,
+        timeout_seconds: Optional[float] = None,
+        max_retries: Optional[int] = None,
+        retry_backoff_seconds: Optional[float] = None,
     ) -> None:
         """Initialize the API keys client.
 
         Args:
             api_key: API key for authentication. If None, will look for REZEN_API_KEY env var
             base_url: Base URL for the API keys API. Defaults to keymaker production URL
+            timeout_seconds: Default request timeout (seconds).
+            max_retries: Maximum number of retries for transient failures.
+            retry_backoff_seconds: Base backoff (seconds) between retries.
         """
         # Use the keymaker base URL for API keys API
         api_keys_base_url = base_url or "https://keymaker.therealbrokerage.com/api/v1"
-        super().__init__(api_key=api_key, base_url=api_keys_base_url)
+        super().__init__(
+            api_key=api_key,
+            base_url=api_keys_base_url,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
+            retry_backoff_seconds=retry_backoff_seconds,
+        )
 
     def get_api_keys(self) -> List[Dict[str, Any]]:
         """Get all API keys for the current user.

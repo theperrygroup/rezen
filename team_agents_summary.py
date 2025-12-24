@@ -121,7 +121,11 @@ def format_agent_info(agent: Dict[str, Any]) -> str:
 
 def main() -> None:
     """Main function to execute the script."""
-    api_key = os.getenv("REZEN_API_KEY", "real_Qp1vOeBFiVevF3XV0APgznZ2frPp8fSlaqq7")
+    api_key = os.getenv("REZEN_API_KEY")
+    if not api_key:
+        raise SystemExit(
+            "Missing REZEN_API_KEY. Set it in your environment to run this script."
+        )
 
     print("ReZEN Team Agents (via Sponsor Tree)")
     print("=" * 80)
