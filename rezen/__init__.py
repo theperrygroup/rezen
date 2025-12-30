@@ -72,12 +72,13 @@ from .models import (
     UpdateExistingPasswordRequest,
     Vendor,
 )
+from .rev_share import RevShareClient
 from .teams import TeamsClient, TeamSortField, TeamStatus, TeamType
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .users import UsersClient
 
-__version__ = "2.2.14"
+__version__ = "2.2.15"
 __all__ = [
     # Client classes
     "RezenClient",
@@ -87,6 +88,7 @@ __all__ = [
     "ChecklistClient",
     "TransactionBuilderClient",
     "TransactionsClient",
+    "RevShareClient",
     "TeamsClient",
     "DirectoryClient",
     "AgentsClient",

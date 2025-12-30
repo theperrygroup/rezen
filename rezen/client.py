@@ -10,6 +10,7 @@ from .directory import DirectoryClient
 from .documents import DocumentClient
 from .dropbox import DropboxClient
 from .mfa import MfaClient
+from .rev_share import RevShareClient
 from .teams import TeamsClient
 from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
@@ -140,6 +141,7 @@ class RezenClient:
         self._checklist: Optional[ChecklistClient] = None
         self._documents: Optional[DocumentClient] = None
         self._dropbox: Optional[DropboxClient] = None
+        self._rev_share: Optional[RevShareClient] = None
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:
@@ -174,6 +176,23 @@ class RezenClient:
                 retry_backoff_seconds=self._retry_backoff_seconds,
             )
         return self._transactions
+
+    @property
+    def rev_share(self) -> RevShareClient:
+        """Access to revenue share (revshare) endpoints.
+
+        Returns:
+            RevShareClient instance
+        """
+        if self._rev_share is None:
+            self._rev_share = RevShareClient(
+                api_key=self._api_key,
+                base_url=self._base_url,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
+        return self._rev_share
 
     @property
     def teams(self) -> TeamsClient:

@@ -93,6 +93,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 |-----------------|------------|---------------|--------------|
 | Transaction Builder | ✅ **Available** | 52+ endpoints | Complete |
 | Transactions | ✅ **Available** | 49+ endpoints | Complete |
+| Rev Share | ✅ **Available** | 12 endpoints | Complete |
 | Agents | ✅ **Available** | 36+ endpoints | Complete |
 | Teams | ✅ **Available** | 4 endpoints | Complete |
 | Users | ✅ **Available** | 3 endpoints | Complete |
@@ -115,6 +116,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
     - **Transaction Builder**: Create and configure new transactions
     - **Transactions**: Manage live transactions and participants
+    - **Rev Share**: Revenue share payments, contributions, and performance
     - **Teams**: Search and filter team information
     - **Agents**: Comprehensive agent search and network management
     - **Users**: Access user profiles and team/office membership
@@ -138,6 +140,7 @@ Complete method reference for the ReZEN Python API client. This section covers a
     agents = client.agents.search_active_agents(name="John")
     checklist = client.checklist.get_checklist("checklist-123")
     dropbox_folders = client.dropbox.get_folders("agent-id")
+    revshare_overview = client.rev_share.get_current_performance("agent-id")
     ```
 
 === "Error Handling"
@@ -200,6 +203,7 @@ Build and manage real estate transactions:
 
 - **[Transaction Builder](transaction-builder.md)** - Create new transactions with participants
 - **[Transactions](transactions.md)** - Manage live transactions and processing
+- **Rev Share** - Revenue share payments, contributions, and performance (via `client.rev_share`)
 - **[Checklist](checklist.md)** - Track transaction requirements and documents
 
 ### **👥 People & Organizations**
@@ -276,3 +280,4 @@ Looking for a specific method? Use the search function above or browse by catego
 - **Document signatures** → [Documents API](documents.md)
 - **Checklist tracking** → [Checklist API](checklist.md)
 - **Cloud file storage** → [Dropbox API](dropbox.md)
+- **Rev share** → Use `client.rev_share` (payments, contributors, contributions, history, performance)

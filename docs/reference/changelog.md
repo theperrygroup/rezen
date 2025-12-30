@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.15] - 2025-12-30
+
+### ✨ Added
+- Add `RevShareClient` with full `rev-share-controller` coverage (payments, exports, contributors, contributions, history, performance)
+- Wire revshare into `RezenClient` via `client.rev_share`
+- Add comprehensive unit tests for revshare endpoints
+
+### 📚 Docs
+- Update API index to mention Rev Share support and usage
+
+---
+
 ## [2.2.11] - 2025-08-21
 
 ### 🔐 Authentication & Multipart

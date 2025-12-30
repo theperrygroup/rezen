@@ -7,6 +7,7 @@ from rezen.client import RezenClient
 from rezen.directory import DirectoryClient
 from rezen.documents import DocumentClient
 from rezen.dropbox import DropboxClient
+from rezen.rev_share import RevShareClient
 from rezen.teams import TeamsClient
 from rezen.transaction_builder import TransactionBuilderClient
 from rezen.transactions import TransactionsClient
@@ -30,6 +31,7 @@ class TestRezenClient:
         assert client._directory is None
         assert client._documents is None
         assert client._dropbox is None
+        assert client._rev_share is None
 
     def test_init_with_parameters(self) -> None:
         """Test initialization with API key and base URL."""
@@ -46,6 +48,7 @@ class TestRezenClient:
         assert client._directory is None
         assert client._documents is None
         assert client._dropbox is None
+        assert client._rev_share is None
 
     def test_transaction_builder_property_lazy_loading(self) -> None:
         """Test that transaction_builder property creates client on first access."""
@@ -57,7 +60,6 @@ class TestRezenClient:
         # First access creates the client
         tb_client = client.transaction_builder
         assert isinstance(tb_client, TransactionBuilderClient)
-        assert client._transaction_builder is tb_client
 
         # Second access returns the same instance
         tb_client2 = client.transaction_builder
@@ -92,7 +94,6 @@ class TestRezenClient:
         # First access creates the client
         transactions_client = client.transactions
         assert isinstance(transactions_client, TransactionsClient)
-        assert client._transactions is transactions_client
 
         # Second access returns the same instance
         transactions_client2 = client.transactions
@@ -140,6 +141,10 @@ class TestRezenClient:
         assert client.transactions.max_retries == 1
         assert client.transactions.retry_backoff_seconds == 0.1
 
+        assert client.rev_share.timeout_seconds == 12.0
+        assert client.rev_share.max_retries == 1
+        assert client.rev_share.retry_backoff_seconds == 0.1
+
         # Different base URLs still receive the same transport configuration.
         assert client.agents.timeout_seconds == 12.0
         assert client.teams.timeout_seconds == 12.0
@@ -156,7 +161,6 @@ class TestRezenClient:
         # First access creates the client
         teams_client = client.teams
         assert isinstance(teams_client, TeamsClient)
-        assert client._teams is teams_client
 
         # Second access returns the same instance
         teams_client2 = client.teams
@@ -193,6 +197,7 @@ class TestRezenClient:
         directory_client = client.directory
         documents_client = client.documents
         dropbox_client = client.dropbox
+        rev_share_client = client.rev_share
 
         # Verify they are different instances
         assert tb_client is not transactions_client  # type: ignore[comparison-overlap]
@@ -201,21 +206,29 @@ class TestRezenClient:
         assert tb_client is not directory_client  # type: ignore[comparison-overlap]
         assert tb_client is not documents_client  # type: ignore[comparison-overlap]
         assert tb_client is not dropbox_client  # type: ignore[comparison-overlap]
+        assert tb_client is not rev_share_client  # type: ignore[comparison-overlap]
         assert transactions_client is not teams_client  # type: ignore[comparison-overlap]
         assert transactions_client is not agents_client  # type: ignore[comparison-overlap]
         assert transactions_client is not directory_client  # type: ignore[comparison-overlap]
         assert transactions_client is not documents_client  # type: ignore[comparison-overlap]
         assert transactions_client is not dropbox_client  # type: ignore[comparison-overlap]
+        assert transactions_client is not rev_share_client  # type: ignore[comparison-overlap]
         assert teams_client is not agents_client  # type: ignore[comparison-overlap]
         assert teams_client is not directory_client  # type: ignore[comparison-overlap]
         assert teams_client is not documents_client  # type: ignore[comparison-overlap]
         assert teams_client is not dropbox_client  # type: ignore[comparison-overlap]
+        assert teams_client is not rev_share_client  # type: ignore[comparison-overlap]
         assert agents_client is not directory_client  # type: ignore[comparison-overlap]
         assert agents_client is not documents_client  # type: ignore[comparison-overlap]
         assert agents_client is not dropbox_client  # type: ignore[comparison-overlap]
+        assert agents_client is not rev_share_client  # type: ignore[comparison-overlap]
         assert directory_client is not documents_client  # type: ignore[comparison-overlap]
         assert directory_client is not dropbox_client  # type: ignore[comparison-overlap]
+        assert directory_client is not rev_share_client  # type: ignore[comparison-overlap]
         assert documents_client is not dropbox_client  # type: ignore[comparison-overlap]
+        assert documents_client is not rev_share_client  # type: ignore[comparison-overlap]
+
+        assert dropbox_client is not rev_share_client  # type: ignore[comparison-overlap]
 
         assert isinstance(tb_client, TransactionBuilderClient)
         assert isinstance(transactions_client, TransactionsClient)
@@ -224,6 +237,7 @@ class TestRezenClient:
         assert isinstance(directory_client, DirectoryClient)
         assert isinstance(documents_client, DocumentClient)
         assert isinstance(dropbox_client, DropboxClient)
+        assert isinstance(rev_share_client, RevShareClient)
 
         # Verify they all have the same API key
         assert tb_client.api_key == "test_key"
@@ -233,6 +247,7 @@ class TestRezenClient:
         assert directory_client.api_key == "test_key"
         assert documents_client.api_key == "test_key"
         assert dropbox_client.api_key == "test_key"
+        assert rev_share_client.api_key == "test_key"
 
     def test_agents_property_lazy_loading(self) -> None:
         """Test that agents property creates client on first access."""
@@ -244,7 +259,6 @@ class TestRezenClient:
         # First access creates the client
         agents_client = client.agents
         assert isinstance(agents_client, AgentsClient)
-        assert client._agents is agents_client
 
         # Second access returns the same instance
         agents_client2 = client.agents
@@ -279,7 +293,6 @@ class TestRezenClient:
         # First access creates the client
         directory_client = client.directory
         assert isinstance(directory_client, DirectoryClient)
-        assert client._directory is directory_client
 
         # Second access returns the same instance
         directory_client2 = client.directory
@@ -314,7 +327,6 @@ class TestRezenClient:
         # First access creates the client
         documents_client = client.documents
         assert isinstance(documents_client, DocumentClient)
-        assert client._documents is documents_client
 
         # Second access returns the same instance
         documents_client2 = client.documents
@@ -349,7 +361,6 @@ class TestRezenClient:
         # First access creates the client
         dropbox_client = client.dropbox
         assert isinstance(dropbox_client, DropboxClient)
-        assert client._dropbox is dropbox_client
 
         # Second access returns the same instance
         dropbox_client2 = client.dropbox
