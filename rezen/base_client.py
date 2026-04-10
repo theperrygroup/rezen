@@ -64,6 +64,66 @@ def _parse_env_int(env_var: str, default: int) -> int:
         return default
 
 
+def _extract_error_message(payload: Any) -> str:
+    """Extract a human-readable error message from an API error payload.
+
+    Some ReZEN services return nested error payloads, for example:
+
+        {"com.real.commons.apierror.ApiError": {"message": "Not authorized."}}
+
+    This helper attempts to find a useful message regardless of nesting or
+    alternative field names.
+
+    Args:
+        payload: Parsed JSON payload (dict/list/str/etc.).
+
+    Returns:
+        Best-effort error message string. Returns empty string if none found.
+    """
+    if payload is None:
+        return ""
+
+    if isinstance(payload, dict):
+        # Common direct fields.
+        for key in ("message", "error", "detail", "title"):
+            value = payload.get(key)
+            if value is None:
+                continue
+            if isinstance(value, str):
+                if value.strip():
+                    return value
+            else:
+                return str(value)
+
+        # Unwrap single-key wrappers (common for ApiError payloads).
+        if len(payload) == 1:
+            _, inner = next(iter(payload.items()))
+            inner_message = _extract_error_message(inner)
+            if inner_message:
+                return inner_message
+
+        # Search nested values.
+        for value in payload.values():
+            inner_message = _extract_error_message(value)
+            if inner_message:
+                return inner_message
+
+        return ""
+
+    if isinstance(payload, list):
+        messages: List[str] = []
+        for item in payload:
+            msg = _extract_error_message(item)
+            if msg:
+                messages.append(msg)
+        if messages:
+            # Preserve order while de-duping.
+            return "; ".join(list(dict.fromkeys(messages)))
+        return str(payload)
+
+    return str(payload)
+
+
 class BaseClient:
     """Base client for ReZEN API with common functionality."""
 
@@ -154,7 +214,8 @@ class BaseClient:
             error_payload = {"message": str(response_data), "raw": response_data}
 
         if response.status_code == 400:
-            error_message = str(error_payload.get("message", "Invalid request"))
+            extracted = _extract_error_message(error_payload)
+            error_message = extracted if extracted else "Invalid request"
             # Add more context for common errors
             if "Invalid request" in error_message and "/owner-info" in response.url:
                 error_message += (
@@ -167,35 +228,57 @@ class BaseClient:
                 response_data=error_payload,
             )
         elif response.status_code == 401:
-            message = str(error_payload.get("message", "Invalid credentials"))
+            extracted = _extract_error_message(error_payload)
+            message = extracted if extracted else "Invalid credentials"
             raise AuthenticationError(
                 f"Authentication failed: {message}",
                 status_code=401,
                 response_data=error_payload,
             )
+        elif response.status_code == 403:
+            extracted = _extract_error_message(error_payload)
+            message = extracted if extracted else "Not authorized"
+            normalized = message.strip().lower()
+            if normalized in {"not authorized", "not authorized."} or normalized.startswith(
+                "not authorized"
+            ):
+                final_message = message
+            else:
+                final_message = f"Not authorized: {message}"
+            raise AuthenticationError(
+                final_message,
+                status_code=403,
+                response_data=error_payload,
+            )
         elif response.status_code == 404:
+            extracted = _extract_error_message(error_payload)
+            message = extracted if extracted else "Not found"
             raise NotFoundError(
-                f"Resource not found: {error_payload.get('message', 'Not found')}",
+                f"Resource not found: {message}",
                 status_code=404,
                 response_data=error_payload,
             )
         elif response.status_code == 429:
-            message = str(error_payload.get("message", "Too many requests"))
+            extracted = _extract_error_message(error_payload)
+            message = extracted if extracted else "Too many requests"
             raise RateLimitError(
                 f"Rate limit exceeded: {message}",
                 status_code=429,
                 response_data=error_payload,
             )
         elif 500 <= response.status_code < 600:
-            message = str(error_payload.get("message", "Internal server error"))
+            extracted = _extract_error_message(error_payload)
+            message = extracted if extracted else "Internal server error"
             raise ServerError(
                 f"Server error: {message}",
                 status_code=response.status_code,
                 response_data=error_payload,
             )
         else:
+            extracted = _extract_error_message(error_payload)
+            message = extracted if extracted else "Unknown error"
             raise RezenError(
-                f"Unexpected error: {error_payload.get('message', 'Unknown error')}",
+                f"Unexpected error: {message}",
                 status_code=response.status_code,
                 response_data=error_payload,
             )

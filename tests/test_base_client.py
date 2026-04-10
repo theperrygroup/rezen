@@ -7,7 +7,7 @@ import pytest
 import requests
 import responses
 
-from rezen.base_client import BaseClient
+from rezen.base_client import BaseClient, _extract_error_message
 from rezen.exceptions import (
     AuthenticationError,
     NetworkError,
@@ -221,6 +221,37 @@ class TestBaseClientResponseHandling:
             self.client.get("test")
 
     @responses.activate
+    def test_handle_response_403_forbidden_raises_authentication_error(self) -> None:
+        """Test 403 Forbidden raises AuthenticationError with extracted message."""
+        responses.add(
+            responses.GET,
+            f"{self.client.base_url}/test",
+            json={
+                "com.real.commons.apierror.ApiError": {
+                    "status": 403,
+                    "message": "Not authorized.",
+                }
+            },
+            status=403,
+        )
+
+        with pytest.raises(AuthenticationError, match="Not authorized"):
+            self.client.get("test")
+
+    @responses.activate
+    def test_handle_response_403_forbidden_prefixes_non_standard_message(self) -> None:
+        """403 should prefix non-standard messages with 'Not authorized:'."""
+        responses.add(
+            responses.GET,
+            f"{self.client.base_url}/test",
+            json={"message": "Forbidden"},
+            status=403,
+        )
+
+        with pytest.raises(AuthenticationError, match="Not authorized: Forbidden"):
+            self.client.get("test")
+
+    @responses.activate
     def test_handle_response_404_not_found_error(self) -> None:
         """Test 404 Not Found raises NotFoundError."""
         responses.add(
@@ -285,6 +316,24 @@ class TestBaseClientResponseHandling:
         )
 
         with pytest.raises(RezenError, match="Unexpected error: Unexpected error"):
+            self.client.get("test")
+
+    @responses.activate
+    def test_handle_response_unexpected_error_nested_api_error(self) -> None:
+        """Unexpected statuses should extract nested ApiError messages."""
+        responses.add(
+            responses.GET,
+            f"{self.client.base_url}/test",
+            json={
+                "com.real.commons.apierror.ApiError": {
+                    "status": 418,
+                    "message": "I'm a teapot",
+                }
+            },
+            status=418,
+        )
+
+        with pytest.raises(RezenError, match="Unexpected error: I'm a teapot"):
             self.client.get("test")
 
     @responses.activate
@@ -527,3 +576,38 @@ class TestBaseClientHttpMethods:
 
         assert result1 == {"success": True}
         assert result2 == {"success": True}
+
+
+class TestExtractErrorMessage:
+    """Unit tests for the error message extraction helper."""
+
+    def test_extract_error_message_none(self) -> None:
+        """None payloads should return an empty string."""
+        assert _extract_error_message(None) == ""
+
+    def test_extract_error_message_non_string_message(self) -> None:
+        """Non-string message values should be stringified."""
+        assert _extract_error_message({"message": 123}) == "123"
+
+    def test_extract_error_message_scans_nested_values(self) -> None:
+        """Nested payloads should be searched for an error message."""
+        assert _extract_error_message({"a": {"message": "hello"}, "b": 1}) == "hello"
+
+    def test_extract_error_message_list_dedupes_and_preserves_order(self) -> None:
+        """Lists of payloads should be joined, de-duped, and ordered."""
+        payload = [{"message": "a"}, {"message": "a"}, {"message": "b"}]
+        assert _extract_error_message(payload) == "a; b"
+
+    def test_extract_error_message_returns_empty_string_when_no_message_found(self) -> None:
+        """Payloads without any message fields should return an empty string."""
+        assert _extract_error_message({"a": {}, "b": {}}) == ""
+
+    def test_extract_error_message_list_without_messages_returns_stringified_payload(
+        self,
+    ) -> None:
+        """Lists with no extractable messages should be stringified."""
+        assert _extract_error_message([{}, {}]) == "[{}, {}]"
+
+    def test_extract_error_message_primitives_return_stringified_value(self) -> None:
+        """Primitive payloads should be stringified."""
+        assert _extract_error_message("boom") == "boom"

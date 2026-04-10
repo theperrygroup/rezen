@@ -22,6 +22,54 @@
   overflow: hidden;
 }
 
+/* Center-align table content (default) */
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* API playground (mkdocstrings) tables: left-align for readability */
+.md-typeset .doc table:not([class]) th,
+.md-typeset .doc table:not([class]) td {
+  text-align: left;
+}
+
+/* Collapsible tables (default collapsed) */
+.rezen-collapsible-table {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  margin: 1rem 0;
+}
+
+.rezen-collapsible-table__summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--md-primary-fg-color);
+  list-style: none;
+}
+
+.rezen-collapsible-table__summary::-webkit-details-marker {
+  display: none;
+}
+
+.rezen-collapsible-table__summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.15s ease-in-out;
+}
+
+.rezen-collapsible-table[open] > .rezen-collapsible-table__summary::before {
+  transform: rotate(90deg);
+}
+
+.rezen-collapsible-table .md-typeset__table,
+.rezen-collapsible-table table {
+  margin-top: 0.75rem;
+}
+
 /* Button styling */
 .md-button {
   border-radius: 6px;

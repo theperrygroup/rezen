@@ -290,6 +290,9 @@ pid.txt
 # Cursor IDE
 .cursor/rules/
 
+# Local playground (scratch / experiments)
+playground/
+
 # Task tracking and development artifacts
 tasks/
 API_WRAPPER_TEMPLATE.md

@@ -74,8 +74,8 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["rezen*"]
-exclude = ["tests*", "docs*", "venv*"]
+include = ["rezen*", "docs_extensions*"]
+exclude = ["tests*", "venv*"]
 
 [tool.setuptools.package-data]
 rezen = ["py.typed"]
