@@ -2,6 +2,8 @@
 
 This document outlines the coding standards and practices for the Perry Group Python API wrapper projects. Following these guidelines ensures consistent, maintainable, and high-quality code.
 
+For this repository, `STYLE_GUIDE.md` is the canonical guide for code contributions. The companion guide for documentation writing lives in `docs/STYLE_GUIDE.md`.
+
 ## General Principles
 
 - **Readability**: Code should be easily readable by others
@@ -139,15 +141,15 @@ except requests.HTTPError as e:
 
 ## Tools and Enforcement
 
-This project uses the following tools to enforce style:
+This repository's default local and CI checks center on the following tools:
 
 1. **Black**: For code formatting
 2. **isort**: For import sorting
 3. **mypy**: For type checking
 4. **flake8**: For linting
-5. **pylint**: For deeper code analysis
+5. **pytest**: For automated test coverage
 
-Configuration files for these tools are in the project root.
+CI also runs Bandit, `pip-audit`, and packaging/docs build checks. `pylint` is available in the development dependencies for ad hoc analysis, but it is not part of the default CI workflow.
 
 ## Data Models and Validation
 

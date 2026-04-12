@@ -87,7 +87,7 @@ client.transaction_builder.update_location_info(transaction_id, {
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.8 or newer (CI-tested on Python 3.8 through 3.12)
 - ReZEN API key
 
 ### Install the Package
@@ -258,11 +258,12 @@ python -m venv venv
 source venv/bin/activate  # Linux/macOS
 # or venv\Scripts\activate  # Windows
 
-# Install dependencies
-pip install -r requirements-dev.txt
+# Install development dependencies
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
 
-# Install in development mode
-pip install -e .
+# Install docs dependencies if you plan to build the site locally
+python -m pip install -r docs/requirements.txt
 ```
 
 ### Run Tests
@@ -281,17 +282,12 @@ pytest tests/test_teams.py -v
 ### Code Quality
 
 ```bash
-# Format code
-black .
-
-# Sort imports
-isort .
-
-# Type checking
-mypy rezen/
-
-# Linting
-flake8 rezen/
+# Match the default CI checks
+black --check --diff --line-length=88 .
+isort --check-only --diff --profile=black --line-length=88 .
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+mypy rezen/ --strict --ignore-missing-imports
 ```
 
 ### Build Documentation
@@ -300,13 +296,13 @@ flake8 rezen/
 # Serve documentation locally
 mkdocs serve
 
-# Build documentation
-mkdocs build
+# Build documentation with the same strictness used for contributor checks
+mkdocs build --strict
 ```
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://theperrygroup.github.io/rezen/development/contributing/) for details.
+We welcome contributions! Please see our [Contributing Guide](https://theperrygroup.github.io/rezen/development/contributing/) for workflow details and the repository [`STYLE_GUIDE.md`](https://github.com/theperrygroup/rezen/blob/main/STYLE_GUIDE.md) for code conventions.
 
 **Quick Contribution Steps:**
 1. Fork the repository

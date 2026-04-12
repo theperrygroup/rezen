@@ -4,6 +4,8 @@
 
 This guide outlines documentation standards for maintainability, consistency, and clarity. It aims to create documentation that serves as both an effective learning resource and technical reference.
 
+This page is the documentation-writing companion for the MkDocs site. The canonical repository-wide code style guide lives in [`STYLE_GUIDE.md`](https://github.com/theperrygroup/rezen/blob/main/STYLE_GUIDE.md); if the two guides overlap, the root guide is authoritative for code conventions and contributor standards.
+
 ## Core Principles
 
 ### 1. **Clarity First**
