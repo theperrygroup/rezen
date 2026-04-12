@@ -351,7 +351,9 @@ results = upload_transaction_documents(
 
 ## API Reference
 
-See the [DropboxClient API Reference](../reference/dropbox.md) for detailed method documentation.
+The `DropboxClient` API reference is rendered at the top of this page through
+`mkdocstrings`, so this page is the source of truth for method-level Dropbox
+documentation.
 
 ## Integration with Checklists
 

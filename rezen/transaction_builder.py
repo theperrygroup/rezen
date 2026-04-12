@@ -856,9 +856,9 @@ class TransactionBuilderClient(BaseClient):
             }
 
         🎯 GETTING THE RIGHT IDS:
-            - agentId: Use current user's ID (user["id"] from get_current_user())
-            - officeId: Use user["offices"][0]["id"] from get_current_user()
-            - teamId: Use team ID from get_user_teams_and_offices()
+            - agentId: Use current user's ID (`user["id"]` from `get_current_user()`)
+            - officeId: Use `user["offices"][0]["id"]` from `get_current_user()`
+            - teamId: Use the team ID returned by `get_user_teams_and_offices()`
 
         Role Matching:
             The role MUST match the representationType from price/date info:

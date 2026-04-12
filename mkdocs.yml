@@ -183,6 +183,12 @@ nav:
     - development/index.md
     - Contributing: development/contributing.md
     - Deployment: development/deployment.md
+    - Consistency Runbooks: development/consistency/index.md
+    - Shared Standard: development/consistency/shared-standard.md
+    - Phase 1 - Foundation: development/consistency/phase-1-foundation.md
+    - Phase 2 - Docs: development/consistency/phase-2-docs.md
+    - Phase 3 - GitHub Actions: development/consistency/phase-3-github-actions.md
+    - Repo Gap Map: development/consistency/repo-gap-map.md
 
 # Extra CSS and JavaScript
 extra_css:
