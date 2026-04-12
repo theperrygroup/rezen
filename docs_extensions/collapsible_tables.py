@@ -306,7 +306,9 @@ class _CollapsibleTablesHTMLRewriter(HTMLParser):
         self._out.append(f"</{tag}>")
 
         if tag == "table":
-            wrapped = self._wrapped_table_stack.pop() if self._wrapped_table_stack else False
+            wrapped = (
+                self._wrapped_table_stack.pop() if self._wrapped_table_stack else False
+            )
             if wrapped:
                 self._out.append("</details>")
 
@@ -417,7 +419,9 @@ class CollapsibleTablesExtension(Extension):
                 md,
                 summary_text=str(self.getConfig("summary_text")),
                 open_by_default=_as_bool(self.getConfig("open_by_default")),
-                collapse_classed_tables=_as_bool(self.getConfig("collapse_classed_tables")),
+                collapse_classed_tables=_as_bool(
+                    self.getConfig("collapse_classed_tables")
+                ),
             ),
             "rezen-collapsible-tables",
             priority=2,
@@ -428,7 +432,9 @@ class CollapsibleTablesExtension(Extension):
                 md,
                 summary_text=str(self.getConfig("summary_text")),
                 open_by_default=_as_bool(self.getConfig("open_by_default")),
-                collapse_classed_tables=_as_bool(self.getConfig("collapse_classed_tables")),
+                collapse_classed_tables=_as_bool(
+                    self.getConfig("collapse_classed_tables")
+                ),
             ),
             "rezen-collapsible-tables-post",
             priority=0,
@@ -445,4 +451,3 @@ def makeExtension(**kwargs: Any) -> Extension:
         The configured Markdown extension.
     """
     return CollapsibleTablesExtension(**kwargs)
-

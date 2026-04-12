@@ -47,7 +47,9 @@ def test_sync_manifests_updates_requirements_and_pyproject(tmp_path: Path) -> No
         "]\n",
         encoding="utf-8",
     )
-    requirements_path.write_text("requests==2.32.3\npydantic>=2.5.0\n", encoding="utf-8")
+    requirements_path.write_text(
+        "requests==2.32.3\npydantic>=2.5.0\n", encoding="utf-8"
+    )
     requirements_dev_path.write_text("python-dotenv==1.1.0\n", encoding="utf-8")
     docs_requirements_path.write_text(
         "# Documentation dependencies\nmkdocs==1.6.1\n",

@@ -609,7 +609,9 @@ class TestExtractErrorMessage:
         payload = [{"message": "a"}, {"message": "a"}, {"message": "b"}]
         assert _extract_error_message(payload) == "a; b"
 
-    def test_extract_error_message_returns_empty_string_when_no_message_found(self) -> None:
+    def test_extract_error_message_returns_empty_string_when_no_message_found(
+        self,
+    ) -> None:
         """Payloads without any message fields should return an empty string."""
         assert _extract_error_message({"a": {}, "b": {}}) == ""
 

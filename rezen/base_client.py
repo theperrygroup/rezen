@@ -274,9 +274,10 @@ class BaseClient:
             extracted = _extract_error_message(error_payload)
             message = extracted if extracted else "Not authorized"
             normalized = message.strip().lower()
-            if normalized in {"not authorized", "not authorized."} or normalized.startswith(
-                "not authorized"
-            ):
+            if normalized in {
+                "not authorized",
+                "not authorized.",
+            } or normalized.startswith("not authorized"):
                 final_message = message
             else:
                 final_message = f"Not authorized: {message}"

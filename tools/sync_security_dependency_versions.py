@@ -149,14 +149,22 @@ def normalize_requirements_file(path: Path) -> tuple[SyncResult, dict[str, str]]
 
     for line in original_text.splitlines(keepends=True):
         stripped_line = line.strip()
-        if not stripped_line or stripped_line.startswith("#") or stripped_line.startswith("-"):
+        if (
+            not stripped_line
+            or stripped_line.startswith("#")
+            or stripped_line.startswith("-")
+        ):
             normalized_lines.append(line)
             continue
 
         newline = "\n" if line.endswith("\n") else ""
         line_without_newline = line[:-1] if newline else line
-        requirement_part, comment_part = _split_requirement_comment(line_without_newline)
-        leading_whitespace = requirement_part[: len(requirement_part) - len(requirement_part.lstrip())]
+        requirement_part, comment_part = _split_requirement_comment(
+            line_without_newline
+        )
+        leading_whitespace = requirement_part[
+            : len(requirement_part) - len(requirement_part.lstrip())
+        ]
         trailing_whitespace = requirement_part[len(requirement_part.rstrip()) :]
         requirement_string = requirement_part.strip()
         normalized_requirement = normalize_requirement_string(requirement_string)
@@ -171,13 +179,18 @@ def normalize_requirements_file(path: Path) -> tuple[SyncResult, dict[str, str]]
         except InvalidRequirement:
             continue
 
-        dependency_map[canonicalize_name(parsed_requirement.name)] = normalized_requirement
+        dependency_map[canonicalize_name(parsed_requirement.name)] = (
+            normalized_requirement
+        )
 
     normalized_text = "".join(normalized_lines)
     if normalized_text != original_text:
         path.write_text(normalized_text, encoding="utf-8")
 
-    return SyncResult(path=path, changed=normalized_text != original_text), dependency_map
+    return (
+        SyncResult(path=path, changed=normalized_text != original_text),
+        dependency_map,
+    )
 
 
 def sync_pyproject_file(path: Path, dependency_map: dict[str, str]) -> SyncResult:
@@ -247,7 +260,9 @@ def sync_manifests(
     results: list[SyncResult] = []
 
     for requirement_path in requirement_paths:
-        requirement_result, file_dependency_map = normalize_requirements_file(requirement_path)
+        requirement_result, file_dependency_map = normalize_requirements_file(
+            requirement_path
+        )
         dependency_map.update(file_dependency_map)
         results.append(requirement_result)
 

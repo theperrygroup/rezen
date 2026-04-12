@@ -509,7 +509,8 @@ class RevShareClient(BaseClient):
                 )
 
                 records = self._extract_records(
-                    payload, list_keys=("contributions", "content", "items", "results", "data")
+                    payload,
+                    list_keys=("contributions", "content", "items", "results", "data"),
                 )
                 if not records:
                     break
@@ -519,9 +520,9 @@ class RevShareClient(BaseClient):
                     amount = self._extract_earning_amount(record)
                     if agent_identifier is None or amount is None:
                         continue
-                    tier_earnings[agent_identifier] = (
-                        tier_earnings.get(agent_identifier, 0.0) + float(amount)
-                    )
+                    tier_earnings[agent_identifier] = tier_earnings.get(
+                        agent_identifier, 0.0
+                    ) + float(amount)
 
                 if len(records) < page_size:
                     break

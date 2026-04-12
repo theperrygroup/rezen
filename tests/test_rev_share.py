@@ -1,7 +1,7 @@
 """Tests for RevShareClient."""
 
-from datetime import date
 import json
+from datetime import date
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -296,7 +296,10 @@ class TestRevShareClient:
             json={
                 "contributions": [
                     {"agentYentaId": "a1", "payout": 100},
-                    {"agentYentaId": "a2", "payout": {"amount": "50.00", "currency": "USD"}},
+                    {
+                        "agentYentaId": "a2",
+                        "payout": {"amount": "50.00", "currency": "USD"},
+                    },
                     {"agentYentaId": "a1", "payoutAmount": 25},
                 ]
             },
@@ -355,7 +358,10 @@ class TestRevShareClient:
             json={
                 "contributions": [
                     {"agentYentaId": "a1", "payout": 100},
-                    {"agentYentaId": "a2", "payout": {"amount": "50.00", "currency": "USD"}},
+                    {
+                        "agentYentaId": "a2",
+                        "payout": {"amount": "50.00", "currency": "USD"},
+                    },
                     {"agentYentaId": "a1", "payoutAmount": 25},
                 ]
             },
@@ -399,7 +405,12 @@ class TestRevShareClient:
         responses.add(
             responses.GET,
             f"{base_url}/revshares/{yenta_id}/contributions/2",
-            json={"contributions": [{"agentYentaId": "a1", "payout": 25}, {"agentYentaId": "a2", "payout": 10}]},
+            json={
+                "contributions": [
+                    {"agentYentaId": "a1", "payout": 25},
+                    {"agentYentaId": "a2", "payout": 10},
+                ]
+            },
             status=200,
         )
 
@@ -454,7 +465,9 @@ class TestRevShareClient:
             status=200,
         )
 
-        result = client.get_earnings_per_agent_per_tier(yenta_id, tiers=[1], page_size=50)
+        result = client.get_earnings_per_agent_per_tier(
+            yenta_id, tiers=[1], page_size=50
+        )
         assert result == {1: {"nested-1": 10.0, "nested-2": 5.0}}
 
     @responses.activate
@@ -477,7 +490,9 @@ class TestRevShareClient:
             status=200,
         )
 
-        result = client.get_earnings_per_agent_per_tier(yenta_id, tiers=[1], page_size=50)
+        result = client.get_earnings_per_agent_per_tier(
+            yenta_id, tiers=[1], page_size=50
+        )
         assert result == {1: {"a1": 2.0}}
 
     @responses.activate
@@ -501,7 +516,9 @@ class TestRevShareClient:
             status=200,
         )
 
-        result = client.get_earnings_per_agent_per_tier(yenta_id, tiers=[1, 2], page_size=50)
+        result = client.get_earnings_per_agent_per_tier(
+            yenta_id, tiers=[1, 2], page_size=50
+        )
         assert result == {1: {}, 2: {}}
 
     @responses.activate
