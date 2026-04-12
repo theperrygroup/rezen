@@ -80,6 +80,29 @@ def _extract_error_message(payload: Any) -> str:
     Returns:
         Best-effort error message string. Returns empty string if none found.
     """
+    return _extract_error_message_impl(
+        payload,
+        allow_non_string_scalar_fallback=True,
+    )
+
+
+def _extract_error_message_impl(
+    payload: Any,
+    *,
+    allow_non_string_scalar_fallback: bool,
+) -> str:
+    """Recursively extract a human-readable error message from a payload.
+
+    Args:
+        payload: Parsed JSON payload (dict/list/str/etc.).
+        allow_non_string_scalar_fallback: Whether non-string scalars should be
+            stringified when no explicit error message field is found. Nested
+            scans disable this so metadata like numeric status codes does not
+            outrank a deeper message field.
+
+    Returns:
+        Best-effort error message string. Returns empty string if none found.
+    """
     if payload is None:
         return ""
 
@@ -98,13 +121,19 @@ def _extract_error_message(payload: Any) -> str:
         # Unwrap single-key wrappers (common for ApiError payloads).
         if len(payload) == 1:
             _, inner = next(iter(payload.items()))
-            inner_message = _extract_error_message(inner)
+            inner_message = _extract_error_message_impl(
+                inner,
+                allow_non_string_scalar_fallback=allow_non_string_scalar_fallback,
+            )
             if inner_message:
                 return inner_message
 
         # Search nested values.
         for value in payload.values():
-            inner_message = _extract_error_message(value)
+            inner_message = _extract_error_message_impl(
+                value,
+                allow_non_string_scalar_fallback=False,
+            )
             if inner_message:
                 return inner_message
 
@@ -113,15 +142,21 @@ def _extract_error_message(payload: Any) -> str:
     if isinstance(payload, list):
         messages: List[str] = []
         for item in payload:
-            msg = _extract_error_message(item)
+            msg = _extract_error_message_impl(
+                item,
+                allow_non_string_scalar_fallback=False,
+            )
             if msg:
                 messages.append(msg)
         if messages:
             # Preserve order while de-duping.
             return "; ".join(list(dict.fromkeys(messages)))
-        return str(payload)
+        return str(payload) if allow_non_string_scalar_fallback else ""
 
-    return str(payload)
+    if isinstance(payload, str):
+        return payload if payload.strip() else ""
+
+    return str(payload) if allow_non_string_scalar_fallback else ""
 
 
 class BaseClient:

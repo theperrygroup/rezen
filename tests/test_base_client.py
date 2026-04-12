@@ -591,7 +591,18 @@ class TestExtractErrorMessage:
 
     def test_extract_error_message_scans_nested_values(self) -> None:
         """Nested payloads should be searched for an error message."""
-        assert _extract_error_message({"a": {"message": "hello"}, "b": 1}) == "hello"
+        assert _extract_error_message({"b": 1, "a": {"message": "hello"}}) == "hello"
+
+    def test_extract_error_message_ignores_scalar_metadata_during_nested_search(
+        self,
+    ) -> None:
+        """Nested numeric metadata should not outrank nested error messages."""
+        payload = {
+            "statusCode": 403,
+            "errors": [{"message": "Access denied"}],
+        }
+
+        assert _extract_error_message(payload) == "Access denied"
 
     def test_extract_error_message_list_dedupes_and_preserves_order(self) -> None:
         """Lists of payloads should be joined, de-duped, and ordered."""
