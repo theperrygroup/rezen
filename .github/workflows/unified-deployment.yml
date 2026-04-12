@@ -86,13 +86,13 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -161,17 +161,17 @@ jobs:
       (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped') &&
       (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-quality-${{ hashFiles('**/pyproject.toml') }}
@@ -210,7 +210,7 @@ jobs:
         pip-audit --path .audit-packages --format json --output pip-audit-report.json
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: deployment-security-reports
@@ -232,12 +232,12 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -253,7 +253,7 @@ jobs:
         pytest --cov=rezen --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       if: matrix.python-version == env.PYTHON_VERSION
       with:
         file: ./coverage.xml
@@ -270,13 +270,13 @@ jobs:
       needs.test.result == 'success' &&
       needs.deployment-type.outputs.is_release == 'true'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -309,7 +309,7 @@ jobs:
       run: twine check dist/*
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: dist
         path: dist/
@@ -326,13 +326,13 @@ jobs:
       (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -404,10 +404,10 @@ jobs:
           SITE_URL: https://theperrygroup.github.io/rezen/
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload documentation artifacts
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./site
 
@@ -422,7 +422,7 @@ jobs:
     environment: release
     steps:
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: dist
         path: dist/
@@ -446,7 +446,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   # Create GitHub release
   create-github-release:
@@ -458,13 +458,13 @@ jobs:
       needs.publish-pypi.result == 'success' &&
       needs.deployment-type.outputs.is_release == 'true'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: dist
         path: dist/
