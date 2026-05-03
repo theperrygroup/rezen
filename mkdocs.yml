@@ -182,6 +182,7 @@ nav:
   - Development:
     - development/index.md
     - Contributing: development/contributing.md
+    - Documentation Style Guide: STYLE_GUIDE.md
     - Deployment: development/deployment.md
     - Consistency Runbooks: development/consistency/index.md
     - Shared Standard: development/consistency/shared-standard.md

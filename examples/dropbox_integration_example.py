@@ -119,10 +119,8 @@ In a real application, this could be:
         print(f"   Local file: {sample_file}")
         print(f"   Dropbox path: {dropbox_path}")
         print("\n   Code to upload:")
-        print(
-            f"""   with open('{sample_file}', 'rb') as f:
-       client.dropbox.upload_file(agent_id, f, '{dropbox_path}')"""
-        )
+        print(f"""   with open('{sample_file}', 'rb') as f:
+       client.dropbox.upload_file(agent_id, f, '{dropbox_path}')""")
 
         # Show batch upload example
         print("\n📤 Batch upload example:")
@@ -165,8 +163,7 @@ def demo_transaction_workflow(client: RezenClient) -> None:
 
     # Show code structure
     print("\n💻 Implementation example:")
-    print(
-        """
+    print("""
 def setup_transaction_dropbox(client, agent_id, transaction_id):
     # Create base folder
     base_path = f"/Transactions/{transaction_id}"
@@ -187,8 +184,7 @@ def setup_transaction_dropbox(client, agent_id, transaction_id):
             pass  # Folder already exists
     
     return base_path
-"""
-    )
+""")
 
 
 def main() -> None:

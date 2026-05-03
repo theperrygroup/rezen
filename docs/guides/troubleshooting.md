@@ -953,7 +953,7 @@ python -c "import rezen; print(rezen.__version__)"
 # Check Python version
 python --version
 
-# ReZEN requires Python 3.7+
+# ReZEN requires Python 3.8+
 # If using older version, upgrade:
 
 # macOS with Homebrew

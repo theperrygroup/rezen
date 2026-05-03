@@ -4,7 +4,7 @@ This guide covers installation and setup of the ReZEN Python API client.
 
 ## 📋 Requirements
 
-- **Python**: 3.7 or higher
+- **Python**: 3.8 or newer
 - **Operating Systems**: Windows, macOS, Linux
 - **Internet connection** for package installation and API access
 
@@ -21,7 +21,7 @@ pip install rezen
 ```bash
 git clone https://github.com/theperrygroup/rezen.git
 cd rezen
-pip install .
+python -m pip install .
 ```
 
 ### Development Installation
@@ -29,7 +29,7 @@ pip install .
 ```bash
 git clone https://github.com/theperrygroup/rezen.git
 cd rezen
-pip install -e .
+python -m pip install -e ".[dev]"
 ```
 
 ## 🔧 Environment Setup
@@ -110,7 +110,7 @@ The ReZEN client automatically installs these dependencies:
 
 - **requests** - HTTP client for API calls
 - **pydantic** - Validation helpers used by the library
-- **typing-extensions** - Enhanced type hints (Python < 3.8)
+- **typing-extensions** - Backported typing helpers used by the library
 
 ### Optional Dependencies
 
@@ -147,7 +147,7 @@ client = RezenClient()
 # Test connection (this will validate your API key)
 try:
     # Simple API call to verify connection
-    teams = client.teams.search_teams(limit=1)
+    teams = client.teams.search_teams(page_size=1)
     print("✅ Installation successful!")
     print(f"Connected to ReZEN API")
 except Exception as e:
