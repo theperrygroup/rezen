@@ -1,8 +1,8 @@
-mkdocs>=1.5.0
-mkdocs-material>=9.4.0
+mkdocs>=1.6.1
+mkdocs-material>=9.7.6
 mkdocs-minify-plugin>=0.7.0
-mkdocs-include-markdown-plugin>=6.0.0
-mkdocstrings[python]>=0.24.0
-pymdown-extensions>=10.0.0
-markdown>=3.5.0
+mkdocs-include-markdown-plugin>=7.2.2
+mkdocstrings[python]>=0.30.1
+pymdown-extensions>=10.21.2
+markdown>=3.9
 Pillow>=9.0.0
