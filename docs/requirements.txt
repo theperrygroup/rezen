@@ -5,4 +5,4 @@ mkdocs-include-markdown-plugin>=7.3.0
 mkdocstrings[python]>=1.0.4
 pymdown-extensions>=10.21.3
 markdown>=3.10.2
-Pillow>=12.2.0
+Pillow>=12.3.0
