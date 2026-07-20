@@ -86,13 +86,13 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -161,17 +161,17 @@ jobs:
       (needs.version-bump.result == 'success' || needs.version-bump.result == 'skipped') &&
       (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache dependencies
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-quality-${{ hashFiles('**/pyproject.toml') }}
@@ -232,12 +232,12 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -253,7 +253,7 @@ jobs:
         pytest --cov=rezen --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v6
+      uses: codecov/codecov-action@v7
       if: matrix.python-version == env.PYTHON_VERSION
       with:
         file: ./coverage.xml
@@ -270,13 +270,13 @@ jobs:
       needs.test.result == 'success' &&
       needs.deployment-type.outputs.is_release == 'true'
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -326,13 +326,13 @@ jobs:
       (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ needs.version-bump.outputs.tag || github.ref }}
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -458,7 +458,7 @@ jobs:
       needs.publish-pypi.result == 'success' &&
       needs.deployment-type.outputs.is_release == 'true'
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         ref: ${{ needs.version-bump.outputs.tag || github.ref }}
