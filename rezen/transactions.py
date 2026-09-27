@@ -5,6 +5,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
 from .base_client import BaseClient
+from .exceptions import ValidationError
 
 TransactionStatus = Literal["active", "closed", "terminated"]
 
@@ -130,6 +131,56 @@ class NormalizedTransaction:
     def closing_date(self) -> Optional[date]:
         """Best-effort closing date (actual preferred, falls back to estimated)."""
         return self.closing_date_actual or self.closing_date_estimated
+
+
+_PAYMENT_VALUE_KINDS = ("money", "percentage", "zero")
+
+
+def _validate_payment_value(payment_value: Any, where: str) -> None:
+    """Check that a ReZEN ``PaymentValue`` names exactly one kind of amount."""
+    if not isinstance(payment_value, dict):
+        raise ValidationError(f"{where}.paymentValue must be a dict")
+    kinds = [
+        kind
+        for kind in _PAYMENT_VALUE_KINDS
+        if kind in payment_value
+        and payment_value[kind] is not None
+        and payment_value[kind] is not False
+    ]
+    if len(kinds) != 1:
+        raise ValidationError(
+            f"{where}.paymentValue must set exactly one of money, percentage "
+            f"or zero (got {kinds or 'none'})"
+        )
+
+
+def _validate_payouts(
+    payments: List[Dict[str, Any]],
+    payments_from_other_participants: List[Dict[str, Any]],
+) -> None:
+    """Validate a ``SetPaymentsRequest`` body before it is sent."""
+    if not payments:
+        raise ValidationError("payments must list at least one participant")
+    for index, payment in enumerate(payments):
+        where = f"payments[{index}]"
+        if not isinstance(payment, dict) or not payment.get("participantId"):
+            raise ValidationError(f"{where}.participantId is required")
+        _validate_payment_value(payment.get("paymentValue"), where)
+    for index, payment in enumerate(payments_from_other_participants):
+        where = f"paymentsFromOtherParticipants[{index}]"
+        if not isinstance(payment, dict) or not payment.get("participantId"):
+            raise ValidationError(f"{where}.participantId is required")
+        _validate_payment_value(payment.get("paymentValue"), where)
+        receiving = payment.get("receivingPayments")
+        if not isinstance(receiving, list):
+            raise ValidationError(f"{where}.receivingPayments must be a list")
+        for inner, received in enumerate(receiving):
+            inner_where = f"{where}.receivingPayments[{inner}]"
+            if not isinstance(received, dict) or not received.get(
+                "payingParticipantId"
+            ):
+                raise ValidationError(f"{inner_where}.payingParticipantId is required")
+            _validate_payment_value(received.get("paymentValue"), inner_where)
 
 
 def normalize_transaction(transaction: Dict[str, Any]) -> NormalizedTransaction:
@@ -618,6 +669,54 @@ class TransactionsClient(BaseClient):
         """
         endpoint = f"transactions/{transaction_id}/attached-fee"
         return self.put(endpoint, json_data=fee_info)
+
+    def set_payouts(
+        self,
+        transaction_id: str,
+        payments: List[Dict[str, Any]],
+        payments_from_other_participants: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Set participant payouts on an existing transaction in place.
+
+        Wraps ``PUT /transactions/{transactionId}/payouts`` (Arrakis operation
+        ``setPayouts``). The transaction keeps its ID; no builder is created
+        and nothing is resubmitted.
+
+        Each payment names a participant already on the transaction and one
+        ``paymentValue`` holding exactly one of ``money``
+        (``{"amount": 2992.5, "currency": "USD"}``), ``percentage``
+        (``{"value": 70}``) or ``zero`` (``True``).
+
+        Args:
+            transaction_id: Transaction ID
+            payments: ``ParticipantPaymentValue`` entries, e.g.
+                ``[{"participantId": "...", "paymentValue": {"money":
+                {"amount": 2992.5, "currency": "USD"}}}]``
+            payments_from_other_participants: Optional
+                ``PaymentFromOtherParticipantsValue`` entries; each has
+                ``participantId``, ``paymentValue`` and a
+                ``receivingPayments`` list of ``{"payingParticipantId",
+                "paymentValue"}``. Sent as an empty list when omitted,
+                because the API requires the field.
+
+        Returns:
+            The updated transaction (``TransactionResponse``), including
+            ``commissionSplits`` and ``paymentParticipants``
+
+        Raises:
+            ValidationError: If a payment is missing a participant ID or its
+                ``paymentValue`` does not set exactly one amount kind
+        """
+        other_payments = list(payments_from_other_participants or [])
+        _validate_payouts(payments, other_payments)
+        endpoint = f"transactions/{transaction_id}/payouts"
+        return self.put(
+            endpoint,
+            json_data={
+                "payments": payments,
+                "paymentsFromOtherParticipants": other_payments,
+            },
+        )
 
     # ===== ESCROW MANAGEMENT =====
 

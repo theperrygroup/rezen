@@ -1,10 +1,13 @@
 """Tests for the transactions client."""
 
+import json
 from datetime import date
+from typing import Any
 
 import pytest
 import responses
 
+from rezen.exceptions import ValidationError
 from rezen.transactions import (
     NormalizedTransactionAddress,
     TransactionsClient,
@@ -636,6 +639,161 @@ class TestTransactionsClient:
         result = self.client.update_attached_fee(self.transaction_id, fee_info)
 
         assert result == expected_response
+
+    @responses.activate
+    def test_set_payouts_puts_request_body(self) -> None:
+        """set_payouts PUTs a SetPaymentsRequest and returns the transaction."""
+        expected_response = {
+            "id": self.transaction_id,
+            "commissionSplits": [{"participantId": "p-agent"}],
+        }
+        responses.add(
+            responses.PUT,
+            f"{self.base_url}/transactions/{self.transaction_id}/payouts",
+            json=expected_response,
+            status=200,
+        )
+        payments = [
+            {
+                "participantId": "p-agent",
+                "paymentValue": {"money": {"amount": 2992.5, "currency": "USD"}},
+            },
+            {"participantId": "p-team", "paymentValue": {"percentage": {"value": 30}}},
+            {"participantId": "p-coach", "paymentValue": {"zero": True}},
+        ]
+
+        result = self.client.set_payouts(self.transaction_id, payments)
+
+        assert result == expected_response
+        assert len(responses.calls) == 1
+        body = json.loads(responses.calls[0].request.body)
+        assert body == {"payments": payments, "paymentsFromOtherParticipants": []}
+
+    @responses.activate
+    def test_set_payouts_sends_payments_from_other_participants(self) -> None:
+        """set_payouts forwards paymentsFromOtherParticipants unchanged."""
+        responses.add(
+            responses.PUT,
+            f"{self.base_url}/transactions/{self.transaction_id}/payouts",
+            json={"id": self.transaction_id},
+            status=200,
+        )
+        payments = [
+            {"participantId": "p-agent", "paymentValue": {"percentage": {"value": 70}}}
+        ]
+        other = [
+            {
+                "participantId": "p-referral",
+                "paymentValue": {"money": {"amount": 500, "currency": "USD"}},
+                "receivingPayments": [
+                    {
+                        "payingParticipantId": "p-agent",
+                        "paymentValue": {"money": {"amount": 500, "currency": "USD"}},
+                    }
+                ],
+            }
+        ]
+
+        self.client.set_payouts(
+            self.transaction_id,
+            payments,
+            payments_from_other_participants=other,
+        )
+
+        body = json.loads(responses.calls[0].request.body)
+        assert body["paymentsFromOtherParticipants"] == other
+
+    @pytest.mark.parametrize(
+        "payments, other, message",
+        [
+            ([], None, "at least one participant"),
+            (
+                [{"paymentValue": {"zero": True}}],
+                None,
+                r"payments\[0\]\.participantId is required",
+            ),
+            (
+                [{"participantId": "p-agent"}],
+                None,
+                r"payments\[0\]\.paymentValue must be a dict",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {}}],
+                None,
+                "exactly one of money, percentage or zero",
+            ),
+            (
+                [
+                    {
+                        "participantId": "p-agent",
+                        "paymentValue": {
+                            "money": {"amount": 1, "currency": "USD"},
+                            "percentage": {"value": 10},
+                        },
+                    }
+                ],
+                None,
+                "exactly one of money, percentage or zero",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"zero": False}}],
+                None,
+                "exactly one of money, percentage or zero",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"zero": True}}],
+                [{"participantId": "p-ref", "paymentValue": {"zero": True}}],
+                "receivingPayments must be a list",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"zero": True}}],
+                [
+                    {
+                        "paymentValue": {"zero": True},
+                        "receivingPayments": [],
+                    }
+                ],
+                r"paymentsFromOtherParticipants\[0\]\.participantId is required",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"zero": True}}],
+                [
+                    {
+                        "participantId": "p-ref",
+                        "paymentValue": {"zero": True},
+                        "receivingPayments": [{"paymentValue": {"zero": True}}],
+                    }
+                ],
+                "payingParticipantId is required",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"zero": True}}],
+                [
+                    {
+                        "participantId": "p-ref",
+                        "paymentValue": {"zero": True},
+                        "receivingPayments": [
+                            {"payingParticipantId": "p-agent", "paymentValue": {}}
+                        ],
+                    }
+                ],
+                r"receivingPayments\[0\]\.paymentValue must set exactly one",
+            ),
+        ],
+    )
+    @responses.activate
+    def test_set_payouts_rejects_malformed_body_without_sending(
+        self, payments: Any, other: Any, message: str
+    ) -> None:
+        """Malformed payout bodies raise ValidationError before any request."""
+        with pytest.raises(ValidationError, match=message):
+            self.client.set_payouts(
+                self.transaction_id,
+                payments,
+                payments_from_other_participants=other,
+            )
+
+        assert len(responses.calls) == 0
 
     # ===== ESCROW MANAGEMENT TESTS =====
 
