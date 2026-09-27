@@ -67,12 +67,7 @@ from .models import (
     RevokeApiKeyRequest,
 )
 from .models import StateOrProvince as ModelStateOrProvince
-from .models import (
-    Team,
-    TeamAgent,
-    TeamConfig,
-    TeamInvitation,
-)
+from .models import Team, TeamAgent, TeamConfig, TeamInvitation
 from .models import TeamStatus as ModelTeamStatus
 from .models import TeamType as ModelTeamType
 from .models import (
