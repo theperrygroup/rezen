@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
+from decimal import Decimal
 from typing import Any, Dict, List, Literal, Optional
 
 from .base_client import BaseClient
@@ -152,6 +153,27 @@ def _validate_payment_value(payment_value: Any, where: str) -> None:
             f"{where}.paymentValue must set exactly one of money, percentage "
             f"or zero (got {kinds or 'none'})"
         )
+    kind = kinds[0]
+    if kind == "zero" and payment_value[kind] is not True:
+        raise ValidationError(f"{where}.paymentValue.zero must be True")
+    required_field = {"money": "amount", "percentage": "value"}.get(kind)
+    if required_field is not None:
+        amount = payment_value[kind]
+        if not isinstance(amount, dict) or amount.get(required_field) is None:
+            raise ValidationError(
+                f"{where}.paymentValue.{kind}.{required_field} is required"
+            )
+
+
+def _json_numbers(value: Any) -> Any:
+    """Return ``value`` with every ``Decimal`` replaced by a JSON-ready float."""
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, dict):
+        return {key: _json_numbers(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_numbers(item) for item in value]
+    return value
 
 
 def _validate_payouts(
@@ -685,7 +707,8 @@ class TransactionsClient(BaseClient):
         Each payment names a participant already on the transaction and one
         ``paymentValue`` holding exactly one of ``money``
         (``{"amount": 2992.5, "currency": "USD"}``), ``percentage``
-        (``{"value": 70}``) or ``zero`` (``True``).
+        (``{"value": 70}``) or ``zero`` (``True``). ``Decimal`` amounts are
+        sent as JSON numbers.
 
         Args:
             transaction_id: Transaction ID
@@ -704,8 +727,9 @@ class TransactionsClient(BaseClient):
             ``commissionSplits`` and ``paymentParticipants``
 
         Raises:
-            ValidationError: If a payment is missing a participant ID or its
-                ``paymentValue`` does not set exactly one amount kind
+            ValidationError: If a payment is missing a participant ID, its
+                ``paymentValue`` does not set exactly one amount kind, or a
+                money/percentage value has no ``amount``/``value``
         """
         other_payments = list(payments_from_other_participants or [])
         _validate_payouts(payments, other_payments)
@@ -713,8 +737,8 @@ class TransactionsClient(BaseClient):
         return self.put(
             endpoint,
             json_data={
-                "payments": payments,
-                "paymentsFromOtherParticipants": other_payments,
+                "payments": _json_numbers(payments),
+                "paymentsFromOtherParticipants": _json_numbers(other_payments),
             },
         )
 

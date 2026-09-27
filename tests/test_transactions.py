@@ -2,6 +2,7 @@
 
 import json
 from datetime import date
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -703,6 +704,35 @@ class TestTransactionsClient:
         body = json.loads(responses.calls[0].request.body)
         assert body["paymentsFromOtherParticipants"] == other
 
+    @responses.activate
+    def test_set_payouts_sends_decimal_amounts_as_numbers(self) -> None:
+        """Decimal money and percentage values are sent as JSON numbers."""
+        responses.add(
+            responses.PUT,
+            f"{self.base_url}/transactions/{self.transaction_id}/payouts",
+            json={"id": self.transaction_id},
+            status=200,
+        )
+        payments = [
+            {
+                "participantId": "p-agent",
+                "paymentValue": {
+                    "money": {"amount": Decimal("2992.50"), "currency": "USD"}
+                },
+            },
+            {
+                "participantId": "p-team",
+                "paymentValue": {"percentage": {"value": Decimal("37.5")}},
+            },
+        ]
+
+        self.client.set_payouts(self.transaction_id, payments)
+
+        body = json.loads(responses.calls[0].request.body)
+        assert body["payments"][0]["paymentValue"]["money"]["amount"] == 2992.5
+        assert body["payments"][1]["paymentValue"]["percentage"]["value"] == 37.5
+        assert payments[0]["paymentValue"]["money"]["amount"] == Decimal("2992.50")
+
     @pytest.mark.parametrize(
         "payments, other, message",
         [
@@ -739,6 +769,26 @@ class TestTransactionsClient:
                 [{"participantId": "p-agent", "paymentValue": {"zero": False}}],
                 None,
                 "exactly one of money, percentage or zero",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"zero": 0}}],
+                None,
+                r"payments\[0\]\.paymentValue\.zero must be True",
+            ),
+            (
+                [{"participantId": "p-agent", "paymentValue": {"money": {}}}],
+                None,
+                r"payments\[0\]\.paymentValue\.money\.amount is required",
+            ),
+            (
+                [
+                    {
+                        "participantId": "p-agent",
+                        "paymentValue": {"percentage": {"string": "70%"}},
+                    }
+                ],
+                None,
+                r"payments\[0\]\.paymentValue\.percentage\.value is required",
             ),
             (
                 [{"participantId": "p-agent", "paymentValue": {"zero": True}}],
