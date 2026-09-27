@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.16] - 2026-09-26
+
+### ✨ Added
+- Add `TransactionsClient.set_payouts` for `PUT /transactions/{transactionId}/payouts` (`setPayouts`), which corrects participant payouts on an existing transaction in place without a builder resubmit
+- Validate payout bodies before sending: at least one payment, a participant ID on each entry, and exactly one of `money`, `percentage` or `zero` per `paymentValue`
+- Send `Decimal` payout amounts as JSON numbers, and reject `money` without `amount`, `percentage` without `value`, or `zero` that is not `True`
+
+### 📚 Docs
+- Document `set_payouts` under Transactions → Financial Operations
+
+---
+
 ## [2.2.15] - 2025-12-30
 
 ### ✨ Added

@@ -122,6 +122,11 @@ client.transactions.create_participant(transaction_id, participant)
       show_source: false
       heading_level: 4
 
+::: rezen.transactions.TransactionsClient.set_payouts
+    options:
+      show_source: false
+      heading_level: 4
+
 ### Document Operations
 
 ::: rezen.transactions.TransactionsClient.get_transaction_summary_pdf
