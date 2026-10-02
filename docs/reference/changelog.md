@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-10-02
+
+### Added
+
+- `BuyerRecordsClient`, exported publicly and available as `client.buyer_records`,
+  for Buyer Record creation, search, retrieval, updates, participants, conversion,
+  and termination requests.
+- `TransactionBuilderClient.update_associations` for Buyer Record and listing links.
+- HTTP contract tests and migration documentation for Real's October 12, 2026
+  buyer transaction API change. Direct listing creation remains available.
+
 ## [2.2.16] - 2026-09-26
 
 ### ✨ Added

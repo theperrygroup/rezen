@@ -11,6 +11,14 @@ Complete method reference for the ReZEN Python API client. This section covers a
 
 <div class="grid cards" markdown>
 
+-   **Buyer Records**
+
+    ---
+
+    Create pre-contract buyer records, manage participants, and convert to builders
+
+    [:octicons-arrow-right-24: Buyer Record API](buyer-records.md)
+
 -   🔧 **Transaction Builder**
 
     ---

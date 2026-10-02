@@ -163,6 +163,7 @@ nav:
 
   - API Reference:
     - api/index.md
+    - Buyer Records: api/buyer-records.md
     - Transaction Builder: api/transaction-builder.md
     - Transactions: api/transactions.md
     - Teams: api/teams.md
