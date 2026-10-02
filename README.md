@@ -12,6 +12,11 @@ Build powerful real estate applications with comprehensive transaction managemen
 
 ## 🚀 Quick Start
 
+**Buyer transaction API change (October 12, 2026):** create a Buyer Record, then
+convert it with `client.buyer_records.build_transaction(record_id)`. Direct
+listing creation remains supported. See the [Buyer Record migration guide](docs/api/buyer-records.md)
+for required agreement fields and dual-sided transaction associations.
+
 **Install:**
 ```bash
 pip install rezen

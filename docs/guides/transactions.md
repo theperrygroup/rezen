@@ -2,6 +2,12 @@
 
 Complete guide to managing real estate transactions with the ReZEN API, from creation to closing.
 
+!!! warning "Buyer transaction creation changes October 12, 2026"
+
+    Use the [Buyer Record creation and conversion sequence](../api/buyer-records.md)
+    for buyer transactions. Direct buyer builder examples below are the legacy
+    workflow. Listing creation continues through `create_listing_builder()`.
+
 ---
 
 ## 🚨 **CRITICAL REQUIREMENTS** - Read This First!

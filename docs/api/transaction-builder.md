@@ -2,6 +2,12 @@
 
 Create and manage transaction builders with full participant and property management capabilities.
 
+!!! warning "Buyer transaction creation changes October 12, 2026"
+
+    Start buyer transactions with a [Buyer Record](buyer-records.md) and convert
+    it to a builder. Direct `LISTING` creation remains supported. Direct buyer
+    `TRANSACTION` creation examples on this page describe the legacy workflow.
+
 ---
 
 ## Overview

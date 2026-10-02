@@ -15,6 +15,24 @@ from .exceptions import (
 class TransactionBuilderClient(BaseClient):
     """Client for transaction builder endpoints."""
 
+    def update_associations(
+        self, transaction_id: str, associations: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Associate a transaction builder with a Buyer Record or listing.
+
+        Args:
+            transaction_id: Transaction builder ID.
+            associations: API fields buyerRecordId and/or listingId. Dual-sided
+                transactions require both associations before submission.
+
+        Returns:
+            Updated transaction builder details.
+        """
+        return self.patch(
+            f"transaction-builder/{transaction_id}/associations",
+            json_data=associations,
+        )
+
     def update_title_info(
         self, transaction_id: str, title_info: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1322,6 +1340,11 @@ class TransactionBuilderClient(BaseClient):
         self, builder_type: str = "TRANSACTION"
     ) -> Dict[str, Any]:
         """Create empty transaction builder.
+
+        Starting October 12, 2026, buyer transactions must originate from a
+        Buyer Record: use RezenClient.buyer_records.create_buyer_record followed
+        by build_transaction. Direct LISTING creation remains supported. The
+        direct TRANSACTION examples below describe the legacy workflow.
 
         This is the starting point for creating a new transaction. After creation,
         you'll receive a transaction ID that you'll use for all subsequent operations.

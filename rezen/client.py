@@ -5,6 +5,7 @@ from typing import Optional
 from .agents import AgentsClient
 from .api_keys import ApiKeysClient
 from .auth import AuthClient
+from .buyer_records import BuyerRecordsClient
 from .checklist import ChecklistClient
 from .directory import DirectoryClient
 from .documents import DocumentClient
@@ -133,6 +134,7 @@ class RezenClient:
         self._mfa: Optional[MfaClient] = None
         self._api_keys: Optional[ApiKeysClient] = None
         self._transaction_builder: Optional[TransactionBuilderClient] = None
+        self._buyer_records: Optional[BuyerRecordsClient] = None
         self._transactions: Optional[TransactionsClient] = None
         self._teams: Optional[TeamsClient] = None
         self._agents: Optional[AgentsClient] = None
@@ -142,6 +144,23 @@ class RezenClient:
         self._documents: Optional[DocumentClient] = None
         self._dropbox: Optional[DropboxClient] = None
         self._rev_share: Optional[RevShareClient] = None
+
+    @property
+    def buyer_records(self) -> BuyerRecordsClient:
+        """Access Buyer Record endpoints.
+
+        Returns:
+            Lazily initialized BuyerRecordsClient using this client's options.
+        """
+        if self._buyer_records is None:
+            self._buyer_records = BuyerRecordsClient(
+                api_key=self._api_key,
+                base_url=self._base_url,
+                timeout_seconds=self._timeout_seconds,
+                max_retries=self._max_retries,
+                retry_backoff_seconds=self._retry_backoff_seconds,
+            )
+        return self._buyer_records
 
     @property
     def transaction_builder(self) -> TransactionBuilderClient:

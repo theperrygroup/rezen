@@ -2,6 +2,11 @@
 
 Get up and running with the ReZEN API in a few minutes. This guide focuses on the current client signatures and a minimal, truthful first workflow.
 
+!!! warning "Buyer transaction creation changes October 12, 2026"
+
+    For buyers, follow the [Buyer Record guide](../api/buyer-records.md) to create
+    and convert a Buyer Record. Direct listing builder creation remains supported.
+
 ## Goal
 
 By the end of this guide, you will have:
