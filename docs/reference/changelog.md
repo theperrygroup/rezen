@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.3.0] - 2026-10-02
+## [2.3.1] - 2026-10-02
+
+### Fixed
+
+- Run package publishing, documentation deployment, and GitHub release jobs after
+  a successful tag build even when the manual version-bump job is skipped. Retain
+  explicit successful-build and release-mode checks, so failed builds cannot publish.
+
+## [2.3.0] - 2026-10-02 (not published)
 
 ### Added
 

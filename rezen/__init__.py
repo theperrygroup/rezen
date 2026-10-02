@@ -83,7 +83,7 @@ from .transaction_builder import TransactionBuilderClient
 from .transactions import TransactionsClient
 from .users import UsersClient
 
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 __all__ = [
     # Client classes
     "RezenClient",
