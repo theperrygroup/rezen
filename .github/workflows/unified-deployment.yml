@@ -418,6 +418,7 @@ jobs:
     needs: [deployment-type, build]
     if: |
       always() &&
+      !cancelled() &&
       needs.build.result == 'success' &&
       needs.deployment-type.outputs.is_release == 'true'
     environment: release
@@ -440,6 +441,7 @@ jobs:
     needs: [deployment-type, build-docs]
     if: |
       always() &&
+      !cancelled() &&
       needs.build-docs.result == 'success' &&
       (needs.deployment-type.outputs.is_release == 'true' || needs.deployment-type.outputs.is_docs_only == 'true')
     environment:
@@ -457,6 +459,7 @@ jobs:
     needs: [deployment-type, version-bump, build, publish-pypi]
     if: |
       always() &&
+      !cancelled() &&
       needs.build.result == 'success' &&
       needs.publish-pypi.result == 'success' &&
       needs.deployment-type.outputs.is_release == 'true'
